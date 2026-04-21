@@ -59,7 +59,7 @@ const FeaturedNewsCard = ({ article }) => {
             <div>
               <button 
               type = "button"
-              onClick={() => navigate("news//§{article.id}")}
+              onClick={() => navigate(`news//§{article.id}`)}
               className="btn btn-primary px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2 transition-all">
                 Ler Artigo <FaChevronRight />
               </button>

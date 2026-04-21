@@ -23,7 +23,7 @@ const NewsArticleCard = ({ article }) => {
       <div className="card-body p-4">
         {/* Title */}
         <h3 className="card-title h5 fw-bold text-dark mb-3">
-          <Link to={`/noticias/${article.id}`} className="text-dark text-decoration-none stretched-link">
+          <Link to={`/news/${article.id}`} className="text-dark text-decoration-none stretched-link">
             {article.title}
           </Link>
         </h3>
