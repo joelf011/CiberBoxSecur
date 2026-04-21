@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Logo from '../assets/logos/CiberBoxSecur-Minimal-NegativeVersion.svg';
 
+
 const Footer = () => {
   return (
     <footer className="bg-dark text-secondary py-5 border-top border-secondary">
