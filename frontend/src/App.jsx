@@ -3,7 +3,7 @@ import React from 'react';
 import Section from './components/Section.jsx';
 import ContactInfo from './components/ContactInfo.jsx';
 import Forms from './components/Forms.jsx';
-// Importa Nav e Footer quando os tiveres
+
 
 function App() {
   return (

@@ -33,7 +33,7 @@ export default function Forms() {
           type="text"
           value={formData.name}
           onChange={handleChange}
-          className="form-control bg-secondary bg-opacity-10 text-white border-secondary px-3 py-2"
+          className="form-control bg-secondary bg-opacity-10 text-white border-secondary px-3 py-2 my-placeholder"
           placeholder="O seu nome"
           required
         />
@@ -49,7 +49,7 @@ export default function Forms() {
           type="email"
           value={formData.email}
           onChange={handleChange}
-          className="form-control bg-secondary bg-opacity-10 text-white border-secondary px-3 py-2"
+          className="form-control bg-secondary bg-opacity-10 text-white border-secondary px-3 py-2 my-placeholder"
           placeholder="email@empresa.com"
           required
         />
@@ -65,7 +65,7 @@ export default function Forms() {
           rows={4}
           value={formData.message}
           onChange={handleChange}
-          className="form-control bg-secondary bg-opacity-10 text-white border-secondary px-3 py-2"
+          className="form-control bg-secondary bg-opacity-10 text-white border-secondary px-3 py-2 my-placeholder"
           placeholder="Como podemos ajudar?"
           style={{ resize: 'none' }} // Bloqueia o redimensionamento
           required

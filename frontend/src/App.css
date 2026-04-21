@@ -1,0 +1,13 @@
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --background-color: #121212;
+  --text-color: #ffffff;
+  --placeholder-color: #6d6d6d;
+}
+
+
+.my-placeholder::placeholder {
+  color: var(--placeholder-color) !important;
+  opacity: 1;
+}
