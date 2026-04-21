@@ -1,7 +1,10 @@
 import React from 'react';
-import { Calendar, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { FaCalendarAlt, FaChevronRight } from 'react-icons/fa';
 
 const FeaturedNewsCard = ({ article }) => {
+  const navigate = useNavigate();
+
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('pt-PT', options);
@@ -48,17 +51,19 @@ const FeaturedNewsCard = ({ article }) => {
 
             {/* Meta Data (Date) */}
             <div className="d-flex align-items-center gap-2 small text-secondary mb-4">
-              <Calendar style={{ width: '16px', height: '16px' }} />
+              <FaCalendarAlt />
               <span>{formatDate(article.date)}</span>
             </div>
 
             {/* CTA */}
             <div>
-              <button className="btn btn-primary px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2 transition-all">
-                Ler Artigo <ChevronRight style={{ width: '20px', height: '20px' }} />
+              <button 
+              type = "button"
+              onClick={() => navigate("news//§{article.id}")}
+              className="btn btn-primary px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2 transition-all">
+                Ler Artigo <FaChevronRight />
               </button>
             </div>
-            
           </div>
         </div>
       </div>
