@@ -9,7 +9,7 @@ const User = sequelize.define('User', {
     },
     role_id: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: true
     },
     company_id: {
         type: DataTypes.INTEGER,
