@@ -5,7 +5,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 const NavBar = () => {
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
-      <div className="container-fluid px-4"> 
+      <div className="container px-4"> 
         
         {/* Logo à Esquerda */}
         <a className="navbar-brand fw-bold" href="/">
@@ -45,7 +45,7 @@ const NavBar = () => {
 
           {/* Botão à DIREITA */}
           <div className="d-flex justify-content-center">
-            <button className="btn btn-light fw-semibold d-inline-flex align-items-center gap-2">
+            <button className="btn btn-light fw-semibold d-inline-flex align-items-center gap-2 rounded-pill px-4">
               Portal do cliente
             </button>
           </div>
