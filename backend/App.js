@@ -1,16 +1,29 @@
 const express = require("express");
+const cors = require('cors');
+require('dotenv').config();
+
+const db = require('./src/models');
 const app = express();
-//Configurações
-app.set("port", process.env.PORT || 3000);
-//Middlewares
-app.use(express.json());
-//Rotas
-app.use("/teste", (req, res) => {
-  res.send("Rota TESTE.");
+
+// --- MIDDLEWARES ---
+app.use(cors()); 
+app.use(express.json()); 
+
+// --- Test ---
+app.get('/', (req, res) => {
+    res.json({ message: 'Bem-vindo à API da ProjectBox!' });
 });
-app.use("/", (req, res) => {
-  res.send("Hello World");
-});
-app.listen(app.get("port"), () => {
-  console.log("Start server on port " + app.get("port"));
-});
+
+// --- DB conexion ---
+const PORT = process.env.PORT || 5000;
+
+db.sequelize.sync({ alter: true })
+    .then(() => {
+        console.log('✅ DB synchronized successfully!');
+        app.listen(PORT, () => {
+            console.log(`🚀 Server running: ${PORT}`);
+        });
+    })
+    .catch((error) => {
+        console.error('❌ Fatal Error:', error);
+    });
