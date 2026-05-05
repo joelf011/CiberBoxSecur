@@ -3,8 +3,9 @@ import Logo from '../assets/logos/CiberBoxSecur-Minimal-NegativeVersion.svg';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 const NavBar = () => {
+  const bgColor = '#0a192f';
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <nav className="navbar navbar-expand-lg navbar-dark shadow-sm" style={{ backgroundColor: bgColor }}>
       <div className="container px-4"> 
         
         {/* Logo à Esquerda */}
