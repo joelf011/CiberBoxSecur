@@ -2,11 +2,13 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  faChartLine, faComments, faEdit, faUsers, 
-  faHistory, faFolderOpen, faSignOutAlt, faShieldAlt 
+  faShieldAlt, 
+  faKey, 
+  faBriefcase, 
+  faUser
 } from "@fortawesome/free-solid-svg-icons";
 
-const paginaLogin = () => {
+const PaginaLogin = () => {
   const navigate = useNavigate();
 
   // Função para simular o login e ir para o backoffice
@@ -61,4 +63,4 @@ const paginaLogin = () => {
   );
 };
 
-export default paginaLogin;
+export default PaginaLogin;
