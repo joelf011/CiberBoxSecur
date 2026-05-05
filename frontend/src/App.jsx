@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import NavBar from './components/NavBar'
 import Footer from './components/Footer'
+import LayoutWebsite from './components/LayoutWebsite'
 
 
 function App() {
@@ -8,8 +9,9 @@ function App() {
 
   return (
     <>
-      <NavBar />
-      <Footer />
+      <LayoutWebsite>
+
+      </LayoutWebsite>
     </>
   )
 }
