@@ -1,0 +1,42 @@
+/* Sidebar sizing */
+.sidebar-container {
+  width: 260px;
+  background-color: #0b0e14 !important; /* Azul escuro quase preto dos teus prints */
+  transition: all 0.3s ease;
+}
+
+/* Custom Active Link */
+.active-custom {
+  background-color: #7c3aed !important; /* Roxo vibrante do design */
+  color: white !important;
+  border-radius: 8px;
+}
+
+.nav-link {
+  color: #94a3b8 !important; /* Cor cinza suave para inativos */
+  border-radius: 8px;
+}
+
+.nav-link:hover:not(.active-custom) {
+  background-color: #1e293b;
+  color: white !important;
+}
+
+/* Avatar circle */
+.avatar-circle {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+/* Estilo para o link de Logout */
+.hover-white:hover {
+  color: white !important;
+}
+
+/* Esconder scrollbar da sidebar mas permitir scroll se necessário */
+.sidebar-container::-webkit-scrollbar {
+  display: none;
+}
