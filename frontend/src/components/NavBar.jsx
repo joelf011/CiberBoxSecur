@@ -10,7 +10,7 @@ const NavBar = () => {
       <div className="container px-4"> 
         
         {/* Logo à Esquerda */}
-        <a className="navbar-brand fw-bold" href="/">
+        <a className="navbar-brand fw-bold" to="/">
           <img src={Logo} alt="Logo" height="60"/>
         </a>
 
@@ -32,7 +32,7 @@ const NavBar = () => {
           {/* Links */}
           <ul className="navbar-nav mx-auto align-items-center">
             <li className="nav-item">
-              <a className="nav-link" aria-current="page" href="#">Home</a>
+              <a className="nav-link" aria-current="page" to="/">Home</a>
             </li>
             <li className="nav-item">
               <a className="nav-link" href="#">Serviços</a>
@@ -47,9 +47,9 @@ const NavBar = () => {
 
           {/* Botão à DIREITA */}
           <div className="d-flex justify-content-center">
-            <button className="btn btn-light fw-semibold d-inline-flex align-items-center gap-2 rounded-pill px-4">
+            <Link to="/login" className="btn btn-light fw-semibold d-inline-flex align-items-center gap-2">
               Portal do cliente
-            </button>
+            </Link>
           </div>
 
         </div>
