@@ -7,6 +7,7 @@ const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const companyRoutes = require('./src/routes/companyRoutes');
 const roleRoutes = require('./src/routes/roleRoutes');
+const assetRoutes = require('./src/routes/assetRoutes');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/roles', roleRoutes);
+app.use('/api/assets', assetRoutes);
 
 // --- Test ---
 app.get('/', (req, res) => {
