@@ -4,6 +4,7 @@ import LayoutWebsite from './components/LayoutWebsite';
 import PaginaLogin from './pages/PaginaLogin';
 import AdminForum from './pages/admin/AdminForum';
 import AdminLogs from './pages/admin/AdminLogs';
+import GestaoConteudos from './pages/admin/GestaoConteudos';
 
 function App() {
   return (
@@ -28,7 +29,7 @@ function App() {
         {/* ESTA É A ROTA QUE TESTA O TEU FÓRUM */}
         <Route path="forum" element={<AdminForum />} />
         
-        <Route path="cms" element={<div>Gestão de Conteúdo (CMS) em breve...</div>} />
+        <Route path="cms" element={<div><GestaoConteudos /></div>} />
         <Route path="users" element={<div>Gestão de Utilizadores em breve...</div>} />
         <Route path="logs" element={<div><AdminLogs /></div>} />
         <Route path="docs" element={<div>Repositório Global em breve...</div>} />

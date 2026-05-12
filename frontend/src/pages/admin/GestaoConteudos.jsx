@@ -1,21 +1,31 @@
 import React, { useState } from 'react';
-import { Save, Edit3, Home, Info, Bell, Newspaper, Phone } from 'lucide-react';
-import { HeroEditor } from './gestao/Hero'; // Vamos criar estas a seguir
-import { AboutEditor } from './gestao/About';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faSave, 
+  faEdit, 
+  faHome, 
+  faInfoCircle, 
+  faConciergeBell, 
+  faNewspaper, 
+  faPhone 
+} from '@fortawesome/free-solid-svg-icons';
+import Hero from './gestao/Hero';
+import About from './gestao/About';
+
 
 const GestaoConteudos = () => {
   const [activeTab, setActiveTab] = useState('hero');
 
-  // Cores do tema (roxo do AdminPanel)
+  // Cores do tema (Roxo do AdminPanel)
   const purpleClass = "text-purple-600";
   const bgPurpleClass = "bg-purple-600";
 
   const menuItems = [
-    { id: 'hero', label: 'Hero', icon: Home },
-    { id: 'sobre', label: 'Sobre', icon: Info },
-    { id: 'servicos', label: 'Serviços', icon: Bell },
-    { id: 'noticias', label: 'Notícias', icon: Newspaper },
-    { id: 'contactos', label: 'Contactos', icon: Phone },
+    { id: 'hero', label: 'Hero', icon: faHome },
+    { id: 'sobre', label: 'Sobre', icon: faInfoCircle },
+    { id: 'servicos', label: 'Serviços', icon: faConciergeBell },
+    { id: 'noticias', label: 'Notícias', icon: faNewspaper },
+    { id: 'contactos', label: 'Contactos', icon: faPhone },
   ];
 
   return (
@@ -25,8 +35,8 @@ const GestaoConteudos = () => {
         {/* Header Interno */}
         <div className="p-6 border-b border-slate-100 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <div className={`p-3 rounded-xl text-white ${bgPurpleClass}`}>
-              <Edit3 size={24} />
+            <div className={`w-12 h-12 rounded-xl text-white flex items-center justify-center ${bgPurpleClass}`}>
+              <FontAwesomeIcon icon={faEdit} size="lg" />
             </div>
             <div>
               <h3 className="text-xl font-bold text-slate-800">Gestão de Conteúdos</h3>
@@ -35,7 +45,7 @@ const GestaoConteudos = () => {
           </div>
           
           <button className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-white font-medium transition-transform hover:scale-105 ${bgPurpleClass}`}>
-            <Save size={18} />
+            <FontAwesomeIcon icon={faSave} />
             Guardar Alterações
           </button>
         </div>
@@ -47,17 +57,21 @@ const GestaoConteudos = () => {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex flex-col items-center gap-1 py-4 transition-all relative ${
+                className={`flex flex-col items-center gap-2 py-4 transition-all relative ${
                   activeTab === item.id ? purpleClass : 'text-slate-400 hover:text-slate-600'
                 }`}
               >
+                {/* Indicador Lateral */}
                 {activeTab === item.id && (
                   <div className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${bgPurpleClass}`} />
                 )}
-                <item.icon size={22} strokeWidth={activeTab === item.id ? 2.5 : 2} />
-                <span className="text-[11px] font-bold uppercase tracking-wider">{item.label}</span>
                 
-                {/* Estilo de "bolha" ativa se quiseres igual à imagem */}
+                <FontAwesomeIcon icon={item.icon} className="text-xl" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-center px-1">
+                  {item.label}
+                </span>
+                
+                {/* Fundo da aba ativa (Bolha) */}
                 {activeTab === item.id && (
                    <div className="absolute inset-0 bg-purple-50 -z-10 mx-2 rounded-xl" />
                 )}
@@ -67,10 +81,14 @@ const GestaoConteudos = () => {
 
           {/* Área do Formulário */}
           <div className="flex-1 p-10 bg-white">
-            {activeTab === 'hero' && <HeroEditor />}
-            {activeTab === 'sobre' && <AboutEditor />}
-            {activeTab === 'servicos' && <div className="text-slate-400 italic">Editor de Serviços em breve...</div>}
-            {/* Adicionar as outras conforme necessário */}
+            {activeTab === 'hero' && <Hero/>}
+            {activeTab === 'sobre' && <About/>}
+            {activeTab === 'servicos' && (
+              <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-4 italic">
+                <FontAwesomeIcon icon={faConciergeBell} size="3x" className="opacity-20" />
+                <p>Editor de Serviços em breve...</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
