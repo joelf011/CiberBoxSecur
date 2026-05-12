@@ -1,15 +1,15 @@
 import React from "react";
 
-const heroStyle = {
-  position: "relative",
-  backgroundColor: "#0f172a",
-  backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.9)), url('${imagemFundo}')`,
-  backgroundSize: "cover",
-  backgroundPosition: "center",
-  padding: "100px 0",
-};
-
 function Hero({ titulo, subtitulo, textoBotao, imagemFundo }) {
+  const heroStyle = {
+    position: "relative",
+    backgroundColor: "#0f172a",
+    backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.9)), url('${imagemFundo}')`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    padding: "100px 0",
+  };
+
   return (
     <section style={heroStyle} className="text-white">
       <div className="container px-4">
