@@ -11,17 +11,50 @@ const Asset = sequelize.define('Asset', {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    uploaded_by_user_id: {
+    created_by_user_id: {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    title: {
+    
+    asset_code: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    name: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    file_path: {
-        type: DataTypes.STRING,
+    description: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    category: {
+        type: DataTypes.ENUM('Hardware', 'Software', 'Network', 'Information', 'Service', 'People', 'Facilities'),
         allowNull: false
+    },
+    owner: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    location: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    confidentiality: {
+        type: DataTypes.ENUM('Low', 'Medium', 'High'),
+        defaultValue: 'Medium'
+    },
+    integrity: {
+        type: DataTypes.ENUM('Low', 'Medium', 'High'),
+        defaultValue: 'Medium'
+    },
+    availability: {
+        type: DataTypes.ENUM('Low', 'Medium', 'High'),
+        defaultValue: 'Medium'
+    },
+    status: {
+        type: DataTypes.ENUM('Active', 'Inactive', 'Maintenance', 'Retired'),
+        defaultValue: 'Active'
     }
 }, {
     tableName: 'Assets',
