@@ -7,10 +7,12 @@ import { faComments } from "@fortawesome/free-solid-svg-icons";
 import ClientSidebar from '../../components/admin/forum/ClientSidebar';
 import ThreadList from '../../components/admin/forum/ThreadList';
 import ChatWindow from '../../components/admin/forum/ChatWindow';
+import CreateThreadModal from '../../components/admin/forum/CreateThreadModal';
 
 const AdminForum = () => {
     const [selectedClientId, setSelectedClientId] = useState(null);
     const [selectedThreadId, setSelectedThreadId] = useState(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     // MOCK DATA (Virá da DB futuramente)
     const clients = [
@@ -24,9 +26,17 @@ const AdminForum = () => {
         { id: 't2', clientId: 'c1', title: 'Erro no Report Q1', desc: 'Dúvidas sobre conformidade...', time: 'Ontem', unread: false },
     ];
 
+    // Variáveis de computação (Devem estar aqui para o return as conseguir ler)
     const activeClient = clients.find(c => c.id === selectedClientId);
     const activeThread = threads.find(t => t.id === selectedThreadId);
     const clientThreads = threads.filter(t => t.clientId === selectedClientId);
+
+    const handleCreateThread = (e) => {
+        e.preventDefault();
+        console.log("Thread criada para o cliente:", selectedClientId);
+        setShowCreateModal(false);
+        // Aqui farias o fetch(POST) para a tua API futuramente
+    };
 
     return (
         <div className="py-2 h-100">
@@ -36,7 +46,7 @@ const AdminForum = () => {
             </div>
 
             <Row className="g-4 h-100">
-                {/* COLUNA ESQUERDA: LISTA DE TICKETS */}
+                {/* COLUNA ESQUERDA: LISTA DE TICKETS OU CHAT */}
                 <Col lg={8} xl={9}>
                     <Card className="border-0 shadow-sm rounded-4 h-100 overflow-hidden" style={{ minHeight: '600px' }}>
                         {!selectedClientId ? (
@@ -62,6 +72,7 @@ const AdminForum = () => {
                                 activeClient={activeClient}
                                 threads={clientThreads}
                                 onSelectThread={setSelectedThreadId}
+                                onShowCreate={() => setShowCreateModal(true)}
                             />
                         )}
                     </Card>
@@ -79,6 +90,14 @@ const AdminForum = () => {
                     />
                 </Col>
             </Row>
+
+            {/* COMPONENTE DO MODAL */}
+            <CreateThreadModal
+                show={showCreateModal}
+                onHide={() => setShowCreateModal(false)}
+                clientName={activeClient?.name}
+                onSubmit={handleCreateThread}
+            />
         </div>
     );
 };

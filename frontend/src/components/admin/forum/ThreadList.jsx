@@ -3,7 +3,7 @@ import { Card, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faComments, faPlus, faBuilding, faClock } from "@fortawesome/free-solid-svg-icons";
 
-const ThreadList = ({ activeClient, threads, onSelectThread }) => {
+const ThreadList = ({ activeClient, threads, onSelectThread, onShowCreate }) => {
   return (
     <>
       <Card.Header className="bg-white p-4 border-bottom border-light d-flex justify-content-between align-items-center">
@@ -14,7 +14,8 @@ const ThreadList = ({ activeClient, threads, onSelectThread }) => {
           </h3>
           <small className="text-muted">Tickets de suporte ativos</small>
         </div>
-        <Button variant="primary" className="rounded-3 px-3 border-0 shadow-sm" style={{ backgroundColor: '#8b5cf6' }}>
+        <Button variant="primary" 
+        className="rounded-3 px-3 border-0 shadow-sm" style={{ backgroundColor: '#8b5cf6' }} onClick={onShowCreate}>
           <FontAwesomeIcon icon={faPlus} className="me-2" /> Nova Thread
         </Button>
       </Card.Header>
