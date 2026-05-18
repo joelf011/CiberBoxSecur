@@ -17,7 +17,7 @@ const reportController = {
                 report_type,
                 title,
                 risk_score: risk_score || null,
-                file_path: `uploads/reports/${req.file.filename}`,
+                file_path: `uploads/${req.file.filename}`,
                 status: status || 'Draft'
             });
 
@@ -102,7 +102,7 @@ const reportController = {
                     fs.unlinkSync(report.file_path);
                 }
                 // New path
-                file_path = `uploads/reports/${req.file.filename}`;
+                file_path = `uploads/${req.file.filename}`;
             }
 
             await report.update({ title, report_type, risk_score, status, file_path });
