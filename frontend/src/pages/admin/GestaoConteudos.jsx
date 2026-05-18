@@ -9,16 +9,14 @@ import {
   faNewspaper, 
   faPhone 
 } from '@fortawesome/free-solid-svg-icons';
-import Hero from './gestao/Hero';
-import About from './gestao/About';
-
+import Hero from './gestao/Hero.jsx';
+import About from './gestao/About.jsx';
+import Services from './gestao/Services.jsx';
+import News from './gestao/News.jsx';
+import Contacts from './gestao/Contacts.jsx';
 
 const GestaoConteudos = () => {
   const [activeTab, setActiveTab] = useState('hero');
-
-  // Cores do tema (Roxo do AdminPanel)
-  const purpleClass = "text-purple-600";
-  const bgPurpleClass = "bg-purple-600";
 
   const menuItems = [
     { id: 'hero', label: 'Hero', icon: faHome },
@@ -29,67 +27,62 @@ const GestaoConteudos = () => {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="container-fluid my-4">
+      <div className="card shadow-sm border-0 rounded-4 overflow-hidden">
         
         {/* Header Interno */}
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-xl text-white flex items-center justify-center ${bgPurpleClass}`}>
+        <div className="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+          <div className="d-flex align-items-center gap-3">
+            <div className="rounded-3 bg-primary text-white d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px', backgroundColor: 'rgb(139, 92, 246)' }}>
               <FontAwesomeIcon icon={faEdit} size="lg" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-slate-800">Gestão de Conteúdos</h3>
-              <p className="text-sm text-slate-500">Editor de conteúdos da página inicial</p>
+              <h3 className="h5 fw-bold text-dark mb-1">Gestão de Conteúdos</h3>
+              <p className="text-muted small mb-0">Editor de conteúdos da página inicial</p>
             </div>
           </div>
           
-          <button className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-white font-medium transition-transform hover:scale-105 ${bgPurpleClass}`}>
+          <button className="btn text-white px-4 py-2 rounded-3 d-flex align-items-center gap-2" style={{ backgroundColor: 'rgb(139, 92, 246)' }}>
             <FontAwesomeIcon icon={faSave} />
             Guardar Alterações
           </button>
         </div>
 
-        <div className="flex min-h-[600px]">
-          {/* Sidebar de Navegação Local */}
-          <div className="w-24 border-r border-slate-100 bg-slate-50/50 flex flex-col py-4">
-            {menuItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`flex flex-col items-center gap-2 py-4 transition-all relative ${
-                  activeTab === item.id ? purpleClass : 'text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                {/* Indicador Lateral */}
-                {activeTab === item.id && (
-                  <div className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${bgPurpleClass}`} />
-                )}
-                
-                <FontAwesomeIcon icon={item.icon} className="text-xl" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-center px-1">
+        {/* Corpo Principal: Sidebar + Conteúdo */}
+        <div className="d-flex" style={{ minHeight: '600px' }}>
+          
+          {/* Sidebar Lateral Esquerda */}
+          <div className="bg-light border-end d-flex flex-column pt-3" style={{ width: '100px' }}>
+            {menuItems.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`btn border-0 rounded-0 py-3 d-flex flex-column align-items-center gap-2 text-uppercase fw-bold style-none shadow-none`}
+                  style={{
+                    fontSize: '10px',
+                    color: isActive ? '#ffffff' : '#0d6efd',
+                    backgroundColor: isActive ? '#0d6efd' : 'transparent',
+                    borderLeft: isActive ? '4px solid #0d6efd' : 'none'
+                  }}
+                >
+                  <FontAwesomeIcon icon={item.icon} style={{ fontSize: '18px' }} />
                   {item.label}
-                </span>
-                
-                {/* Fundo da aba ativa (Bolha) */}
-                {activeTab === item.id && (
-                   <div className="absolute inset-0 bg-purple-50 -z-10 mx-2 rounded-xl" />
-                )}
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Área do Formulário */}
-          <div className="flex-1 p-10 bg-white">
-            {activeTab === 'hero' && <Hero/>}
-            {activeTab === 'sobre' && <About/>}
-            {activeTab === 'servicos' && (
-              <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-4 italic">
-                <FontAwesomeIcon icon={faConciergeBell} size="3x" className="opacity-20" />
-                <p>Editor de Serviços em breve...</p>
-              </div>
-            )}
+          {/* Área Direita do Conteúdo */}
+          <div className="flex-grow-1 p-4 bg-white">
+            {activeTab === 'hero' && <Hero />}
+            {activeTab === 'sobre' && <About />}
+            {activeTab === 'servicos' && <Services />}
+            {activeTab === 'noticias' && <News />}
+            {activeTab === 'contactos' && <Contacts />}
           </div>
+
         </div>
       </div>
     </div>
