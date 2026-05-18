@@ -1,5 +1,6 @@
 const { Report, User, Company } = require('../models');
 const fs = require('fs');
+const auditLogController = require('./auditLogController');
 
 const reportController = {
     // CREATE
@@ -21,10 +22,19 @@ const reportController = {
                 status: status || 'Draft'
             });
 
+            // LOG: report created
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'REPORT_CREATE',
+                entity_type: 'Report',
+                entity_id: newReport.id,
+                ip_address: req.ip
+            });
+
             return res.status(201).json({ message: 'Report created successfully!', data: newReport });
         } catch (error) {
             // delete in case of an error
-            if (req.file) fs.unlinkSync(req.file.path);
+            if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
             
             console.error('Create Report error:', error);
             return res.status(500).json({ error: 'Internal server error.' });
@@ -89,8 +99,14 @@ const reportController = {
 
             const report = await Report.findByPk(id);
             if (!report) {
-                if (req.file) fs.unlinkSync(req.file.path);
+                if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
                 return res.status(404).json({ error: 'Report not found.' });
+            }
+
+            // IDOR Protection
+            if (req.user.company_id && report.company_id !== req.user.company_id) {
+                if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+                return res.status(403).json({ error: 'Forbidden.' });
             }
 
             let file_path = report.file_path;
@@ -107,9 +123,18 @@ const reportController = {
 
             await report.update({ title, report_type, risk_score, status, file_path });
 
+            // LOG: report updated
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'REPORT_UPDATE',
+                entity_type: 'Report',
+                entity_id: report.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Report updated successfully!', data: report });
         } catch (error) {
-            if (req.file) fs.unlinkSync(req.file.path);
+            if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
             console.error('Update Report error:', error);
             return res.status(500).json({ error: 'Internal server error.' });
         }
@@ -129,6 +154,16 @@ const reportController = {
             }
 
             await report.destroy();
+
+            // LOG: report deleted
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'REPORT_DELETE',
+                entity_type: 'Report',
+                entity_id: report.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Report deleted successfully!' });
         } catch (error) {
             console.error('Delete Report error:', error);
