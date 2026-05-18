@@ -13,6 +13,7 @@ const incidentRoutes = require('./src/routes/incidentRoutes');
 const documentRoutes = require('./src/routes/documentRoutes');
 const ticketRoutes = require('./src/routes/ticketRoutes');
 const articleRoutes = require('./src/routes/articleRoutes');
+const categoryRoutes = require('./src/routes/categoryRoutes');
 const chatRoutes = require('./src/routes/chatRoutes');
 const auditLogRoutes = require('./src/routes/auditLogRoutes');
 
@@ -33,6 +34,7 @@ app.use('/api/incidents', incidentRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/articles', articleRoutes);
+app.use('/api/categories', categoryRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
 
