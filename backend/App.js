@@ -12,6 +12,7 @@ const incidentRoutes = require('./src/routes/incidentRoutes');
 const documentRoutes = require('./src/routes/documentRoutes');
 const ticketRoutes = require('./src/routes/ticketRoutes');
 const articleRoutes = require('./src/routes/articleRoutes');
+const chatRoutes = require('./src/routes/chatRoutes');
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use('/api/incidents', incidentRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/articles', articleRoutes);
+app.use('/api/chats', chatRoutes);
 
 // --- Test ---
 app.get('/', (req, res) => {

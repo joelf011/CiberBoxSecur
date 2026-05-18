@@ -5,7 +5,8 @@ const ChatUser = sequelize.define('ChatUser', {
     chat_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
-        allowNull: false
+        allowNull: false,
+        references: { model: 'Chats', key: 'id' }
     },
     user_id: {
         type: DataTypes.INTEGER,

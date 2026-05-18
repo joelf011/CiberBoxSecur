@@ -9,7 +9,8 @@ const Chat = sequelize.define('Chat', {
     },
     company_id: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: { model: 'Companies', key: 'id' }
     }
 }, {
     tableName: 'Chats',
