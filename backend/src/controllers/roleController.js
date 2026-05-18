@@ -1,4 +1,5 @@
 const { Role, Permission, sequelize } = require('../models');
+const auditLogController = require('./auditLogController');
 
 const roleController = {
     // CREATE
@@ -24,6 +25,15 @@ const roleController = {
             // Find the newly created role, but with the permissions to return it to the Frontend
             const roleWithPermissions = await Role.findByPk(newRole.id, {
                 include: { model: Permission, attributes: ['id', 'name'] }
+            });
+
+            // LOG
+            await auditLogController.logEvent({
+                user_id: req.user ? req.user.id : null,
+                action: 'ROLE_CREATE',
+                entity_type: 'Role',
+                entity_id: newRole.id,
+                ip_address: req.ip
             });
 
             return res.status(201).json({ message: 'Role created successfully!', role: roleWithPermissions });
@@ -106,6 +116,15 @@ const roleController = {
                 include: { model: Permission, attributes: ['id', 'name'] }
             });
 
+            // LOG: role updated
+            await auditLogController.logEvent({
+                user_id: req.user ? req.user.id : null,
+                action: 'ROLE_UPDATE',
+                entity_type: 'Role',
+                entity_id: role.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Role updated successfully!', role: updatedRole });
         } catch (error) {
             await t.rollback();
@@ -129,6 +148,15 @@ const roleController = {
 
             await role.destroy();
 
+            // LOG: role deleted
+            await auditLogController.logEvent({
+                user_id: req.user ? req.user.id : null,
+                action: 'ROLE_DELETE',
+                entity_type: 'Role',
+                entity_id: role.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Role deleted successfully!' });
         } catch (error) {
             console.error('Delete Role error:', error);
@@ -151,6 +179,15 @@ const roleController = {
             }
 
             await role.restore();
+
+            // LOG: role restored
+            await auditLogController.logEvent({
+                user_id: req.user ? req.user.id : null,
+                action: 'ROLE_RESTORE',
+                entity_type: 'Role',
+                entity_id: role.id,
+                ip_address: req.ip
+            });
 
             return res.status(200).json({ message: 'Role restored successfully!', role });
         } catch (error) {

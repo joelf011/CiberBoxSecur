@@ -1,4 +1,5 @@
 const { Permission } = require('../models');
+const auditLogController = require('./auditLogController');
 
 const permissionController = {
     // LIST all
@@ -24,6 +25,16 @@ const permissionController = {
             }
 
             const newPermission = await Permission.create({ name, description });
+
+            // LOG: created
+            await auditLogController.logEvent({
+                user_id: req.user ? req.user.id : null,
+                action: 'PERMISSION_CREATE',
+                entity_type: 'Permission',
+                entity_id: newPermission.id,
+                ip_address: req.ip
+            });
+
             return res.status(201).json({ message: 'Permission created successfully!', data: newPermission });
         } catch (error) {
             if (error.name === 'SequelizeUniqueConstraintError') {
@@ -44,6 +55,16 @@ const permissionController = {
             if (!permission) return res.status(404).json({ error: 'Permission not found.' });
 
             await permission.update({ name, description });
+
+            // LOG: permission updated
+            await auditLogController.logEvent({
+                user_id: req.user ? req.user.id : null,
+                action: 'PERMISSION_UPDATE',
+                entity_type: 'Permission',
+                entity_id: permission.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Permission updated successfully!', data: permission });
         } catch (error) {
             console.error('Update Permission error:', error);
@@ -51,7 +72,7 @@ const permissionController = {
         }
     },
 
-    // 4. APAGAR PERMISSÃO
+    // DELETE (Soft)
     async delete(req, res) {
         try {
             const { id } = req.params;
@@ -60,6 +81,16 @@ const permissionController = {
             if (!permission) return res.status(404).json({ error: 'Permission not found.' });
 
             await permission.destroy();
+
+            // LOG: permission deleted
+            await auditLogController.logEvent({
+                user_id: req.user ? req.user.id : null,
+                action: 'PERMISSION_DELETE',
+                entity_type: 'Permission',
+                entity_id: permission.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Permission deleted successfully!' });
         } catch (error) {
             console.error('Delete Permission error:', error);
