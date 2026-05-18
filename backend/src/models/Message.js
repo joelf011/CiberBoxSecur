@@ -9,19 +9,26 @@ const Message = sequelize.define('Message', {
     },
     sender_id: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: { model: 'Users', key: 'id' }
     },
     ticket_id: {
         type: DataTypes.INTEGER,
-        allowNull: true
+        allowNull: true,
+        references: { model: 'Tickets', key: 'id' }
     },
     chat_id: {
         type: DataTypes.INTEGER,
-        allowNull: true
+        allowNull: true,
+        references: { model: 'Chats', key: 'id' }
     },
     content: {
         type: DataTypes.TEXT,
         allowNull: false
+    },
+    is_read: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     }
 }, {
     tableName: 'Messages',
