@@ -16,6 +16,7 @@ const articleRoutes = require('./src/routes/articleRoutes');
 const categoryRoutes = require('./src/routes/categoryRoutes');
 const chatRoutes = require('./src/routes/chatRoutes');
 const auditLogRoutes = require('./src/routes/auditLogRoutes');
+const reportRoutes = require('./src/routes/reportRoutes');
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use('/api/articles', articleRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
+app.use('/api/reports', reportRoutes);
 
 // --- Test ---
 app.get('/', (req, res) => {
