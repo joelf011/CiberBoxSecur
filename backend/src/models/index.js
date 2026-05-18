@@ -2,6 +2,7 @@ const sequelize = require('../config/database');
 
 const Role = require('./Role');
 const Permission = require('./Permission');
+const RolePermission = require('./RolePermission');
 const User = require('./User');
 const Company = require('./Company');
 
@@ -27,8 +28,8 @@ Role.hasMany(User, { foreignKey: 'role_id' });
 User.belongsTo(Role, { foreignKey: 'role_id' });
 
 // M:N Relation Roles <-> Permissions Pivot table
-Role.belongsToMany(Permission, { through: 'Role_Permissions', foreignKey: 'role_id', timestamps: false });
-Permission.belongsToMany(Role, { through: 'Role_Permissions', foreignKey: 'permission_id', timestamps: false });
+Role.belongsToMany(Permission, { through: RolePermission, foreignKey: 'role_id', timestamps: false });
+Permission.belongsToMany(Role, { through: RolePermission, foreignKey: 'permission_id', timestamps: false });
 
 Company.hasMany(User, { foreignKey: 'company_id' });
 User.belongsTo(Company, { foreignKey: 'company_id' });
@@ -95,6 +96,7 @@ module.exports = {
     sequelize,
     Role,
     Permission,
+    RolePermission,
     User,
     Company,
     Page,
