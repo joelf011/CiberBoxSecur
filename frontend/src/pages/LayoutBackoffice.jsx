@@ -102,7 +102,7 @@ const LayoutBackoffice = () => {
             <div className="d-flex align-items-center ps-2 nav-label">
               <Link to="/" className="d-flex align-items-center ">
                 <img
-                  src={Logo} alt="CiberBoxSecur Logo"  style={{ maxHeight:"60px", width: "145px"}}
+                  src={Logo} alt="CiberBoxSecur Logo"  style={{ maxHeight: "40px", width: "145px", objectFit: "contain", display: "block"}}
                 />
               </Link>
             </div>
@@ -186,8 +186,11 @@ const LayoutBackoffice = () => {
       <Offcanvas show={showMobileMenu} onHide={() => setShowMobileMenu(false)} placement="bottom" className="h-100 border-0 bg-dark text-white">
         <Offcanvas.Header className="border-bottom border-secondary border-opacity-25 p-4">
           <div className="d-flex align-items-center">
-            <FontAwesomeIcon icon={faShieldAlt} className="text-primary me-2 fs-4" />
-            <span className="fw-bold fs-4 text-white">Admin<span className="text-primary">Panel</span></span>
+            <img
+              src={Logo} 
+              alt="CiberBoxSecur Logo"  
+              style={{ height: "40px", width: "auto", objectFit: "contain", display: "block" }}
+            />
           </div>
           <button className="btn text-white p-2 border-0 shadow-none" onClick={() => setShowMobileMenu(false)}>
             <FontAwesomeIcon icon={faTimes} size="lg" />
