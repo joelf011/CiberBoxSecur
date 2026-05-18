@@ -1,4 +1,5 @@
 const { Incident } = require('../models');
+const auditLogController = require('./auditLogController');
 
 const incidentController = {
     // CREATE
@@ -18,6 +19,15 @@ const incidentController = {
                 severity: severity || 'Medium',
                 status: status || 'Open',
                 cncs_form_data
+            });
+
+            // LOG: incident reportad
+            await auditLogController.logEvent({
+                user_id: reported_by_user_id,
+                action: 'INCIDENT_CREATE',
+                entity_type: 'Incident',
+                entity_id: newIncident.id,
+                ip_address: req.ip
             });
 
             return res.status(201).json({ message: 'Incident reported successfully!', incident: newIncident });
@@ -40,7 +50,13 @@ const incidentController = {
     // READ ALL
     async findAll(req, res) {
         try {
+            let whereClause = {};
+            if (req.user.company_id) {
+                whereClause.company_id = req.user.company_id;
+            }
+
             const incidents = await Incident.findAll({
+                where: whereClause,
                 order: [['createdAt', 'DESC']]
             });
             return res.status(200).json(incidents);
@@ -56,8 +72,10 @@ const incidentController = {
             const { id } = req.params;
             const incident = await Incident.findByPk(id);
             
-            if (!incident) {
-                return res.status(404).json({ error: 'Incident not found.' });
+            if (!incident) return res.status(404).json({ error: 'Incident not found.' });
+
+            if (req.user.company_id && incident.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden: Access denied to this incident.' });
             }
 
             return res.status(200).json(incident);
@@ -74,12 +92,22 @@ const incidentController = {
             const updates = req.body;
 
             const incident = await Incident.findByPk(id);
-            
-            if (!incident) {
-                return res.status(404).json({ error: 'Incident not found.' });
+            if (!incident) return res.status(404).json({ error: 'Incident not found.' });
+
+            if (req.user.company_id && incident.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden.' });
             }
 
             await incident.update(updates);
+
+            // LOG: incident updated
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'INCIDENT_UPDATE',
+                entity_type: 'Incident',
+                entity_id: incident.id,
+                ip_address: req.ip
+            });
 
             return res.status(200).json({ message: 'Incident updated successfully!', incident });
         } catch (error) {
@@ -100,11 +128,22 @@ const incidentController = {
             const { id } = req.params;
             const incident = await Incident.findByPk(id);
             
-            if (!incident) {
-                return res.status(404).json({ error: 'Incident not found.' });
+            if (!incident) return res.status(404).json({ error: 'Incident not found.' });
+
+            if (req.user.company_id && incident.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden.' });
             }
 
             await incident.destroy();
+
+            // LOG: incident deleted
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'INCIDENT_DELETE',
+                entity_type: 'Incident',
+                entity_id: incident.id,
+                ip_address: req.ip
+            });
 
             return res.status(200).json({ message: 'Incident deleted successfully!' });
         } catch (error) {
@@ -119,15 +158,24 @@ const incidentController = {
             const { id } = req.params;
             const incident = await Incident.findByPk(id, { paranoid: false });
             
-            if (!incident) {
-                return res.status(404).json({ error: 'Incident not found.' });
+            if (!incident) return res.status(404).json({ error: 'Incident not found.' });
+            
+            if (req.user.company_id && incident.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden.' });
             }
 
-            if (incident.deletedAt === null) {
-                return res.status(400).json({ error: 'This incident is already active.' });
-            }
+            if (incident.deletedAt === null) return res.status(400).json({ error: 'This incident is already active.' });
 
             await incident.restore();
+
+            // LOG: Incident restored
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'INCIDENT_RESTORE',
+                entity_type: 'Incident',
+                entity_id: incident.id,
+                ip_address: req.ip
+            });
 
             return res.status(200).json({ message: 'Incident restored successfully!', incident });
         } catch (error) {

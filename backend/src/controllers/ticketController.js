@@ -1,5 +1,6 @@
 const { Ticket } = require('../models');
 const { Op } = require('sequelize');
+const auditLogController = require('./auditLogController');
 
 const ticketController = {
     // NEW TICKET
@@ -29,8 +30,15 @@ const ticketController = {
                 category,
                 subject,
                 description,
-                // priority and status with defaultValue ('Medium' and 'Open')
-                // assigned_to_user_id stay 'null'
+            });
+
+            // LOG: ticket created
+            await auditLogController.logEvent({
+                user_id: opened_by_user_id,
+                action: 'TICKET_CREATE',
+                entity_type: 'Ticket',
+                entity_id: newTicket.id,
+                ip_address: req.ip
             });
 
             return res.status(201).json({ message: 'Ticket opened successfully!', ticket: newTicket });
@@ -52,7 +60,15 @@ const ticketController = {
     // LIST ALL
     async findAll(req, res) {
         try {
-            const tickets = await Ticket.findAll({ order: [['createdAt', 'DESC']] });
+            let whereClause = {};
+            if (req.user.company_id) {
+                whereClause.company_id = req.user.company_id;
+            }
+
+            const tickets = await Ticket.findAll({ 
+                where: whereClause,
+                order: [['createdAt', 'DESC']] 
+            });
             return res.status(200).json(tickets);
         } catch (error) {
             console.error('Find All Tickets error:', error);
@@ -67,6 +83,10 @@ const ticketController = {
             const ticket = await Ticket.findByPk(id);
             
             if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
+
+            if (req.user.company_id && ticket.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden: Access denied to this ticket.' });
+            }
 
             return res.status(200).json(ticket);
         } catch (error) {
@@ -86,11 +106,24 @@ const ticketController = {
             const ticket = await Ticket.findByPk(id);
             if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
 
+            if (req.user.company_id && ticket.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden.' });
+            }
+
             await ticket.update({ 
                 category, 
                 priority, 
                 status, 
                 assigned_to_user_id 
+            });
+
+            // LOG: ticket updated
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'TICKET_UPDATE',
+                entity_type: 'Ticket',
+                entity_id: ticket.id,
+                ip_address: req.ip
             });
 
             return res.status(200).json({ message: 'Ticket updated successfully!', ticket });
@@ -114,7 +147,21 @@ const ticketController = {
             
             if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
 
+            if (req.user.company_id && ticket.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden.' });
+            }
+
             await ticket.destroy();
+
+            // LOG: ticket deleted
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'TICKET_DELETE',
+                entity_type: 'Ticket',
+                entity_id: ticket.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Ticket deleted successfully!' });
         } catch (error) {
             console.error('Delete Ticket error:', error);
@@ -129,9 +176,24 @@ const ticketController = {
             const ticket = await Ticket.findByPk(id, { paranoid: false });
             
             if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
+
+            if (req.user.company_id && ticket.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden.' });
+            }
+
             if (ticket.deletedAt === null) return res.status(400).json({ error: 'This ticket is already active.' });
 
             await ticket.restore();
+
+            // LOG: ticket restored
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'TICKET_RESTORE',
+                entity_type: 'Ticket',
+                entity_id: ticket.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Ticket restored successfully!', ticket });
         } catch (error) {
             console.error('Restore Ticket error:', error);
