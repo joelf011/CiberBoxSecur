@@ -1,6 +1,7 @@
 const { Article } = require('../models');
 const { Op } = require('sequelize');
 const fs = require('fs');
+const auditLogController = require('./auditLogController');
 
 const articleController = {
     // CREATE
@@ -14,6 +15,15 @@ const articleController = {
                 author_id, title, slug, summary, content_body, cover_image,
                 published_date: published_date || null,
                 status: status || 'Draft'
+            });
+
+            // LOG: article created
+            await auditLogController.logEvent({
+                user_id: author_id,
+                action: 'ARTICLE_CREATE',
+                entity_type: 'Article',
+                entity_id: newArticle.id,
+                ip_address: req.ip
             });
 
             return res.status(201).json({ message: 'Article created successfully!', article: newArticle });
@@ -110,6 +120,16 @@ const articleController = {
             }
 
             await article.update({ title, slug, summary, content_body, cover_image, published_date, status });
+
+            // LOG: update article
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'ARTICLE_UPDATE',
+                entity_type: 'Article',
+                entity_id: article.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Article updated successfully!', article });
         } catch (error) {
             if (req.file) fs.unlinkSync(req.file.path);
@@ -129,6 +149,16 @@ const articleController = {
             if (!article) return res.status(404).json({ error: 'Article not found.' });
 
             await article.destroy();
+
+            // LOG: article deleted
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'ARTICLE_DELETE',
+                entity_type: 'Article',
+                entity_id: article.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Article deleted successfully!' });
         } catch (error) {
             console.error('Delete Article error:', error);

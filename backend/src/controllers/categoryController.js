@@ -1,4 +1,5 @@
 const { Category } = require('../models');
+const auditLogController = require('./auditLogController');
 
 // Automatic slug ("NIS 2 alerts -> nis2-alerts")
 const generateSlug = (text) => {
@@ -36,6 +37,16 @@ const categoryController = {
             if (!slug) slug = generateSlug(name);
 
             const newCategory = await Category.create({ name, slug });
+
+            // LOG: category created
+            await auditLogController.logEvent({
+                user_id: req.user ? req.user.id : null,
+                action: 'CATEGORY_CREATE',
+                entity_type: 'Category',
+                entity_id: newCategory.id,
+                ip_address: req.ip
+            });
+
             return res.status(201).json({ message: 'Category created successfully!', data: newCategory });
         } catch (error) {
             if (error.name === 'SequelizeUniqueConstraintError') {
@@ -59,6 +70,16 @@ const categoryController = {
             if (name && !slug) slug = generateSlug(name);
 
             await category.update({ name, slug: slug || category.slug });
+
+            // LOG: Category updated
+            await auditLogController.logEvent({
+                user_id: req.user ? req.user.id : null,
+                action: 'CATEGORY_UPDATE',
+                entity_type: 'Category',
+                entity_id: category.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Category updated successfully!', data: category });
         } catch (error) {
             if (error.name === 'SequelizeUniqueConstraintError') {
@@ -78,6 +99,16 @@ const categoryController = {
             if (!category) return res.status(404).json({ error: 'Category not found.' });
 
             await category.destroy();
+
+            // LOG: Category deleted
+            await auditLogController.logEvent({
+                user_id: req.user ? req.user.id : null,
+                action: 'CATEGORY_DELETE',
+                entity_type: 'Category',
+                entity_id: category.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Category deleted successfully!' });
         } catch (error) {
             console.error('Delete Category error:', error);
