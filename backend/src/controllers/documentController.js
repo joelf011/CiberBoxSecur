@@ -1,5 +1,6 @@
 const { Document } = require('../models');
 const fs = require('fs');
+const auditLogController = require('./auditLogController');
 
 const documentController = {
     // CREATE
@@ -33,12 +34,19 @@ const documentController = {
                 parent_document_id: parent_document_id || null
             });
 
+            // LOG: document created (Upload)
+            await auditLogController.logEvent({
+                user_id: uploaded_by_user_id,
+                action: 'DOCUMENT_CREATE',
+                entity_type: 'Document',
+                entity_id: newDocument.id,
+                ip_address: req.ip
+            });
+
             return res.status(201).json({ message: 'Document uploaded successfully!', document: newDocument });
         } catch (error) {
-            if (req.file){
-                fs.unlink(req.file.path, (err) => {
-                    if (err) console.error('Error deleting file:', err);
-                });
+            if (req.file && fs.existsSync(req.file.path)){
+                fs.unlinkSync(req.file.path);
             }
             if (error.name === 'SequelizeForeignKeyConstraintError') {
                 return res.status(400).json({ error: 'The specified company or parent document does not exist.' });
@@ -54,7 +62,15 @@ const documentController = {
     // LIST ALL
     async findAll(req, res) {
         try {
-            const documents = await Document.findAll({ order: [['createdAt', 'DESC']] });
+            let whereClause = {};
+            if (req.user.company_id) {
+                whereClause.company_id = req.user.company_id;
+            }
+
+            const documents = await Document.findAll({ 
+                where: whereClause,
+                order: [['createdAt', 'DESC']] 
+            });
             return res.status(200).json(documents);
         } catch (error) {
             console.error('Find All Documents error:', error);
@@ -72,7 +88,22 @@ const documentController = {
             const document = await Document.findByPk(id);
             if (!document) return res.status(404).json({ error: 'Document not found.' });
 
+            // IDOR Check
+            if (req.user.company_id && document.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden.' });
+            }
+
             await document.update({ title, document_category, status });
+
+            // LOG: document updated
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'DOCUMENT_UPDATE',
+                entity_type: 'Document',
+                entity_id: document.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Document details updated!', document });
         } catch (error) {
             console.error('Update Document error:', error);
@@ -88,7 +119,22 @@ const documentController = {
             
             if (!document) return res.status(404).json({ error: 'Document not found.' });
 
+            // IDOR Check
+            if (req.user.company_id && document.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden.' });
+            }
+
             await document.destroy();
+
+            // LOG: document deleted
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'DOCUMENT_DELETE',
+                entity_type: 'Document',
+                entity_id: document.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Document deleted successfully!' });
         } catch (error) {
             console.error('Delete Document error:', error);
@@ -103,9 +149,25 @@ const documentController = {
             const document = await Document.findByPk(id, { paranoid: false });
             
             if (!document) return res.status(404).json({ error: 'Document not found.' });
+            
+            // IDOR Check
+            if (req.user.company_id && document.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden.' });
+            }
+
             if (document.deletedAt === null) return res.status(400).json({ error: 'This document is already active.' });
 
             await document.restore();
+
+            // LOG: documento restored
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'DOCUMENT_RESTORE',
+                entity_type: 'Document',
+                entity_id: document.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Document restored successfully!', document });
         } catch (error) {
             console.error('Restore Document error:', error);
