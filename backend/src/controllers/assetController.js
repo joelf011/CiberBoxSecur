@@ -1,4 +1,5 @@
 const { Asset } = require('../models');
+const auditLogController = require('./auditLogController');
 
 const assetController = {
     // CREATE
@@ -26,6 +27,15 @@ const assetController = {
                 status: status || 'Active'
             });
 
+            // LOG
+            await auditLogController.logEvent({
+                user_id: created_by_user_id,
+                action: 'ASSET_CREATE',
+                entity_type: 'Asset',
+                entity_id: newAsset.id,
+                ip_address: req.ip
+            });
+
             return res.status(201).json({ message: 'Asset created successfully!', asset: newAsset });
         } catch (error) {
             if (error.name === 'SequelizeForeignKeyConstraintError') {
@@ -48,8 +58,13 @@ const assetController = {
     // READ ALL
     async findAll(req, res) {
         try {
-            // TODO: Add a filter to list assets with a specific company_id
+            let whereClause = {};
+            if (req.user.company_id) {
+                whereClause.company_id = req.user.company_id;
+            }
+
             const assets = await Asset.findAll({
+                where: whereClause,
                 order: [['createdAt', 'DESC']]
             });
             return res.status(200).json(assets);
@@ -67,6 +82,10 @@ const assetController = {
             
             if (!asset) {
                 return res.status(404).json({ error: 'Asset not found.' });
+            }
+
+            if (req.user.company_id && asset.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden: Access denied to this asset.' });
             }
 
             return res.status(200).json(asset);
@@ -88,7 +107,20 @@ const assetController = {
                 return res.status(404).json({ error: 'Asset not found.' });
             }
 
+            if (req.user.company_id && asset.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden.' });
+            }
+
             await asset.update(updates);
+
+            // LOG: updated
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'ASSET_UPDATE',
+                entity_type: 'Asset',
+                entity_id: asset.id,
+                ip_address: req.ip
+            });
 
             return res.status(200).json({ message: 'Asset updated successfully!', asset });
         } catch (error) {
@@ -107,7 +139,20 @@ const assetController = {
                 return res.status(404).json({ error: 'Asset not found.' });
             }
 
+            if (req.user.company_id && asset.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden.' });
+            }
+
             await asset.destroy();
+
+            // LOG: deleted
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'ASSET_DELETE',
+                entity_type: 'Asset',
+                entity_id: asset.id,
+                ip_address: req.ip
+            });
 
             return res.status(200).json({ message: 'Asset deleted successfully!' });
         } catch (error) {
@@ -126,11 +171,24 @@ const assetController = {
                 return res.status(404).json({ error: 'Asset not found.' });
             }
 
+            if (req.user.company_id && asset.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden.' });
+            }
+
             if (asset.deletedAt === null) {
                 return res.status(400).json({ error: 'This asset is already active.' });
             }
 
             await asset.restore();
+
+            // LOG: restored
+            await auditLogController.logEvent({
+                user_id: req.user.id,
+                action: 'ASSET_RESTORE',
+                entity_type: 'Asset',
+                entity_id: asset.id,
+                ip_address: req.ip
+            });
 
             return res.status(200).json({ message: 'Asset restored successfully!', asset });
         } catch (error) {
