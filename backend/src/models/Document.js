@@ -9,14 +9,16 @@ const Document = sequelize.define('Document', {
     },
     company_id: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: { model: 'Companies', key: 'id' }
     },
     uploaded_by_user_id: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: { model: 'Users', key: 'id' }
     },
     document_category: { 
-        type: DataTypes.ENUM('Policies', 'Network', 'Training', 'Incident_Response', 'Other'),
+        type: DataTypes.ENUM('Policies', 'Network', 'Training', 'Incident_Response', 'Templates', 'Other'),
         allowNull: false
     },
     title: {
@@ -26,6 +28,19 @@ const Document = sequelize.define('Document', {
     file_path: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    is_action_required: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    status: {
+        type: DataTypes.ENUM('Informational', 'Pending_Client', 'Submitted', 'Approved', 'Rejected'),
+        defaultValue: 'Informational'
+    },
+    parent_document_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: { model: 'Documents', key: 'id' }
     }
 }, {
     tableName: 'Documents',

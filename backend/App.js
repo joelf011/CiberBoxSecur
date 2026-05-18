@@ -9,6 +9,7 @@ const companyRoutes = require('./src/routes/companyRoutes');
 const roleRoutes = require('./src/routes/roleRoutes');
 const assetRoutes = require('./src/routes/assetRoutes');
 const incidentRoutes = require('./src/routes/incidentRoutes');
+const documentRoutes = require('./src/routes/documentRoutes');
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use('/api/companies', companyRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/incidents', incidentRoutes);
+app.use('/api/documents', documentRoutes);
 
 // --- Test ---
 app.get('/', (req, res) => {
