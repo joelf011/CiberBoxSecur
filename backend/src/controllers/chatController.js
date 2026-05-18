@@ -1,5 +1,6 @@
 const { Chat, ChatUser, Message, User } = require('../models');
 const { Op } = require('sequelize');
+const auditLogController = require('./auditLogController');
 
 const chatController = {
 
@@ -42,6 +43,15 @@ const chatController = {
                 { chat_id: newChat.id, user_id: target_user_id }
             ]);
 
+            // LOG: new room created
+            await auditLogController.logEvent({
+                user_id: my_id,
+                action: 'CHAT_CREATE',
+                entity_type: 'Chat',
+                entity_id: newChat.id,
+                ip_address: req.ip
+            });
+
             return res.status(201).json({ 
                 message: 'Chat created successfully!', 
                 chat_id: newChat.id 
@@ -79,6 +89,15 @@ const chatController = {
                 chat_id: chat_id || null,
                 ticket_id: ticket_id || null,
                 content
+            });
+
+            // LOG: message sent
+            await auditLogController.logEvent({
+                user_id: sender_id,
+                action: 'MESSAGE_SEND',
+                entity_type: 'Message',
+                entity_id: newMessage.id,
+                ip_address: req.ip
             });
 
             return res.status(201).json({ message: 'Message sent!', data: newMessage });
