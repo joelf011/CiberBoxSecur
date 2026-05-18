@@ -1,4 +1,5 @@
 const { Company } = require('../models');
+const auditLogController = require('./auditLogController');
 
 const companyController = {
     // CREATE
@@ -14,6 +15,15 @@ const companyController = {
                 address: address || null,
                 compliance_status: compliance_status || 'Awaiting',
                 is_active: true
+            });
+
+            // LOG: Company created
+            await auditLogController.logEvent({
+                user_id: req.user ? req.user.id : null,
+                action: 'COMPANY_CREATE',
+                entity_type: 'Company',
+                entity_id: newCompany.id,
+                ip_address: req.ip
             });
 
             return res.status(201).json({ 
@@ -76,6 +86,15 @@ const companyController = {
 
             await company.update(updates);
 
+            // LOG: company updated
+            await auditLogController.logEvent({
+                user_id: req.user ? req.user.id : null,
+                action: 'COMPANY_UPDATE',
+                entity_type: 'Company',
+                entity_id: company.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Company updated successfully!', company });
         } catch (error) {
             console.error('Update Company error:', error);
@@ -95,6 +114,15 @@ const companyController = {
             }
 
             await company.destroy();
+
+            // LOG: company deleted
+            await auditLogController.logEvent({
+                user_id: req.user ? req.user.id : null,
+                action: 'COMPANY_DELETE',
+                entity_type: 'Company',
+                entity_id: company.id,
+                ip_address: req.ip
+            });
 
             return res.status(200).json({ message: 'Company deleted successfully!' });
         } catch (error) {
@@ -119,6 +147,15 @@ const companyController = {
             }
 
             await company.restore();
+
+            // LOG: company restored
+            await auditLogController.logEvent({
+                user_id: req.user ? req.user.id : null,
+                action: 'COMPANY_RESTORE',
+                entity_type: 'Company',
+                entity_id: company.id,
+                ip_address: req.ip
+            });
 
             return res.status(200).json({ message: 'Company restored successfully!', company });
         } catch (error) {
