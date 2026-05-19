@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import LogoCiberBox from '../assets/logos/CiberBoxSecur-Minimal-color.svg';
 import { 
   faEnvelope, 
   faLock, 
   faSignInAlt,
-  faSpinner // Ícone novo para o loading
+  faSpinner
 } from "@fortawesome/free-solid-svg-icons";
 
-// Mudei o nome aqui de PaginaLogin para Login para bater certo com o ficheiro!
 const Login = () => {
   const navigate = useNavigate();
   
@@ -27,7 +26,6 @@ const Login = () => {
     setLoading(true); // Ativa o estado de carregamento
 
     try {
-      // ATENÇÃO: Confirma se a porta do teu backend local é a 3000
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: {
@@ -59,13 +57,13 @@ const Login = () => {
 
   return (
     <div className="vh-100 d-flex align-items-center justify-content-center bg-light">
-      <div className="card shadow-sm" style={{ width: '420px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.08)' }}>
+      <div className="card shadow-sm rounded-4 border-0" style={{ maxWidth: '420px', width: '100%' }}>
         
         {/* Cabeçalho Limpo */}
         <div className="text-center p-5 pb-3">
-          <img src={LogoCiberBox} alt="Logo CiberBox Security" style={{ height: '60px', width: 'auto', marginBottom: '1.5rem' }} />
-          <h2 className="fs-4 fw-bold text-dark mb-1">Bem-vindo de volta</h2>
-          <p className="small text-muted">Acesso reservado à gestão CiberBoxSecur</p>
+          <img src={LogoCiberBox} alt="Logo CiberBox Security" className="mb-4" style={{ height: '60px' }} />
+          <h2 className="fs-4 fw-bold text-dark mb-1">Bem-vindo</h2>
+          <p className="small text-muted">Acesso reservado à plataforma</p>
         </div>
         
         {/* Formulário */}
@@ -81,36 +79,38 @@ const Login = () => {
           <form onSubmit={handleSubmit}>
             
             <div className="mb-3">
-              <label className="form-label small fw-bold text-secondary">E-mail Corporativo</label>
+              <label className="form-label small fw-bold text-secondary">E-mail</label>
               <div className="input-group input-group-lg">
-                <span className="input-group-text bg-white text-muted border-end-0 px-3">
-                  <FontAwesomeIcon icon={faEnvelope} style={{ fontSize: '1rem' }} />
+                <span className="input-group-text bg-light text-muted px-3">
+                  <FontAwesomeIcon icon={faEnvelope} className="fs-6" />
                 </span>
                 <input 
                   type="email" 
-                  className="form-control border-start-0 ps-0 text-muted" 
+                  className="form-control text-muted shadow-none"
                   style={{ fontSize: '0.95rem', boxShadow: 'none' }}
-                  placeholder="exemplo@cyberrisk.pt"
+                  placeholder="exemplo@cyberbox.pt"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required 
                   disabled={loading}
-                />
+                  />
               </div>
             </div>
 
             <div className="mb-4">
               <div className="d-flex justify-content-between align-items-center mb-1">
                 <label className="form-label small fw-bold text-secondary mb-0">Password</label>
-                <a href="#" className="text-decoration-none text-primary" style={{ fontSize: '12px' }}>Recuperar?</a>
+                <Link to="/recuperar-password" className="text-decoration-none text-primary small" style={{ fontSize: '12px' }}>
+                  Recuperar password
+                </Link>
               </div>
               <div className="input-group input-group-lg">
-                <span className="input-group-text bg-white text-muted border-end-0 px-3">
-                  <FontAwesomeIcon icon={faLock} style={{ fontSize: '1rem' }} />
+                <span className="input-group-text bg-light text-muted px-3">
+                  <FontAwesomeIcon icon={faLock} className="fs-6" />
                 </span>
                 <input 
                   type="password" 
-                  className="form-control border-start-0 ps-0 text-muted" 
+                  className="form-control text-muted shadow-none" 
                   style={{ fontSize: '0.95rem', boxShadow: 'none' }}
                   placeholder="••••••••"
                   value={password}
@@ -123,8 +123,7 @@ const Login = () => {
 
             <button 
               type="submit" 
-              className="btn btn-primary btn-lg w-100 fw-bold shadow-sm rounded-3 mt-2"
-              style={{ fontSize: '1rem' }}
+              className="btn btn-primary btn-lg w-100 fw-bold shadow-sm rounded-3 mt-2 fs-6"
               disabled={loading}
             >
               {loading ? (
@@ -134,7 +133,7 @@ const Login = () => {
                 </>
               ) : (
                 <>
-                  Entrar na Plataforma
+                  Entrar
                   <FontAwesomeIcon icon={faSignInAlt} className="ms-2" />
                 </>
               )}
