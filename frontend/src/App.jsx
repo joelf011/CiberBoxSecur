@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import LayoutBackoffice from './pages/LayoutBackoffice';
 import LayoutWebsite from './components/LayoutWebsite';
 import Login from './pages/Login';
+import RecuperarPassword from './pages/RecuperarPassword';
 import AdminForum from './pages/admin/AdminForum';
 import AdminLogs from './pages/admin/AdminLogs';
 import GestaoConteudos from './pages/admin/GestaoConteudos';
@@ -18,6 +19,7 @@ function App() {
 
       {/* Rota de Login */}
       <Route path="/login" element={<Login />} />
+      <Route path="/recuperar-password" element={<RecuperarPassword />} />
 
       {/* Rotas do Backoffice */}
       <Route path="/admin" element={<LayoutBackoffice />}>
