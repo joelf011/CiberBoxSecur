@@ -2,12 +2,17 @@ const express = require('express');
 const router = express.Router();
 const incidentController = require('../controllers/incidentController');
 const authMiddleware = require('../middlewares/authMiddleware');
+const checkPermission = require('../middlewares/permissionMiddleware');
 
-router.post('/', authMiddleware, incidentController.create);
-router.get('/', authMiddleware, incidentController.findAll);
-router.get('/:id', authMiddleware, incidentController.findOne);
-router.put('/:id', authMiddleware, incidentController.update);
-router.delete('/:id', authMiddleware, incidentController.delete);
-router.patch('/:id/restore', authMiddleware, incidentController.restore);
+// Require authentication
+router.use(authMiddleware);
+
+// Specific permissions
+router.post('/', checkPermission('CREATE_INCIDENT'), incidentController.create);
+router.get('/', checkPermission('VIEW_INCIDENTS'), incidentController.findAll);
+router.get('/:id', checkPermission('VIEW_INCIDENTS'), incidentController.findOne);
+router.put('/:id', checkPermission('UPDATE_INCIDENT'), incidentController.update);
+router.delete('/:id', checkPermission('DELETE_INCIDENT'), incidentController.delete);
+router.patch('/:id/restore', checkPermission('RESTORE_INCIDENT'), incidentController.restore);
 
 module.exports = router;
