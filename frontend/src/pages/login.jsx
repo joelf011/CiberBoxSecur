@@ -3,103 +3,147 @@ import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import LogoCiberBox from '../assets/logos/CiberBoxSecur-Minimal-color.svg';
 import { 
-  faShieldAlt, 
   faEnvelope, 
   faLock, 
-  faSignInAlt 
+  faSignInAlt,
+  faSpinner // Ícone novo para o loading
 } from "@fortawesome/free-solid-svg-icons";
 
-const PaginaLogin = () => {
+// Mudei o nome aqui de PaginaLogin para Login para bater certo com o ficheiro!
+const Login = () => {
   const navigate = useNavigate();
   
-  // Estado para capturar os dados do formulário
+  // Estados para capturar os dados do formulário
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  // Estados para gerir a interface (erros e carregamento)
+  const [erro, setErro] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Tentativa de login com:", { email, password });
-    
-    // Aqui podes adicionar a tua lógica de validação
-    // Por agora, redireciona diretamente como fizeste antes
-    navigate('/admin/dashboard'); 
+    setErro(''); // Limpa erros antigos
+    setLoading(true); // Ativa o estado de carregamento
+
+    try {
+      // ATENÇÃO: Confirma se a porta do teu backend local é a 3000
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Ocorreu um erro ao tentar iniciar sessão.');
+      }
+
+      // SUCESSO! Guardar o token e os dados do utilizador no localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Redireciona para o painel
+      navigate('/admin/dashboard'); 
+
+    } catch (err) {
+      console.error("Erro no login:", err);
+      setErro(err.message); 
+    } finally {
+      setLoading(false); 
+    }
   };
 
   return (
-    <div className="vh-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#0b0e14' }}>
-      <div className="card text-center shadow-lg" style={{ width: '400px', borderRadius: '15px', overflow: 'hidden', border: 'none' }}>
+    <div className="vh-100 d-flex align-items-center justify-content-center bg-light">
+      <div className="card shadow-sm" style={{ width: '420px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.08)' }}>
         
-        {/* Cabeçalho */}
-        <div className="bg-dark text-white p-4">
-          <img src={LogoCiberBox} alt="Logo CiberBox Security" className="mb-1" style={{ height: '70px', width: 'auto' }} />
-          <h2 className="fs-4 fw-bold">CiberBox Security</h2>
-          <p className="small text-secondary">Introduza as suas credenciais para aceder</p>
+        {/* Cabeçalho Limpo */}
+        <div className="text-center p-5 pb-3">
+          <img src={LogoCiberBox} alt="Logo CiberBox Security" style={{ height: '60px', width: 'auto', marginBottom: '1.5rem' }} />
+          <h2 className="fs-4 fw-bold text-dark mb-1">Bem-vindo de volta</h2>
+          <p className="small text-muted">Acesso reservado à gestão CiberBoxSecur</p>
         </div>
         
         {/* Formulário */}
-        <div className="card-body p-4 bg-white">
+        <div className="card-body px-5 pb-5 pt-2">
+          
+          {erro && (
+            <div className="alert alert-danger small py-2 mb-4 text-center border-0 rounded-3" role="alert">
+              <FontAwesomeIcon icon={faLock} className="me-2" />
+              {erro}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit}>
             
-            {/* Campo Email */}
-            <div className="mb-3 text-start">
-              <label className="form-label small fw-bold text-muted">E-mail</label>
-              <div className="input-group">
-                <span className="input-group-text bg-light border-end-0">
-                  <FontAwesomeIcon icon={faEnvelope} className="text-secondary" />
+            <div className="mb-3">
+              <label className="form-label small fw-bold text-secondary">E-mail Corporativo</label>
+              <div className="input-group input-group-lg">
+                <span className="input-group-text bg-white text-muted border-end-0 px-3">
+                  <FontAwesomeIcon icon={faEnvelope} style={{ fontSize: '1rem' }} />
                 </span>
                 <input 
                   type="email" 
-                  className="form-control bg-light border-start-0" 
-                  placeholder="exemplo@empresa.com"
+                  className="form-control border-start-0 ps-0 text-muted" 
+                  style={{ fontSize: '0.95rem', boxShadow: 'none' }}
+                  placeholder="exemplo@cyberrisk.pt"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required 
+                  disabled={loading}
                 />
               </div>
             </div>
 
-            {/* Campo Password */}
-            <div className="mb-4 text-start">
-              <label className="form-label small fw-bold text-muted">Password</label>
-              <div className="input-group">
-                <span className="input-group-text bg-light border-end-0">
-                  <FontAwesomeIcon icon={faLock} className="text-secondary" />
+            <div className="mb-4">
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <label className="form-label small fw-bold text-secondary mb-0">Password</label>
+                <a href="#" className="text-decoration-none text-primary" style={{ fontSize: '12px' }}>Recuperar?</a>
+              </div>
+              <div className="input-group input-group-lg">
+                <span className="input-group-text bg-white text-muted border-end-0 px-3">
+                  <FontAwesomeIcon icon={faLock} style={{ fontSize: '1rem' }} />
                 </span>
                 <input 
                   type="password" 
-                  className="form-control bg-light border-start-0" 
+                  className="form-control border-start-0 ps-0 text-muted" 
+                  style={{ fontSize: '0.95rem', boxShadow: 'none' }}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required 
+                  disabled={loading}
                 />
               </div>
             </div>
 
-            {/* Botão de Entrar */}
-            <button type="submit" className="btn btn-primary w-100 py-2 fw-bold d-flex align-items-center justify-content-center">
-              <FontAwesomeIcon icon={faSignInAlt} className="me-2" />
-              Entrar no Sistema
+            <button 
+              type="submit" 
+              className="btn btn-primary btn-lg w-100 fw-bold shadow-sm rounded-3 mt-2"
+              style={{ fontSize: '1rem' }}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <FontAwesomeIcon icon={faSpinner} spin className="me-2" />
+                  A validar...
+                </>
+              ) : (
+                <>
+                  Entrar na Plataforma
+                  <FontAwesomeIcon icon={faSignInAlt} className="ms-2" />
+                </>
+              )}
             </button>
-
           </form>
-
-          <div className="mt-3">
-            <a href="#" className="text-decoration-none small text-primary" style={{ fontSize: '12px' }}>
-              Esqueceu-se da password?
-            </a>
-          </div>
-        </div>
-        
-        {/* Rodapé */}
-        <div className="card-footer bg-light py-3">
-          <small className="text-muted" style={{ fontSize: '10px' }}>
-            Acesso Restrito a Pessoal Autorizado.
-          </small>
         </div>
       </div>
     </div>
   );
 };
 
-export default PaginaLogin;
+export default Login;
