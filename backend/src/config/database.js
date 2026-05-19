@@ -10,9 +10,18 @@ const sequelize = new Sequelize(
         dialect: 'postgres',
         port: process.env.DB_PORT,
         logging: false, // change to console.log to show SQL on terminal
+
+        // NEON -> SSl
+        dialectOptions: {
+            ssl: {
+                require: true,
+                rejectUnauthorized: false
+            }
+        },
+        
         define: {
             timestamps: true, // createdAt & updatedAt
-            underscored: true, // camelCase to snake_case (creaetdAt -> created_at)
+            underscored: true, // camelCase to snake_case (createdAt -> created_at)
             paranoid: true
         }
     }
