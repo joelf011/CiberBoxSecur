@@ -1,7 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LayoutBackoffice from './pages/LayoutBackoffice';
 import LayoutWebsite from './components/LayoutWebsite';
-import PaginaLogin from './pages/PaginaLogin';
+import Login from './pages/Login';
+import RecuperarPassword from './pages/RecuperarPassword';
 import AdminForum from './pages/admin/AdminForum';
 import AdminLogs from './pages/admin/AdminLogs';
 import GestaoConteudos from './pages/admin/GestaoConteudos';
@@ -10,25 +11,28 @@ import GestaoUtilizadores from './pages/admin/GestaoUtilizadores';
 function App() {
   return (
     <Routes>
-      {/* 1. Rota do Website: Envolvemos o conteúdo no layout dos teus colegas */}
+      {/* Rota do Website */}
       <Route path="/" element={
         <LayoutWebsite>
           <div className="container py-5"><h1>Bem-vindo à CiberBoxSecur</h1></div>
         </LayoutWebsite>
       } />
 
-      {/* 2. Rota da Página Intermédia de Login */}
-      <Route path="/login" element={<PaginaLogin />} />
+      {/* Rota de Login */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/recuperar-password" element={<RecuperarPassword />} />
 
-      {/* 3. Rotas do Backoffice: Aqui injetamos os teus novos componentes */}
+      {/* Rotas do Backoffice */}
       <Route path="/admin" element={<LayoutBackoffice />}>
         {/* Redireciona /admin para /admin/dashboard automaticamente */}
         <Route index element={<Navigate to="dashboard" replace />} />
         
+        {/* Dashboard */}
         <Route path="dashboard" element={<div>Conteúdo da Dashboard em breve...</div>} />
         
-        {/* ESTA É A ROTA QUE TESTA O TEU FÓRUM */}
         <Route path="forum" element={<AdminForum />} />
+        <Route path="cms" element={<GestaoConteudos />} />
+        <Route path="logs" element={<AdminLogs />} />
         
         <Route path="cms" element={<GestaoConteudos />} />
         <Route path="users" element={<GestaoUtilizadores />} />
