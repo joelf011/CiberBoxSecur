@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, Link } from 'react-router-dom';
 import { Container, Nav, Offcanvas } from 'react-bootstrap';
+import Logo from '../assets/logos/CiberBoxSecur-Minimal-color.svg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faChartLine, faComments, faEdit, faUsers,
@@ -99,8 +100,11 @@ const LayoutBackoffice = () => {
         <div className="d-flex align-items-center justify-content-between px-3 overflow-hidden" style={{ height: '70px', flexShrink: 0 }}>
           {!isCollapsed && (
             <div className="d-flex align-items-center ps-2 nav-label">
-              <FontAwesomeIcon icon={faShieldAlt} className="text-primary me-2 fs-4" />
-              <span className="fw-bold fs-5 mb-0">Admin<span className="text-primary">Panel</span></span>
+              <Link to="/" className="d-flex align-items-center ">
+                <img
+                  src={Logo} alt="CiberBoxSecur Logo"  style={{ maxHeight:"60px", width: "145px"}}
+                />
+              </Link>
             </div>
           )}
           <div className={isCollapsed ? "w-100 d-flex justify-content-center" : ""}>
