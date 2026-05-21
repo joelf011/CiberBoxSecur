@@ -75,12 +75,18 @@ const userController = {
     async updateAdmin(req, res) {
         try {
             const { id } = req.params;
-            const { name, role_id, company_id, is_active } = req.body;
+            const { name, email, role_id, company_id, is_active, password } = req.body;
 
             const user = await User.findByPk(id);
             if (!user) return res.status(404).json({ error: 'User not found' });
 
-            await user.update({ name, role_id, company_id, is_active });
+            let updateData = { name, email, role_id, company_id, is_active };
+
+            if (password) {
+                updateData.password = await bcrypt.hash(password, 10);
+            }
+
+            await user.update(updateData);
 
             // LOG: Admin chaged this account
             await auditLogController.logEvent({
