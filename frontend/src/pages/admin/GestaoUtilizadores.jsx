@@ -1,42 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Row, Col, Form, InputGroup, Badge, Pagination, Spinner, Alert } from 'react-bootstrap';
+import { Card, Table, Button, Row, Col, Form, InputGroup, Badge, Pagination, Spinner, Alert, Modal } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faSearch, faUserPlus, faEdit, faTrash, faUsers, faRefresh 
-} from "@fortawesome/free-solid-svg-icons";
+import { faSearch, faUserPlus, faEdit, faTrash, faUsers, faRefresh, faPaperPlane } from "@fortawesome/free-solid-svg-icons";
+import { usersApi } from '../../api/usersApi';
+import { Alerts } from '../../utils/Alerts';
 
 const GestaoUtilizadores = () => {
   // Estados
   const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const currentUser = JSON.parse(localStorage.getItem('user'));
+  
+  // Estados Modal
+  const [showModal, setShowModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [formData, setFormData] = useState({ name: '', email: '', role_id: '' });
 
-  // URL do backend 
-  const API_URL = 'https://ciberbox-backend.onrender.com/api/users'; 
+  // Funções Modal
+  const handleClose = () => {
+    setShowModal(false);
+    setEditingUserId(null);
+  };
 
-  // Função para carregar os utilizadores
-  const fetchUtilizadores = async () => {
+  const handleShow = () => {
+    setEditingUserId(null);
+    setFormData({ name: '', email: '', role_id: '' });
+    setShowModal(true);
+  };
+
+  const handleEditClick = (user) => {
+    setEditingUserId(user.id);
+    setFormData({ name: user.name, email: user.email, role_id: user.role_id || '' });
+    setShowModal(true);
+  };
+
+  // Carregar Dados da API
+  const fetchData = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Token JWT guardado no login
-      const token = localStorage.getItem('token');
-
-      const response = await fetch(API_URL, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Não foi possível carregar os utilizadores do servidor.');
-      }
-
-      const data = await response.json();
-      setUsers(data);
+      const [usersData, rolesData] = await Promise.all([
+        usersApi.getUsers(),
+        usersApi.getRoles()
+      ]);
+      setUsers(usersData);
+      setRoles(rolesData);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -44,15 +56,76 @@ const GestaoUtilizadores = () => {
     }
   };
 
-  // Executa a função quando a página abre
   useEffect(() => {
-    fetchUtilizadores();
+    fetchData();
   }, []);
 
-  // Estado - Ativo/Inativo
-  const getStatusBadge = (status) => {
-    return status === 'Ativo' || status === true ? 'success' : 'danger';
+  // Ações da Tabela
+  const handleToggleStatus = async (user) => {
+    if (currentUser && currentUser.id === user.id) {
+      return Alerts.error("Não podes desativar a tua própria conta.");
+    }
+    try {
+      const newStatus = !user.is_active;
+      await usersApi.updateUser(user.id, { ...user, is_active: newStatus });
+      setUsers(users.map(u => u.id === user.id ? { ...u, is_active: newStatus } : u));
+    } catch (err) {
+      Alerts.error(`Erro: ${err.message}`);
+    }
   };
+
+  const handleResendActivation = async (userId) => {
+    try {
+      const message = await usersApi.resendActivation(userId);
+      Alerts.success(message || 'Convite reenviado com sucesso!');
+    } catch (err) {
+      Alerts.error(`Erro: ${err.message}`);
+    }
+  };
+
+  const handleDelete = async (userId) => {
+    const result = await Alerts.confirmDelete("Vais eliminar este utilizador do sistema.");
+    if (result.isConfirmed) {
+      try {
+        await usersApi.deleteUser(userId);
+        setUsers(users.filter(user => user.id !== userId));
+        Alerts.success("Utilizador eliminado com sucesso!");
+      } catch (err) {
+        Alerts.error(`Erro: ${err.message}`);
+      }
+    }
+  };
+
+  const handleSubmitUser = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      if (editingUserId) {
+        await usersApi.updateUser(editingUserId, formData);
+        Alerts.success("Utilizador atualizado com sucesso!");
+      } else {
+        await usersApi.createUser(formData);
+        Alerts.success("Utilizador criado e convite enviado!");
+      }
+      handleClose();
+      fetchData(); // Recarrega a tabela para ver o resultado
+    } catch (err) {
+      Alerts.error(`Erro ao guardar: ${err.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Filtro de Pesquisa
+  const filteredUsers = users.filter(user => {
+    const termo = searchTerm.toLowerCase();
+    const nomeDoCargo = roles.find(r => r.id === user.role_id)?.name || '';
+    return ( 
+      user.name.toLowerCase().includes(termo) || 
+      user.email.toLowerCase().includes(termo) ||
+      nomeDoCargo.toLowerCase().includes(termo)
+    );
+  });
 
   return (
     <div className="animate-fade-in py-2">
@@ -60,16 +133,15 @@ const GestaoUtilizadores = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="fs-4 fw-bold text-dark mb-1">
-            <FontAwesomeIcon icon={faUsers} className="text-primary me-2" />
-            Gestão de Utilizadores
+            <FontAwesomeIcon icon={faUsers} className="text-primary me-2" /> Gestão de Utilizadores
           </h2>
-          <p className="text-muted small">Controlo de acessos, cargos e estado das contas do sistema.</p>
+          <p className="text-muted small">Controlo de acessos, cargos e estado das contas.</p>
         </div>
         <div className="d-flex gap-2">
-          <Button variant="outline-secondary" className="rounded-3 border" onClick={fetchUtilizadores} title="Recarregar dados">
+          <Button variant="outline-secondary" className="rounded-3 border" onClick={fetchData} title="Recarregar dados">
             <FontAwesomeIcon icon={faRefresh} />
           </Button>
-          <Button variant="primary" className="rounded-3 border-0 fw-bold d-flex align-items-center gap-2 shadow-sm">
+          <Button variant="primary" className="rounded-3 border-0 fw-bold d-flex align-items-center gap-2 shadow-sm" onClick={handleShow}>
             <FontAwesomeIcon icon={faUserPlus} /> Adicionar Utilizador
           </Button>
         </div>
@@ -103,7 +175,7 @@ const GestaoUtilizadores = () => {
         </div>
       ) : error ? (
         <Alert variant="danger" className="rounded-4 border-0 shadow-sm">
-          <strong>Erro de Ligação</strong> {error} <br />
+          <strong>Erro de Ligação:</strong> {error}
         </Alert>
       ) : (
         /* TABELA DE UTILIZADORES */
@@ -120,39 +192,60 @@ const GestaoUtilizadores = () => {
                 </tr>
               </thead>
               <tbody style={{ fontSize: '0.85rem' }}>
-                {users.length === 0 ? (
+                {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="text-center py-4 text-muted">Nenhum utilizador encontrado na base de dados.</td>
+                    <td colSpan="5" className="text-center py-4 text-muted">
+                      {searchTerm ? 'Nenhum utilizador encontrado com essa pesquisa.' : 'Nenhum utilizador encontrado na base de dados.'}
+                    </td>
                   </tr>
                 ) : (
-                  users.map((user) => (
+                  filteredUsers.map((user) => (
                     <tr key={user.id}>
-                      <td className="px-4 py-3">
-                        <span className="fw-bold text-dark">{user.name}</span>
-                      </td>
-                      <td className="py-3 text-muted">
-                        {user.email}
-                      </td>
+                      <td className="px-4 py-3 fw-bold text-dark">{user.name}</td>
+                      <td className="py-3 text-muted">{user.email}</td>
                       <td className="py-3">
-                        {/* Se o teu backend envia apenas o ID, usamos uma tradução simples no frontend. 
-                            Se o teu backend envia o objeto Role (user.Role.name), podes alterar aqui. */}
                         <Badge bg="light" text="dark" className="border fw-normal">
-                          {user.Role ? user.Role.name : `Cargo ID: ${user.role_id}`}
+                          {roles.find(r => r.id === user.role_id)?.name || `Sem Cargo`}
                         </Badge>
                       </td>
                       <td className="py-3">
-                        {/* Usa o is_active do modelo User */}
-                        <Badge bg={user.is_active ? 'success' : 'danger'} className="fw-normal bg-opacity-75">
-                          {user.is_active ? 'Ativo' : 'Inativo'}
-                        </Badge>
+                        <Form.Check 
+                          type="switch"
+                          id={`switch-${user.id}`}
+                          checked={user.is_active}
+                          onChange={() => handleToggleStatus(user)}
+                          disabled={currentUser && currentUser.id === user.id}
+                          label={
+                            <Badge 
+                              bg={user.activation_token ? 'warning' : (user.is_active ? 'success' : 'danger')} 
+                              className={`fw-normal bg-opacity-75 ms-2 ${user.activation_token ? 'text-dark' : ''}`}
+                            >
+                              {user.activation_token ? 'Pendente' : (user.is_active ? 'Ativo' : 'Inativo')}
+                            </Badge>
+                          }
+                        />
                       </td>
                       <td className="px-4 py-3 text-end">
-                        <Button variant="light" size="sm" className="me-2 text-primary shadow-sm border">
-                          <FontAwesomeIcon icon={faEdit} />
-                        </Button>
-                        <Button variant="light" size="sm" className="text-danger shadow-sm border">
-                          <FontAwesomeIcon icon={faTrash} />
-                        </Button>
+                        {currentUser && currentUser.id === user.id ? (
+                          <span className="text-muted small fst-italic me-3">A tua conta</span>
+                        ) : (
+                          <>
+                            {user.activation_token && (
+                              <Button 
+                                variant="light" size="sm" className="me-2 text-warning shadow-sm border" 
+                                title="Reenviar e-mail de ativação" onClick={() => handleResendActivation(user.id)}
+                              >
+                                <FontAwesomeIcon icon={faPaperPlane} />
+                              </Button>
+                            )}
+                            <Button variant="light" size="sm" className="me-2 text-primary shadow-sm border" onClick={() => handleEditClick(user)}>
+                              <FontAwesomeIcon icon={faEdit} />
+                            </Button>
+                            <Button variant="light" size="sm" className="text-danger shadow-sm border" title="Eliminar utilizador" onClick={() => handleDelete(user.id)}>
+                              <FontAwesomeIcon icon={faTrash} />
+                            </Button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -160,10 +253,8 @@ const GestaoUtilizadores = () => {
               </tbody>
             </Table>
           </div>
-          
-          {/* PAGINAÇÃO */}
           <Card.Footer className="bg-white border-0 p-3 d-flex justify-content-between align-items-center">
-            <small className="text-muted">Total: {users.length} utilizadores registados</small>
+            <small className="text-muted">Total: {filteredUsers.length} utilizadores listados</small>
             <Pagination className="mb-0">
               <Pagination.Prev disabled />
               <Pagination.Item active>{1}</Pagination.Item>
@@ -172,6 +263,54 @@ const GestaoUtilizadores = () => {
           </Card.Footer>
         </Card>
       )}
+
+      {/* ADICIONAR / EDITAR UTILIZADOR */}
+      <Modal show={showModal} onHide={handleClose} centered backdrop="static">
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="fs-5 fw-bold">
+            {editingUserId ? 'Editar Utilizador' : 'Adicionar Novo Utilizador'}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form id="userForm" onSubmit={handleSubmitUser}>
+            <Form.Group className="mb-3">
+              <Form.Label className="small fw-bold text-secondary">Nome Completo</Form.Label>
+              <Form.Control 
+                type="text" placeholder="Ex: João Silva" required
+                value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label className="small fw-bold text-secondary">E-mail</Form.Label>
+              <Form.Control 
+                type="email" placeholder="exemplo@cyberrisk.pt" required
+                value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
+              />
+            </Form.Group>
+
+            {/* O Campo Cargo está agora esticado e liberto das Row/Cols */}
+            <Form.Group className="mb-3">
+              <Form.Label className="small fw-bold text-secondary">Cargo</Form.Label>
+              <Form.Select
+                required value={formData.role_id}
+                onChange={(e) => setFormData({...formData, role_id: Number(e.target.value)})}
+              >
+                <option value="" disabled>Selecione um cargo</option>
+                {roles.map((role) => (
+                  <option key={role.id} value={role.id}>{role.name}</option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0">
+          <Button variant="light" onClick={handleClose} className="border shadow-sm">Cancelar</Button>
+          <Button variant="primary" type="submit" form="userForm" className="shadow-sm fw-bold" disabled={isSubmitting}>
+            {isSubmitting ? 'A guardar...' : (editingUserId ? 'Guardar Alterações' : 'Guardar Utilizador')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
