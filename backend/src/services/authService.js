@@ -94,6 +94,45 @@ const authService = {
         await auditLogController.logEvent({ user_id: user.id, action: 'USER_LOGIN_SUCCESS', entity_type: 'User', entity_id: user.id, ip_address: ipAddress });
 
         return { token, user: { id: user.id, name: user.name, role_id: user.role_id } };
+    },
+
+    async forgotPassword(email, ipAddress) {
+        const user = await User.findOne({ where: { email } });
+        
+        if (!user) return true; 
+
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const tokenExpiresAt = new Date();
+        tokenExpiresAt.setHours(tokenExpiresAt.getHours() + 1);
+
+        user.activation_token = resetToken;
+        user.token_expires_at = tokenExpiresAt;
+        await user.save();
+
+        await auditLogController.logEvent({ 
+            user_id: user.id, action: 'USER_FORGOT_PASSWORD_REQUEST', entity_type: 'User', entity_id: user.id, ip_address: ipAddress 
+        });
+
+        await emailService.sendPasswordResetEmail(user.email, user.name, resetToken);
+        return true;
+    },
+
+    async resetPassword(token, newPassword, ipAddress) {
+        const user = await User.findOne({ where: { activation_token: token } });
+        
+        if (!user) throw new Error('Token inválido ou utilizador não encontrado.');
+        if (new Date() > new Date(user.token_expires_at)) throw new Error('Este link de recuperação já expirou.');
+
+        user.password = await bcrypt.hash(newPassword, 10);
+        user.activation_token = null;
+        user.token_expires_at = null;
+        await user.save();
+
+        await auditLogController.logEvent({ 
+            user_id: user.id, action: 'USER_PASSWORD_RESET_SUCCESS', entity_type: 'User', entity_id: user.id, ip_address: ipAddress 
+        });
+        
+        return true;
     }
 };
 

@@ -30,6 +30,28 @@ const emailService = {
         };
 
         await transporter.sendMail(mailOptions);
+    },
+
+    async sendPasswordResetEmail(userEmail, userName, resetToken) {
+        const resetLink = `http://localhost:5173/recuperar-password?token=${resetToken}`;
+
+        const mailOptions = {
+            from: '"CiberBoxSecur" <nao-responder@ciberboxsecur.com>',
+            to: userEmail,
+            subject: 'Recuperação de Password - CiberBoxSecur',
+            html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                    <h2>Olá, ${userName}</h2>
+                    <p>Recebemos um pedido para repor a sua password na plataforma CiberBoxSecur.</p>
+                    <p>Se foi o(a) próprio(a) a fazer este pedido, clique no botão abaixo para definir uma nova password:</p>
+                    <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px; margin-top: 15px;">Redefinir Password</a>
+                    <p style="margin-top: 30px; font-size: 0.85em; color: #777;">Este link expira em 1 hora por motivos de segurança.</p>
+                    <p style="font-size: 0.85em; color: #777;">Se não pediu a alteração da password, ignore este e-mail. A sua conta permanece segura.</p>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
     }
 };
 
