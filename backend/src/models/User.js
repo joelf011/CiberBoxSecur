@@ -26,7 +26,15 @@ const User = sequelize.define('User', {
     },
     password: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
+    },
+    activation_token: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    token_expires_at: {
+        type: DataTypes.DATE,
+        allowNull: true
     },
     phone: {
         type: DataTypes.STRING,
