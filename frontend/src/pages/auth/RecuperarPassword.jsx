@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import LogoCiberBox from '../assets/logos/CiberBoxSecur-Minimal-color.svg';
+import LogoCiberBox from '../../assets/logos/CiberBoxSecur-Minimal-color.svg';
 import { 
   faEnvelope, 
   faArrowLeft, 

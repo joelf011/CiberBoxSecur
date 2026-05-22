@@ -1,9 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LayoutBackoffice from './pages/LayoutBackoffice';
 import LayoutWebsite from './components/LayoutWebsite';
-import Login from './pages/Login';
-import DefinirPassword from './pages/DefinirPassword';
-import RecuperarPassword from './pages/RecuperarPassword';
+import Login from './pages/auth/Login';
+import DefinirPassword from './pages/auth/DefinirPassword';
+import RecuperarPassword from './pages/auth/RecuperarPassword';
 import AdminForum from './pages/admin/AdminForum';
 import AdminLogs from './pages/admin/AdminLogs';
 import GestaoConteudos from './pages/admin/GestaoConteudos';
