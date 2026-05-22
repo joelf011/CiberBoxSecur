@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { Container, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { usersApi } from '../../api/usersApi';
+import { Alerts } from '../../utils/Alerts';
+import LogoCiberBox from '../../assets/logos/CiberBoxSecur-Minimal-color.svg';
 
 const DefinirPassword = () => {
-  // Lê o '?token=123xyz' do endereço web
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token'); 
   const navigate = useNavigate();
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [status, setStatus] = useState({ type: '', message: '' });
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -18,45 +19,30 @@ const DefinirPassword = () => {
     
     // Validações básicas de segurança no frontend
     if (password !== confirmPassword) {
-      setStatus({ type: 'danger', message: 'As passwords não coincidem. Tente novamente.' });
-      return;
+      return Alerts.error('As passwords não coincidem. Tente novamente.');
     }
     
     if (password.length < 8) {
-      setStatus({ type: 'warning', message: 'A password deve ter pelo menos 8 caracteres.' });
-      return;
+      return Alerts.error('A password deve ter pelo menos 8 caracteres.');
     }
 
     setIsLoading(true);
-    setStatus({ type: '', message: '' });
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/activate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, newPassword: password })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Ocorreu um erro ao ativar a conta.');
-      }
-
-      // Sucesso!
-      setStatus({ type: 'success', message: 'Conta ativada com sucesso! A redirecionar para o Login...' });
+      const message = await usersApi.activateAccount(token, password);
       
-      // Espera 3 segundos para o utilizador ler a mensagem e envia-o para o Login
-      setTimeout(() => navigate('/login'), 3000);
+      // Mostra o sucesso e redireciona
+      await Alerts.success(message);
+      navigate('/login');
 
     } catch (err) {
-      setStatus({ type: 'danger', message: err.message });
+      Alerts.error(err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Barreira de segurança visual: Se alguém abrir a página sem token, avisamos logo.
+  // Barreira de segurança visual
   if (!token) {
     return (
       <Container className="d-flex justify-content-center align-items-center vh-100 bg-light">
@@ -70,18 +56,13 @@ const DefinirPassword = () => {
 
   return (
     <Container className="d-flex justify-content-center align-items-center vh-100 bg-light">
-      <Card className="shadow-sm border-0 rounded-4 p-4" style={{ width: '100%', maxWidth: '450px' }}>
-        <Card.Body>
+      <Card className="shadow-lg border-0 rounded-4" style={{ width: '100%', maxWidth: '450px' }}>
+        <Card.Body className="p-5">
           <div className="text-center mb-4">
-            <h3 className="fw-bold text-dark">Ativar Conta</h3>
-            <p className="text-muted small">Defina a sua password para aceder à plataforma CiberBoxSecur.</p>
+            <img src={LogoCiberBox} alt="CiberBoxSecur" width="180" className="mb-3" />
+            <h4 className="fw-bold text-dark">Ativar Conta</h4>
+            <p className="text-muted small">Defina a sua password para aceder à plataforma.</p>
           </div>
-
-          {status.message && (
-            <Alert variant={status.type} className="small rounded-3">
-              {status.message}
-            </Alert>
-          )}
 
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
@@ -90,9 +71,9 @@ const DefinirPassword = () => {
                 type="password" 
                 placeholder="Mínimo de 8 caracteres" 
                 required
+                className="bg-light border-0 px-3 py-2"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={status.type === 'success'}
               />
             </Form.Group>
 
@@ -102,9 +83,9 @@ const DefinirPassword = () => {
                 type="password" 
                 placeholder="Repita a password" 
                 required
+                className="bg-light border-0 px-3 py-2"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={status.type === 'success'}
               />
             </Form.Group>
 
@@ -112,9 +93,9 @@ const DefinirPassword = () => {
               variant="primary" 
               type="submit" 
               className="w-100 fw-bold py-2 rounded-3 shadow-sm" 
-              disabled={isLoading || status.type === 'success'}
+              disabled={isLoading}
             >
-              {isLoading ? <Spinner size="sm" animation="border" /> : 'Ativar Conta'}
+              {isLoading ? <><Spinner size="sm" animation="border" className="me-2" /> A ativar...</> : 'Ativar Conta'}
             </Button>
           </Form>
         </Card.Body>

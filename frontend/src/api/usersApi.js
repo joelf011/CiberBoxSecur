@@ -52,6 +52,16 @@ export const usersApi = {
     }
   },
 
+  // Ativar Conta
+  activateAccount: async (token, newPassword) => {
+    try {
+      const response = await api.post('/auth/activate', { token, newPassword });
+      return response.data.message;
+    } catch (error) {
+      throw new Error(error.response?.data?.error || 'Erro ao ativar a conta.');
+    }
+  },
+
   // Reenviar Ativação
   resendActivation: async (userId) => {
     try {
@@ -59,6 +69,26 @@ export const usersApi = {
       return response.data.message;
     } catch (error) {
       throw new Error(error.response?.data?.error || 'Erro ao reenviar convite.');
+    }
+  },
+
+  // Pede o link de recuperação
+  forgotPassword: async (email) => {
+    try {
+      const response = await api.post('/auth/forgot-password', { email });
+      return response.data.message;
+    } catch (error) {
+      throw new Error(error.response?.data?.error || 'Erro ao pedir recuperação.');
+    }
+  },
+
+  // Grava a nova password com o token
+  resetPassword: async (token, newPassword) => {
+    try {
+      const response = await api.post('/auth/reset-password', { token, newPassword });
+      return response.data.message;
+    } catch (error) {
+      throw new Error(error.response?.data?.error || 'Erro ao alterar password.');
     }
   }
 };
