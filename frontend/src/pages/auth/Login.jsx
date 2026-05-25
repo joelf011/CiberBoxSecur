@@ -26,7 +26,7 @@ const Login = () => {
     setLoading(true); // Ativa o estado de carregamento
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch('https://ciberbox-backend.onrender.com/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
