@@ -8,6 +8,7 @@ import AdminForum from './pages/admin/AdminForum';
 import AdminLogs from './pages/admin/AdminLogs';
 import GestaoConteudos from './pages/admin/GestaoConteudos';
 import GestaoUtilizadores from './pages/admin/GestaoUtilizadores';
+import GestaoCargos from './pages/admin/GestaoCargos';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
         
         <Route path="cms" element={<GestaoConteudos />} />
         <Route path="users" element={<GestaoUtilizadores />} />
+        <Route path="cargos" element={<GestaoCargos />} />
         <Route path="logs" element={<div><AdminLogs /></div>} />
         <Route path="docs" element={<div>Repositório Global em breve...</div>} />
       </Route>
