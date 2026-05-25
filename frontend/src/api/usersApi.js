@@ -42,6 +42,16 @@ export const usersApi = {
     }
   },
 
+  getMyProfile: async () => {
+    const response = await api.get('/users/profile'); 
+    return response.data;
+  },
+
+  updateMyProfile: async (profileData) => {
+    const response = await api.put('/users/profile', profileData);
+    return response.data;
+  },
+
   // Eliminar Utilizador
   deleteUser: async (userId) => {
     try {

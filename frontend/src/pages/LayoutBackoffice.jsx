@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Outlet, NavLink, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, NavLink, Link, useNavigate} from 'react-router-dom';
 import { Container, Nav, Offcanvas } from 'react-bootstrap';
 import Logo from '../assets/logos/CiberBoxSecur-Minimal-color.svg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,10 +8,43 @@ import {
   faHistory, faFolderOpen, faSignOutAlt, faShieldAlt,
   faIndent, faOutdent, faBars, faTimes, faUserShield
 } from "@fortawesome/free-solid-svg-icons";
+import { usersApi } from '../api/usersApi';
 
 const LayoutBackoffice = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const navigate = useNavigate();
+  
+  // Estado para guardar os dados do utilizador
+  const [userProfile, setUserProfile] = useState({ name: 'A carregar...', email: '', avatar: null });
+
+  const handleLogout = () => {
+    // Apagar o token
+    localStorage.removeItem('token'); 
+    
+    // (Opcional) Se tiveres guardado mais coisas no localStorage, apaga-as também:
+    // localStorage.removeItem('user');
+    
+    navigate('/');
+  };
+
+  // Carregar dados
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await usersApi.getMyProfile();
+        setUserProfile(data);
+      } catch (error) {
+        console.error("Erro ao carregar perfil no Sidebar:", error);
+      }
+    };
+    fetchProfile();
+    window.addEventListener('perfilAtualizado', fetchProfile);
+
+    return () => {
+      window.removeEventListener('perfilAtualizado', fetchProfile);
+    };
+  }, []);
 
   const navItems = [
     { path: '/admin/dashboard', icon: faChartLine, label: 'Dashboard' },
@@ -101,7 +134,7 @@ const LayoutBackoffice = () => {
         <div className="d-flex align-items-center justify-content-between px-3 overflow-hidden" style={{ height: '70px', flexShrink: 0 }}>
           {!isCollapsed && (
             <div className="d-flex align-items-center ps-2 nav-label">
-              <Link to="/" className="d-flex align-items-center ">
+              <Link to="/admin/dashboard" className="d-flex align-items-center ">
                 <img
                   src={Logo} alt="CiberBoxSecur Logo"  style={{ maxHeight: "40px", width: "145px", objectFit: "contain", display: "block"}}
                 />
@@ -127,22 +160,35 @@ const LayoutBackoffice = () => {
         </Nav>
 
         <div className="mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 py-3 overflow-hidden" style={{ flexShrink: 0 }}>
-          <div className="d-flex align-items-center mb-3">
-            <div className="icon-wrapper">
-              <div className="rounded-circle bg-primary d-flex align-items-center justify-content-center fw-bold shadow-sm text-white"
-                style={{ width: '38px', height: '38px', fontSize: '13px' }}>A</div>
+          {/* Link para o Perfil */}
+          <Link to="/admin/perfil" className="text-decoration-none d-block mx-2 profile-section-hover">
+            <div className="d-flex align-items-center mb-3 mt-2">
+              <div className="icon-wrapper">
+                {userProfile.avatar ? (
+                  <img src={userProfile.avatar} alt="Avatar" className="rounded-circle object-fit-cover shadow-sm border border-secondary" style={{ width: '38px', height: '38px' }} />
+                ) : (
+                  <div className="rounded-circle bg-primary d-flex align-items-center justify-content-center fw-bold shadow-sm text-white" style={{ width: '38px', height: '38px', fontSize: '13px' }}>
+                    {userProfile.name ? userProfile.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                )}
+              </div>
+              <div className="nav-label overflow-hidden text-white">
+                <p className="mb-0 fw-bold small text-truncate">{userProfile.name}</p>
+                <small className="text-white-50 d-block text-truncate" style={{ fontSize: '11px' }}>{userProfile.email}</small>
+              </div>
             </div>
-            <div className="nav-label overflow-hidden">
-              <p className="mb-0 fw-bold small text-white text-truncate">System Admin</p>
-              <small className="text-white-50 d-block text-truncate" style={{ fontSize: '11px' }}>admin@cyberrisk.pt</small>
-            </div>
-          </div>
-          <Link to="/" className="side-link text-decoration-none py-2 bg-white bg-opacity-10 border-0 side-link-danger">
+          </Link>
+
+          <button 
+            onClick={handleLogout} 
+            className="side-link text-decoration-none py-2 bg-white bg-opacity-10 border-0 side-link-danger w-100 text-start"
+            style={{ cursor: 'pointer' }}
+          >
             <div className="icon-wrapper">
               <FontAwesomeIcon icon={faSignOutAlt} />
             </div>
             <span className="nav-label small fw-bold">Terminar Sessão</span>
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -209,19 +255,28 @@ const LayoutBackoffice = () => {
             ))}
           </Nav>
 
-          {/* DIV CORRIGIDA COM PADDING-BOTTOM PARA NÃO FICAR POR BAIXO DA BARRA */}
           <div className="offcanvas-footer mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 p-4">
-            <div className="d-flex align-items-center mb-4">
-              <div className="rounded-circle bg-primary d-flex align-items-center justify-content-center fw-bold me-3 shadow-sm text-white"
-                style={{ width: '45px', height: '45px' }}>A</div>
-              <div>
-                <h6 className="mb-0 fw-bold text-white">System Admin</h6>
-                <small className="text-white-50">admin@cyberrisk.pt</small>
+            {/* Link para o Perfil no Mobile --- */}
+            <Link to="/admin/perfil" className="text-decoration-none d-flex align-items-center mb-4" onClick={() => setShowMobileMenu(false)}>
+              {userProfile.avatar ? (
+                <img src={userProfile.avatar} alt="Avatar" className="rounded-circle object-fit-cover me-3 shadow-sm border border-secondary" style={{ width: '45px', height: '45px' }} />
+              ) : (
+                <div className="rounded-circle bg-primary d-flex align-items-center justify-content-center fw-bold me-3 shadow-sm text-white" style={{ width: '45px', height: '45px' }}>
+                  {userProfile.name ? userProfile.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+              )}
+              <div className="text-white">
+                <h6 className="mb-0 fw-bold text-white">{userProfile.name}</h6>
+                <small className="text-white-50">{userProfile.email}</small>
               </div>
-            </div>
-            <Link to="/" className="btn btn-danger w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 border-0">
-              <FontAwesomeIcon icon={faSignOutAlt} /> Terminar Sessão
             </Link>
+
+            <button 
+              onClick={handleLogout} 
+              className="btn btn-danger w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 border-0"
+            >
+              <FontAwesomeIcon icon={faSignOutAlt} /> Terminar Sessão
+            </button>
           </div>
         </Offcanvas.Body>
       </Offcanvas>

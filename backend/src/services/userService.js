@@ -14,21 +14,42 @@ const userService = {
         if (!user) throw new Error('User not found');
 
         let updateData = { name: data.name };
-        if (data.password) {
-            updateData.password = await bcrypt.hash(data.password, 10);
+
+        // Update avatar
+        if (data.avatar !== undefined) {
+            updateData.avatar = data.avatar;
+        }
+
+        // Change password
+        if (data.newPassword) {
+            // Current password
+            if (!data.currentPassword) {
+                throw new Error('To change your password, you must provide your current password.');
+            }
+
+            const isMatch = await bcrypt.compare(data.currentPassword, user.password);
+            if (!isMatch) {
+                throw new Error('A password atual está incorreta.');
+            }
+
+            updateData.password = await bcrypt.hash(data.newPassword, 10);
         }
 
         await user.update(updateData);
 
         await auditLogController.logEvent({
-            user_id: userId, action: data.password ? 'USER_UPDATE_PASSWORD' : 'USER_UPDATE_PROFILE', entity_type: 'User', entity_id: userId, ip_address: ipAddress
+            user_id: userId, 
+            action: data.newPassword ? 'USER_UPDATE_PASSWORD' : 'USER_UPDATE_PROFILE', 
+            entity_type: 'User', 
+            entity_id: userId, 
+            ip_address: ipAddress
         });
         return user;
     },
 
     async getAllAdmin() {
         return await User.findAll({
-            attributes: { exclude: ['password'] }, order: [['createdAt', 'DESC']]
+            attributes: { exclude: ['password', 'avatar'] }, order: [['createdAt', 'DESC']]
         });
     },
 
