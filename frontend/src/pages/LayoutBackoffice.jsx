@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faChartLine, faComments, faEdit, faUsers,
   faHistory, faFolderOpen, faSignOutAlt, faShieldAlt,
-  faIndent, faOutdent, faBars, faTimes
+  faIndent, faOutdent, faBars, faTimes, faUserShield
 } from "@fortawesome/free-solid-svg-icons";
 
 const LayoutBackoffice = () => {
@@ -18,6 +18,7 @@ const LayoutBackoffice = () => {
     { path: '/admin/forum', icon: faComments, label: 'Fórum de Clientes' },
     { path: '/admin/cms', icon: faEdit, label: 'Gestão de Conteúdo' },
     { path: '/admin/users', icon: faUsers, label: 'Gestão de Utilizadores' },
+    { path: '/admin/cargos', icon: faUserShield, label: 'Cargos e Permissões' },
     { path: '/admin/logs', icon: faHistory, label: 'Activity Logs' },
     { path: '/admin/docs', icon: faFolderOpen, label: 'Repositório Global' },
   ];
