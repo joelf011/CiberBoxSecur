@@ -3,8 +3,8 @@ import { Card, Form, Button, Row, Col, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle, faPaperPlane, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { incidentsApi } from '../api/incidentsApi';
-import { Alerts } from '../utils/Alerts';
+import { incidentsApi } from '../../api/incidentsApi';
+import { Alerts } from '../../utils/Alerts';
 
 const NovoIncidente = () => {
   const navigate = useNavigate();
