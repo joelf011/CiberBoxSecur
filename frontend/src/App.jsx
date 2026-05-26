@@ -10,6 +10,7 @@ import GestaoConteudos from './pages/admin/GestaoConteudos';
 import GestaoUtilizadores from './pages/admin/GestaoUtilizadores';
 import GestaoCargos from './pages/admin/GestaoCargos';
 import Perfil from './pages/admin/Perfil';
+import NovoIncidente from './pages/NovoIncidente';
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
         <Route path="users" element={<GestaoUtilizadores />} />
         <Route path="cargos" element={<GestaoCargos />} />
         <Route path="logs" element={<div><AdminLogs /></div>} />
+        <Route path="incidentes/novo" element={<NovoIncidente />} />
         <Route path="docs" element={<div>Repositório Global em breve...</div>} />
         <Route path="perfil" element={<Perfil />} />
       </Route>
