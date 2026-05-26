@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const darkSection = {
   backgroundColor: "#0f172a",
@@ -39,7 +40,7 @@ function Regulamentacao({
                       <div
                         className={`d-inline-flex p-3 ${card.corFundo} ${card.corTexto} rounded-3 mb-3`}
                       >
-                        <i className={`${card.icone} fs-4`}></i>
+                        <FontAwesomeIcon icon={card.icone} className="fs-4" />
                       </div>
 
                       <h3 className="h6 fw-bold text-white mb-0">

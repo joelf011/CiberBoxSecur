@@ -1,4 +1,10 @@
 import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faEnvelope,
+  faPhone,
+  faLocationDot,
+} from "@fortawesome/free-solid-svg-icons";
 
 function ContactInfo({ email, telefone, morada }) {
   return (
@@ -10,7 +16,7 @@ function ContactInfo({ email, telefone, morada }) {
             className="bg-secondary bg-opacity-10 rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
             style={{ width: "48px", height: "48px" }}
           >
-            <i className="fa-solid fa-envelope fs-5 text-info"></i>
+            <FontAwesomeIcon icon={faEnvelope} className="fs-5 text-info" />
           </div>
           <div>
             <h4 className="h5 fw-semibold text-white mb-1">Email</h4>
@@ -22,7 +28,7 @@ function ContactInfo({ email, telefone, morada }) {
             className="bg-secondary bg-opacity-10 rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
             style={{ width: "48px", height: "48px" }}
           >
-            <i className="fa-solid fa-phone fs-5 text-info"></i>
+            <FontAwesomeIcon icon={faPhone} className="fs-5 text-info" />
           </div>
           <div>
             <h4 className="h5 fw-semibold text-white mb-1">Telefone</h4>
@@ -34,7 +40,7 @@ function ContactInfo({ email, telefone, morada }) {
             className="bg-secondary bg-opacity-10 rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
             style={{ width: "48px", height: "48px" }}
           >
-            <i className="fa-solid fa-location-dot fs-5 text-info"></i>
+            <FontAwesomeIcon icon={faLocationDot} className="fs-5 text-info" />
           </div>
           <div>
             <h4 className="h5 fw-semibold text-white mb-1">Morada</h4>
