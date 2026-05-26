@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+const { User, Role, Permission  } = require('../models');
 const emailService = require('./emailService');
 const auditLogService = require('./auditLogService');
 
@@ -65,7 +65,15 @@ const authService = {
     },
 
     async login(email, password, ipAddress) {
-        const user = await User.findOne({ where: { email } });
+        const user = await User.findOne({
+            where: { email },
+            include: [{model: Role,
+                include: [{
+                    model: Permission,
+                    attributes: ['name']
+                }]
+            }]
+        });
 
         if (!user) {
             await auditLogService.logEvent({ user_id: null, action: 'USER_LOGIN_FAILED_NOT_FOUND', entity_type: 'User', entity_id: null, ip_address: ipAddress });
@@ -86,14 +94,33 @@ const authService = {
             throw new Error('Wrong password.');
         }
 
+        // Permissions array
+        const userPermissions = user.Role && user.Role.Permissions 
+            ? user.Role.Permissions.map(p => p.name) 
+            : [];
+
         const token = jwt.sign(
-            { id: user.id, role_id: user.role_id, company_id: user.company_id },
+            { 
+                id: user.id, 
+                role_id: user.role_id, 
+                company_id: user.company_id,
+                permissions: userPermissions // Adicionado ao token
+            },
             process.env.JWT_SECRET, { expiresIn: '8h' }
         );
 
         await auditLogService.logEvent({ user_id: user.id, action: 'USER_LOGIN_SUCCESS', entity_type: 'User', entity_id: user.id, ip_address: ipAddress });
 
-        return { token, user: { id: user.id, name: user.name, role_id: user.role_id } };
+        return { 
+            token, 
+            user: { 
+                id: user.id, 
+                name: user.name, 
+                role_id: user.role_id,
+                role_name: user.Role ? user.Role.name : null,
+                permissions: userPermissions
+            } 
+        };
     },
 
     async forgotPassword(email, ipAddress) {

@@ -1,5 +1,5 @@
 const { Role, Permission, sequelize } = require('../models');
-const auditLogController = require('./auditLogController');
+const auditLogService = require('../services/auditLogService');
 
 const roleController = {
     // CREATE
@@ -28,7 +28,7 @@ const roleController = {
             });
 
             // LOG
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user ? req.user.id : null,
                 action: 'ROLE_CREATE',
                 entity_type: 'Role',
@@ -38,7 +38,9 @@ const roleController = {
 
             return res.status(201).json({ message: 'Role created successfully!', role: roleWithPermissions });
         } catch (error) {
-            await t.rollback(); // Rollback if there is an error
+            if (!t.finished) {
+                 await t.rollback(); 
+            }
             if (error.name === 'SequelizeUniqueConstraintError') {
                 return res.status(400).json({ error: 'This role name already exists.' });
             }
@@ -117,17 +119,23 @@ const roleController = {
             });
 
             // LOG: role updated
-            await auditLogController.logEvent({
-                user_id: req.user ? req.user.id : null,
-                action: 'ROLE_UPDATE',
-                entity_type: 'Role',
-                entity_id: role.id,
-                ip_address: req.ip
-            });
+            try {
+                await auditLogService.logEvent({
+                    user_id: req.user ? req.user.id : null,
+                    action: 'ROLE_UPDATE',
+                    entity_type: 'Role',
+                    entity_id: role.id,
+                    ip_address: req.ip
+                });
+            } catch (logError) {
+                 console.error("Error updating log:", logError);
+            }
 
             return res.status(200).json({ message: 'Role updated successfully!', role: updatedRole });
         } catch (error) {
-            await t.rollback();
+            if (!t.finished) {
+                await t.rollback();
+            }
             if (error.name === 'SequelizeUniqueConstraintError') {
                 return res.status(400).json({ error: 'This role name already exists.' });
             }
@@ -149,7 +157,7 @@ const roleController = {
             await role.destroy();
 
             // LOG: role deleted
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user ? req.user.id : null,
                 action: 'ROLE_DELETE',
                 entity_type: 'Role',
@@ -181,7 +189,7 @@ const roleController = {
             await role.restore();
 
             // LOG: role restored
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user ? req.user.id : null,
                 action: 'ROLE_RESTORE',
                 entity_type: 'Role',
