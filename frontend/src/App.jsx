@@ -46,7 +46,7 @@ function App() {
         <Route path="perfil" element={<Perfil />} />
       </Route>
 
-      {/* Rota de "catch-all" para 404 (opcional) */}
+      {/* Rota de "catch-all" para 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
