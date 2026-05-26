@@ -1,6 +1,6 @@
 const { User } = require('../models');
 const bcrypt = require('bcrypt');
-const auditLogController = require('../controllers/auditLogController');
+const auditLogService = require('./auditLogService');
 
 const userService = {
     async getProfile(userId) {
@@ -37,7 +37,7 @@ const userService = {
 
         await user.update(updateData);
 
-        await auditLogController.logEvent({
+        await auditLogService.logEvent({
             user_id: userId, 
             action: data.newPassword ? 'USER_UPDATE_PASSWORD' : 'USER_UPDATE_PROFILE', 
             entity_type: 'User', 
@@ -65,7 +65,7 @@ const userService = {
 
         await user.update(updateData);
 
-        await auditLogController.logEvent({
+        await auditLogService.logEvent({
             user_id: adminId, action: 'ADMIN_UPDATE_USER', entity_type: 'User', entity_id: user.id, ip_address: ipAddress
         });
         return user;
@@ -77,7 +77,7 @@ const userService = {
 
         await user.destroy();
 
-        await auditLogController.logEvent({
+        await auditLogService.logEvent({
             user_id: adminId, action: 'ADMIN_DELETE_USER', entity_type: 'User', entity_id: user.id, ip_address: ipAddress
         });
         return true;

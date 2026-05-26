@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 const emailService = require('./emailService');
-const auditLogController = require('../controllers/auditLogController');
+const auditLogService = require('./auditLogService');
 
 const authService = {
     async registerUser(data, adminId, ipAddress) {
@@ -18,7 +18,7 @@ const authService = {
             activation_token: activationToken, token_expires_at: tokenExpiresAt, is_active: true
         });
 
-        await auditLogController.logEvent({
+        await auditLogService.logEvent({
             user_id: adminId, action: 'USER_REGISTER', entity_type: 'User', entity_id: newUser.id, ip_address: ipAddress
         });
 
@@ -37,7 +37,7 @@ const authService = {
         user.token_expires_at = null;
         await user.save();
 
-        await auditLogController.logEvent({
+        await auditLogService.logEvent({
             user_id: user.id, action: 'USER_ACTIVATED_ACCOUNT', entity_type: 'User', entity_id: user.id, ip_address: ipAddress
         });
         return user;
@@ -56,7 +56,7 @@ const authService = {
         user.token_expires_at = newTokenExpiresAt;
         await user.save();
 
-        await auditLogController.logEvent({
+        await auditLogService.logEvent({
             user_id: adminId, action: 'ADMIN_RESENT_ACTIVATION_EMAIL', entity_type: 'User', entity_id: user.id, ip_address: ipAddress
         });
 
@@ -68,21 +68,21 @@ const authService = {
         const user = await User.findOne({ where: { email } });
 
         if (!user) {
-            await auditLogController.logEvent({ user_id: null, action: 'USER_LOGIN_FAILED_NOT_FOUND', entity_type: 'User', entity_id: null, ip_address: ipAddress });
+            await auditLogService.logEvent({ user_id: null, action: 'USER_LOGIN_FAILED_NOT_FOUND', entity_type: 'User', entity_id: null, ip_address: ipAddress });
             throw new Error('User not found.');
         }
         if (!user.is_active) {
-            await auditLogController.logEvent({ user_id: user.id, action: 'USER_LOGIN_BLOCKED_INACTIVE', entity_type: 'User', entity_id: user.id, ip_address: ipAddress });
+            await auditLogService.logEvent({ user_id: user.id, action: 'USER_LOGIN_BLOCKED_INACTIVE', entity_type: 'User', entity_id: user.id, ip_address: ipAddress });
             throw new Error('This account is deactivated.');
         }
         if (!user.password) {
-            await auditLogController.logEvent({ user_id: user.id, action: 'USER_LOGIN_FAILED_NOT_ACTIVATED', entity_type: 'User', entity_id: user.id, ip_address: ipAddress });
+            await auditLogService.logEvent({ user_id: user.id, action: 'USER_LOGIN_FAILED_NOT_ACTIVATED', entity_type: 'User', entity_id: user.id, ip_address: ipAddress });
             throw new Error('Please, activate your account using the link sent by email.');
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            await auditLogController.logEvent({ user_id: user.id, action: 'USER_LOGIN_FAILED_WRONG_PASSWORD', entity_type: 'User', entity_id: user.id, ip_address: ipAddress });
+            await auditLogService.logEvent({ user_id: user.id, action: 'USER_LOGIN_FAILED_WRONG_PASSWORD', entity_type: 'User', entity_id: user.id, ip_address: ipAddress });
             throw new Error('Wrong password.');
         }
 
@@ -91,7 +91,7 @@ const authService = {
             process.env.JWT_SECRET, { expiresIn: '8h' }
         );
 
-        await auditLogController.logEvent({ user_id: user.id, action: 'USER_LOGIN_SUCCESS', entity_type: 'User', entity_id: user.id, ip_address: ipAddress });
+        await auditLogService.logEvent({ user_id: user.id, action: 'USER_LOGIN_SUCCESS', entity_type: 'User', entity_id: user.id, ip_address: ipAddress });
 
         return { token, user: { id: user.id, name: user.name, role_id: user.role_id } };
     },
@@ -109,7 +109,7 @@ const authService = {
         user.token_expires_at = tokenExpiresAt;
         await user.save();
 
-        await auditLogController.logEvent({ 
+        await auditLogService.logEvent({ 
             user_id: user.id, action: 'USER_FORGOT_PASSWORD_REQUEST', entity_type: 'User', entity_id: user.id, ip_address: ipAddress 
         });
 
@@ -128,7 +128,7 @@ const authService = {
         user.token_expires_at = null;
         await user.save();
 
-        await auditLogController.logEvent({ 
+        await auditLogService.logEvent({ 
             user_id: user.id, action: 'USER_PASSWORD_RESET_SUCCESS', entity_type: 'User', entity_id: user.id, ip_address: ipAddress 
         });
         

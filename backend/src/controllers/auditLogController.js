@@ -3,21 +3,6 @@ const { Op } = require('sequelize');
 
 const auditLogController = {
 
-    // This functions is called inside controllers
-    async logEvent({ user_id, action, entity_type, entity_id, ip_address }) {
-        try {
-            await AuditLog.create({
-                user_id: user_id || null,
-                action,
-                entity_type: entity_type || null,
-                entity_id: entity_id || null,
-                ip_address: ip_address || null
-            });
-        } catch (error) { 
-            console.error('Error saving AuditLog:', error);
-        }
-    },
-
     // ADMIN -> Read audit log
     async getLogs(req, res) {
         try {
