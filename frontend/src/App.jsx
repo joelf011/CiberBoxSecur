@@ -9,6 +9,7 @@ import AdminLogs from './pages/admin/AdminLogs';
 import GestaoConteudos from './pages/admin/GestaoConteudos';
 import GestaoUtilizadores from './pages/admin/GestaoUtilizadores';
 import GestaoCargos from './pages/admin/GestaoCargos';
+import GestaoEmpresas from './pages/admin/GestaoEmpresas';
 import Perfil from './pages/admin/Perfil';
 import NovoIncidente from './pages/incidentes/NovoIncidente';
 import ListaIncidentes from './pages/incidentes/ListaIncidentes';
@@ -48,16 +49,17 @@ function App() {
         
         <Route path="forum" element={<AdminForum />} />
         <Route path="cms" element={<GestaoConteudos />} />
-        <Route path="logs" element={<AdminLogs />} />
-
-        <Route path="cms" element={<GestaoConteudos />} />
         <Route path="users" element={<GestaoUtilizadores />} />
         <Route path="cargos" element={<GestaoCargos />} />
-        <Route path="logs" element={<div><AdminLogs /></div>} />
+        <Route path="empresas" element={<GestaoEmpresas />} />
+        
+        <Route path="logs" element={<AdminLogs />} />
+        
         <Route path="incidentes/novo" element={<NovoIncidente />} />
         <Route path="incidentes" element={<ListaIncidentes />} />
         <Route path="incidentes/:id" element={<DetalhesIncidente />} />
-        <Route path="docs" element={<div><RepositorioGlobal /></div>} />
+        
+        <Route path="docs" element={<RepositorioGlobal />} />
         <Route path="perfil" element={<Perfil />} />
       </Route>
 
