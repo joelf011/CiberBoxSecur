@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, UNSAFE_getTurboStreamSingleFetchDataStrategy } from 'react-router-dom';
 import LayoutBackoffice from './pages/LayoutBackoffice';
 import LayoutWebsite from './components/LayoutWebsite';
 import Login from './pages/auth/Login';
@@ -10,6 +10,10 @@ import GestaoConteudos from './pages/admin/GestaoConteudos';
 import GestaoUtilizadores from './pages/admin/GestaoUtilizadores';
 import GestaoCargos from './pages/admin/GestaoCargos';
 import Perfil from './pages/admin/Perfil';
+import NovoIncidente from './pages/incidentes/NovoIncidente';
+import ListaIncidentes from './pages/incidentes/ListaIncidentes';
+import DetalhesIncidente from './pages/incidentes/DetalhesIncidente';
+import Dashboard from './pages/admin/Dashboard';
 
 function App() {
   return (
@@ -32,7 +36,7 @@ function App() {
         <Route index element={<Navigate to="dashboard" replace />} />
         
         {/* Dashboard */}
-        <Route path="dashboard" element={<div>Conteúdo da Dashboard em breve...</div>} />
+        <Route path="dashboard" element={<Dashboard />} />
         
         <Route path="forum" element={<AdminForum />} />
         <Route path="cms" element={<GestaoConteudos />} />
@@ -42,6 +46,9 @@ function App() {
         <Route path="users" element={<GestaoUtilizadores />} />
         <Route path="cargos" element={<GestaoCargos />} />
         <Route path="logs" element={<div><AdminLogs /></div>} />
+        <Route path="incidentes/novo" element={<NovoIncidente />} />
+        <Route path="incidentes" element={<ListaIncidentes />} />
+        <Route path="incidentes/:id" element={<DetalhesIncidente />} />
         <Route path="docs" element={<div>Repositório Global em breve...</div>} />
         <Route path="perfil" element={<Perfil />} />
       </Route>
