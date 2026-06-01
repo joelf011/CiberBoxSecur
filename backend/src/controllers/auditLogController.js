@@ -1,64 +1,32 @@
-const { AuditLog, User, Role } = require('../models');
-const { Op } = require('sequelize');
+const auditLogService = require('../services/auditLogService');
 
 const auditLogController = {
 
     // ADMIN -> Read audit log
     async getLogs(req, res) {
         try {
+            // Extract query data and define defaults
+            const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 20;
-            const offset = parseInt(req.query.offset) || 0;
-            
-            // Filters - frontend
-            const { action, date, search } = req.query;
+            const { action, startDate, endDate, search, company_id } = req.query;
 
-            let whereClause = {};
-
-            if (action) whereClause.action = action;
-
-            if (date) {
-                whereClause.createdAt = {
-                    [Op.between]: [`${date} 00:00:00`, `${date} 23:59:59`]
-                };
-            }
-            if (search) {
-                whereClause[Op.or] = [
-                    { action: { [Op.iLike]: `%${search}%` } },
-                    { entity_type: { [Op.iLike]: `%${search}%` } },
-                    // Search user
-                    { '$User.name$': { [Op.iLike]: `%${search}%` } },
-                    { '$User.email$': { [Op.iLike]: `%${search}%` } },
-                    { '$User.Role.name$': { [Op.iLike]: `%${search}%` } }
-                ];
-            }
-
-            const logs = await AuditLog.findAndCountAll({
-                where: whereClause,
-                include: [
-                    {
-                        model: User,
-                        attributes: ['id', 'name', 'email'],
-                        include: [
-                            {
-                                model: Role,
-                                attributes: ['name']
-                            }
-                        ]
-                    }
-                ],
-                order: [['createdAt', 'DESC']], // Order
-                limit: limit,
-                offset: offset
+            // Call service
+            const result = await auditLogService.getLogs({
+                page,
+                limit,
+                action,
+                startDate,
+                endDate,
+                search,
+                company_id
             });
 
-            return res.status(200).json({
-                total_records: logs.count,
-                current_page_records: logs.rows.length,
-                data: logs.rows
-            });
+            // Success
+            return res.status(200).json(result);
 
         } catch (error) {
             console.error('Get Audit Logs error:', error);
+            // Error -> 500
             return res.status(500).json({ error: 'Internal server error.' });
         }
     }

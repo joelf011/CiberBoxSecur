@@ -21,6 +21,9 @@ const reportRoutes = require('./src/routes/reportRoutes');
 
 const app = express();
 
+// TRUST PROXY (para obter IP real do cliente, especialmente atrás de proxies ou em produção)
+app.set('trust proxy', 1);
+
 // --- MIDDLEWARES ---
 app.use(cors()); 
 app.use(express.json({ limit: '10mb' })); 
