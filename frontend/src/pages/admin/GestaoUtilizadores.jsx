@@ -18,7 +18,9 @@ const GestaoUtilizadores = () => {
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingUserId, setEditingUserId] = useState(null);
-  const [formData, setFormData] = useState({ name: '', email: '', role_id: '' });
+  
+  // Adicionado o campo 'phone' no estado inicial
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', role_id: '' });
 
   // Funções Modal
   const handleClose = () => {
@@ -28,13 +30,15 @@ const GestaoUtilizadores = () => {
 
   const handleShow = () => {
     setEditingUserId(null);
-    setFormData({ name: '', email: '', role_id: '' });
+    // Limpar também o campo phone ao abrir para criar novo
+    setFormData({ name: '', email: '', phone: '', role_id: '' });
     setShowModal(true);
   };
 
   const handleEditClick = (user) => {
     setEditingUserId(user.id);
-    setFormData({ name: user.name, email: user.email, role_id: user.role_id || '' });
+    // Puxar o phone da base de dados ao editar
+    setFormData({ name: user.name, email: user.email, phone: user.phone || '', role_id: user.role_id || '' });
     setShowModal(true);
   };
 
@@ -289,7 +293,15 @@ const GestaoUtilizadores = () => {
               />
             </Form.Group>
 
-            {/* O Campo Cargo está agora esticado e liberto das Row/Cols */}
+            {/* --- NOVO CAMPO DE TELEFONE --- */}
+            <Form.Group className="mb-3">
+              <Form.Label className="small fw-bold text-secondary">Telefone / Telemóvel</Form.Label>
+              <Form.Control 
+                type="text" placeholder="Ex: +351 912 345 678" 
+                value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              />
+            </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label className="small fw-bold text-secondary">Cargo</Form.Label>
               <Form.Select

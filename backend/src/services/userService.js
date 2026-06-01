@@ -13,7 +13,10 @@ const userService = {
         const user = await User.findByPk(userId);
         if (!user) throw new Error('User not found');
 
-        let updateData = { name: data.name };
+        let updateData = { 
+            name: data.name,
+            phone: data.phone !== undefined ? data.phone : user.phone 
+        };
 
         // Update avatar
         if (data.avatar !== undefined) {
@@ -57,7 +60,14 @@ const userService = {
         const user = await User.findByPk(userId);
         if (!user) throw new Error('User not found');
 
-        let updateData = { name: data.name, email: data.email, role_id: data.role_id, company_id: data.company_id, is_active: data.is_active };
+        let updateData = { 
+            name: data.name, 
+            email: data.email, 
+            phone: data.phone,
+            role_id: data.role_id, 
+            company_id: data.company_id, 
+            is_active: data.is_active 
+        };
         
         if (data.password) {
             updateData.password = await bcrypt.hash(data.password, 10);

@@ -7,7 +7,7 @@ const auditLogService = require('./auditLogService');
 
 const authService = {
     async registerUser(data, adminId, ipAddress) {
-        const { name, email, role_id } = data;
+        const { name, email, phone, role_id } = data; 
         const activationToken = crypto.randomBytes(32).toString('hex');
 
         const tokenExpiresAt = new Date();
@@ -16,6 +16,7 @@ const authService = {
         const newUser = await User.create({
             name, 
             email, 
+            phone,
             role_id: role_id || null,
             activation_token: activationToken, 
             token_expires_at: tokenExpiresAt, 
