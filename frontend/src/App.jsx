@@ -16,7 +16,7 @@ import DetalhesIncidente from './pages/incidentes/DetalhesIncidente';
 import Dashboard from './pages/admin/Dashboard';
 import Home from './pages/Home'; 
 import NewsPage from './pages/NewsPage';
-
+import RepositorioGlobal from './pages/admin/RepositorioGlobal';
 
 function App() {
   return (
@@ -57,7 +57,7 @@ function App() {
         <Route path="incidentes/novo" element={<NovoIncidente />} />
         <Route path="incidentes" element={<ListaIncidentes />} />
         <Route path="incidentes/:id" element={<DetalhesIncidente />} />
-        <Route path="docs" element={<div>Repositório Global em breve...</div>} />
+        <Route path="docs" element={<div><RepositorioGlobal /></div>} />
         <Route path="perfil" element={<Perfil />} />
       </Route>
 
