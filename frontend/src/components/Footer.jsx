@@ -4,8 +4,9 @@ import Logo from '../assets/logos/CiberBoxSecur-Minimal-NegativeVersion.svg';
 
 
 const Footer = () => {
+  const bgColor = '#0a192f';
   return (
-    <footer className="bg-dark text-secondary py-5 border-top border-secondary">
+    <footer className="text-secondary py-5 border-top border-secondary" style={{ backgroundColor: bgColor }}>
       <div className="container px-4">
         <div className="row gy-4">
           {/* Brand & Description */}

@@ -1,5 +1,6 @@
 var Sequelize = require('sequelize');
 require('dotenv').config();
+const isLocalhost = process.env.DB_HOST === 'localhost';
 
 const sequelize = new Sequelize(
     process.env.DB_NAME,
@@ -12,7 +13,7 @@ const sequelize = new Sequelize(
         logging: false, // change to console.log to show SQL on terminal
 
         // NEON -> SSl
-        dialectOptions: {
+        dialectOptions: isLocalhost ? {} : {
             ssl: {
                 require: true,
                 rejectUnauthorized: false
