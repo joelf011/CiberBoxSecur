@@ -18,13 +18,14 @@ const LayoutBackoffice = () => {
   // Estado para guardar os dados do utilizador
   const [userProfile, setUserProfile] = useState({ name: 'A carregar...', email: '', avatar: null });
 
+  // Obter as permissões do utilizador
+  const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const userPermissions = loggedInUser.permissions || [];
+
   const handleLogout = () => {
     // Apagar o token
     localStorage.removeItem('token'); 
-    
-    // (Opcional) Se tiveres guardado mais coisas no localStorage, apaga-as também:
-    // localStorage.removeItem('user');
-    
+    localStorage.removeItem('user');
     navigate('/');
   };
 
@@ -46,15 +47,24 @@ const LayoutBackoffice = () => {
     };
   }, []);
 
-  const navItems = [
-    { path: '/admin/dashboard', icon: faChartLine, label: 'Dashboard' },
-    { path: '/admin/forum', icon: faComments, label: 'Fórum de Clientes' },
-    { path: '/admin/cms', icon: faEdit, label: 'Gestão de Conteúdo' },
-    { path: '/admin/users', icon: faUsers, label: 'Gestão de Utilizadores' },
-    { path: '/admin/cargos', icon: faUserShield, label: 'Cargos e Permissões' },
-    { path: '/admin/logs', icon: faHistory, label: 'Activity Logs' },
-    { path: '/admin/docs', icon: faFolderOpen, label: 'Repositório Global' },
+  const allNavItems = [
+    { path: '/admin/dashboard', icon: faChartLine, label: 'Dashboard' }, // Visível para todos
+    { path: '/admin/incidentes', icon: faShieldAlt, label: 'Central de Incidentes' }, // Incidentes
+    { path: '/admin/forum', icon: faComments, label: 'Fórum de Clientes' }, // Visível para todos
+    { path: '/admin/cms', icon: faEdit, label: 'Gestão de Conteúdo', permission: 'MANAGE_CMS' },
+    { path: '/admin/users', icon: faUsers, label: 'Gestão de Utilizadores', permission: 'VIEW_USERS' },
+    { path: '/admin/cargos', icon: faUserShield, label: 'Cargos e Permissões', permission: 'VIEW_ROLES' },
+    { path: '/admin/docs', icon: faFolderOpen, label: 'Repositório Global' }, // Visível para todos
+    { path: '/admin/logs', icon: faHistory, label: 'Activity Logs', permission: 'VIEW_AUDIT_LOGS' }
   ];
+
+  // Filtrar menu
+  const navItems = allNavItems.filter(item => {
+    if (!item.permission) return true;
+    
+    // Verifica se o utilizador tem permissão
+    return userPermissions.includes(item.permission);
+  });
 
   const toggleMobileMenu = () => setShowMobileMenu(!showMobileMenu);
 

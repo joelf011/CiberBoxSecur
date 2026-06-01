@@ -8,6 +8,7 @@ import {
   faSignInAlt,
   faSpinner
 } from "@fortawesome/free-solid-svg-icons";
+import api from '../../api/axiosConfig';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -26,19 +27,9 @@ const Login = () => {
     setLoading(true); // Ativa o estado de carregamento
 
     try {
-      const response = await fetch('https://ciberbox-backend.onrender.com/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
+      const response = await api.post('/auth/login', { email, password });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Ocorreu um erro ao tentar iniciar sessão.');
-      }
+      const data = await response.data;
 
       // SUCESSO! Guardar o token e os dados do utilizador no localStorage
       localStorage.setItem('token', data.token);
@@ -49,9 +40,10 @@ const Login = () => {
 
     } catch (err) {
       console.error("Erro no login:", err);
-      setErro(err.message); 
+      const mensagemErro = err.response?.data?.error || 'Ocorreu um erro ao tentar iniciar sessão.';
+      setErro(mensagemErro); 
     } finally {
-      setLoading(false); 
+      setLoading(false);; 
     }
   };
 
