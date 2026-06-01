@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, UNSAFE_getTurboStreamSingleFetchDataStrategy } from 'react-router-dom';
 import LayoutBackoffice from './pages/LayoutBackoffice';
 import LayoutWebsite from './components/LayoutWebsite';
 import Login from './pages/auth/Login';
@@ -13,6 +13,7 @@ import Perfil from './pages/admin/Perfil';
 import NovoIncidente from './pages/incidentes/NovoIncidente';
 import ListaIncidentes from './pages/incidentes/ListaIncidentes';
 import DetalhesIncidente from './pages/incidentes/DetalhesIncidente';
+import Dashboard from './pages/admin/Dashboard';
 
 function App() {
   return (
@@ -35,7 +36,7 @@ function App() {
         <Route index element={<Navigate to="dashboard" replace />} />
         
         {/* Dashboard */}
-        <Route path="dashboard" element={<div>Conteúdo da Dashboard em breve...</div>} />
+        <Route path="dashboard" element={<Dashboard />} />
         
         <Route path="forum" element={<AdminForum />} />
         <Route path="cms" element={<GestaoConteudos />} />
