@@ -17,10 +17,10 @@ function Servicos({ titulo, subtitulo, servicos }) {
               {servicos.map((servico, index) => (
                 <div className="col-md-6" key={index}>
                   <HelpCard
-                    titulo={servico.titulo}
-                    descricao={servico.descricao}
-                    icone={servico.icone}
-                    corTema={servico.corTema}
+                    title={servico.titulo}
+                    description={servico.descricao}
+                    icon={servico.icone}
+                    color={`var(--bs-${servico.corTema})`}
                   />
                 </div>
               ))}

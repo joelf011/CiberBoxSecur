@@ -1,4 +1,6 @@
 import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronRight } from "@fortawesome/free-solid-svg-icons";
 
 function Hero({ titulo, subtitulo, textoBotao, imagemFundo }) {
   const heroStyle = {
@@ -10,6 +12,13 @@ function Hero({ titulo, subtitulo, textoBotao, imagemFundo }) {
     padding: "100px 0",
   };
 
+  const scrollToContact = () => {
+    const contactSection = document.getElementById("contact");
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <section style={heroStyle} className="text-white">
       <div className="container px-4">
@@ -19,8 +28,11 @@ function Hero({ titulo, subtitulo, textoBotao, imagemFundo }) {
 
             <p className="lead fs-4 text-white-50 mb-5">{subtitulo}</p>
 
-            <button className="btn btn-primary fw-semibold d-inline-flex align-items-center gap-2">
-              {textoBotao} <i className="fa-solid fa-chevron-right"></i>
+            <button
+              onClick={scrollToContact}
+              className="btn btn-primary fw-semibold d-inline-flex align-items-center gap-2"
+            >
+              {textoBotao} <FontAwesomeIcon icon={faChevronRight} />
             </button>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 function ContextoAtual({ titulo, textoInicial, itens, textoFinal }) {
   return (
@@ -18,7 +19,7 @@ function ContextoAtual({ titulo, textoInicial, itens, textoFinal }) {
                       <div
                         className={`p-3 ${item.corFundo} ${item.corTexto} rounded-3 flex-shrink-0 d-flex align-items-center justify-content-center`}
                       >
-                        <i className={`${item.icone} fs-4`}></i>
+                        <FontAwesomeIcon icon={item.icone} className="fs-4" />
                       </div>
                       <div>
                         <h3 className="h6 fw-bold text-dark mb-0">
@@ -29,8 +30,6 @@ function ContextoAtual({ titulo, textoInicial, itens, textoFinal }) {
                   </div>
                 ))}
               </div>
-
-              {/* Texto Final Dinâmico */}
               <p className="fs-6 lh-lg mb-0">{textoFinal}</p>
             </div>
           </div>

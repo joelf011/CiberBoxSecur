@@ -9,6 +9,22 @@ import Regulamentacao from "../components/Regulamentacao";
 import Servicos from "../components/Servicos";
 import PorqueEscolher from "../components/PorqueEscolher";
 
+// --- OS IMPORTS DOS ÍCONES QUE FALTAVAM ---
+import {
+  faCertificate,
+  faUsersGear,
+  faLaptopCode,
+  faShieldVirus,
+  faBug,
+  faServer,
+  faEnvelopeOpenText,
+  faTriangleExclamation,
+  faUserShield,
+  faCircleCheck,
+  faShieldHalved,
+  faUserGraduate,
+} from "@fortawesome/free-solid-svg-icons";
+
 const darkSection = {
   backgroundColor: "#0f172a",
   color: "white",
@@ -16,14 +32,14 @@ const darkSection = {
 
 const listaMotivos = [
   {
-    icone: "fa-solid fa-certificate",
+    icone: faCertificate,
     corFundoIcone: "bg-primary-subtle",
     corTextoIcone: "text-primary",
     tituloCard: "Especialização Comprovada",
     descricao: "Equipa de especialistas certificados (CISSP, CISM, ISO 27001).",
   },
   {
-    icone: "fa-solid fa-users-gear",
+    icone: faUsersGear,
     corFundoIcone: "bg-warning-subtle",
     corTextoIcone: "text-warning-emphasis",
     tituloCard: "Abordagem Personalizada",
@@ -31,7 +47,7 @@ const listaMotivos = [
       "Gestores dedicados que conhecem a realidade e os desafios específicos da sua organização.",
   },
   {
-    icone: "fa-solid fa-laptop-shield",
+    icone: faLaptopCode, // --- ÍCONE CORRIGIDO AQUI ---
     corFundoIcone: "bg-info-subtle",
     corTextoIcone: "text-info-emphasis",
     tituloCard: "Tecnologia de Ponta",
@@ -42,25 +58,25 @@ const listaMotivos = [
 
 const topicosContexto = [
   {
-    icone: "fa-solid fa-shield-virus",
+    icone: faShieldVirus,
     corFundo: "bg-danger-subtle",
     corTexto: "text-danger",
     tituloItem: "Ataques de ransomware",
   },
   {
-    icone: "fa-solid fa-bug",
+    icone: faBug,
     corFundo: "bg-warning-subtle",
     corTexto: "text-warning-emphasis",
     tituloItem: "Exploração de vulnerabilidades",
   },
   {
-    icone: "fa-solid fa-server",
+    icone: faServer,
     corFundo: "bg-secondary-subtle",
     corTexto: "text-secondary-emphasis",
     tituloItem: "Ataques a infraestruturas críticas",
   },
   {
-    icone: "fa-solid fa-envelope-open-text",
+    icone: faEnvelopeOpenText,
     corFundo: "bg-primary-subtle",
     corTexto: "text-primary",
     tituloItem: "Campanhas de phishing direcionado",
@@ -69,19 +85,19 @@ const topicosContexto = [
 
 const cardsRegulamentacao = [
   {
-    icone: "fa-solid fa-triangle-exclamation",
+    icone: faTriangleExclamation,
     corFundo: "bg-danger bg-opacity-10",
     corTexto: "text-danger",
     tituloCard: "Sanções financeiras significativas",
   },
   {
-    icone: "fa-solid fa-user-shield",
+    icone: faUserShield,
     corFundo: "bg-warning bg-opacity-10",
     corTexto: "text-warning",
     tituloCard: "Responsabilidade da gestão",
   },
   {
-    icone: "fa-solid fa-server",
+    icone: faServer,
     corFundo: "bg-info bg-opacity-10",
     corTexto: "text-info",
     tituloCard: "Impacto reputacional",
@@ -93,28 +109,28 @@ const listaServicos = [
     titulo: "Avaliação de maturidade de cibersegurança",
     descricao:
       "Analisamos o estado atual da sua organização e identificamos áreas de melhoria prioritárias.",
-    icone: "fa-solid fa-circle-check",
+    icone: faCircleCheck,
     corTema: "primary",
   },
   {
     titulo: "Implementação de requisitos da diretiva NIS2",
     descricao:
       "Apoiamos a sua organização no cumprimento integral dos requisitos regulamentares.",
-    icone: "fa-solid fa-shield-halved",
+    icone: faShieldHalved,
     corTema: "dark",
   },
   {
     titulo: "Auditorias de segurança e testes técnicos",
     descricao:
       "Identificamos vulnerabilidades através de testes de penetração e auditorias especializadas.",
-    icone: "fa-solid fa-bug",
+    icone: faBug,
     corTema: "info",
   },
   {
     titulo: "Programas de formação e security awareness",
     descricao:
       "Capacitamos as suas equipas com conhecimento e boas práticas de segurança.",
-    icone: "fa-solid fa-user-graduate",
+    icone: faUserGraduate,
     corTema: "secondary",
   },
 ];
@@ -125,7 +141,7 @@ const Home = () => {
       <Hero
         titulo="Cibersegurança para organizações que não podem parar"
         subtitulo="Num contexto em que os ataques cibernéticos aumentam todos os dias, as organizações precisam de proteger os seus sistemas, dados e serviços críticos."
-        textoBotao="Começar agora"
+        textoBotao="Contactos"
         imagemFundo="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop"
       />
       <ContextoAtual

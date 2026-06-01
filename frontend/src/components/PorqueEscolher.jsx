@@ -1,4 +1,5 @@
 import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 function PorqueEscolher({ titulo, subtitulo, motivos }) {
   return (
@@ -17,7 +18,7 @@ function PorqueEscolher({ titulo, subtitulo, motivos }) {
                 <div
                   className={`d-inline-flex align-items-center justify-content-center p-4 rounded-circle mb-4 ${motivo.corFundoIcone} ${motivo.corTextoIcone}`}
                 >
-                  <i className={`${motivo.icone} fs-2`}></i>
+                  <FontAwesomeIcon icon={motivo.icone} className="fs-2" />
                 </div>
 
                 <h3 className="h5 fw-bold text-dark mb-4">
