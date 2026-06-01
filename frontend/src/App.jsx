@@ -11,6 +11,8 @@ import GestaoUtilizadores from './pages/admin/GestaoUtilizadores';
 import GestaoCargos from './pages/admin/GestaoCargos';
 import Perfil from './pages/admin/Perfil';
 
+import Home from './pages/Home'; 
+import NewsPage from './pages/NewsPage';
 function App() {
   return (
     <Routes>
