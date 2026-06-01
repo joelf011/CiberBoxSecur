@@ -1,109 +1,76 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Row, Col, Form, InputGroup, Badge, Pagination } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faDownload, faSearch, faFilter, faHistory,
-  faExclamationTriangle, faInfoCircle, faUserShield
-} from "@fortawesome/free-solid-svg-icons";
+import { faDownload, faSearch, faHistory, faExclamationTriangle, faInfoCircle, faBuilding } from "@fortawesome/free-solid-svg-icons";
+import { motion } from 'framer-motion';
 import { logsApi } from '../../api/logsApi';
 
-
 const AdminLogs = () => {
-  // Estados para os dados da API
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Estados para pesquisa e paginação
+  // Estados dos Filtros e Paginação
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [logsPerPage] = useState(20);
+  const [actionFilter, setActionFilter] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  // Ligar ao Backend
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const limit = 20;
+
+  // Efeito principal: Carregar Logs sempre que os filtros ou página mudarem
   useEffect(() => {
     const fetchLogs = async () => {
       try {
         setLoading(true);
+        const response = await logsApi.getAuditLogs(currentPage, limit, searchTerm, actionFilter, startDate, endDate);
 
-        // Chamamos a função do teu novo ficheiro
-        const data = await logsApi.getAuditLogs();
-        setLogs(data.data);
+        setLogs(response.data || []);
+        setTotalRecords(response.total_records || 0);
+
+        const calculatedPages = response.total_pages || Math.ceil((response.total_records || 0) / limit) || 1;
+        setTotalPages(calculatedPages);
+
       } catch (err) {
         setError(err.message);
-        console.error('Erro na API:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchLogs();
-  }, []);
+    // Debounce de 500ms para não spammar o servidor enquanto o utilizador digita
+    const delayDebounceFn = setTimeout(() => {
+      fetchLogs();
+    }, 500);
 
-  const getSeverityStyle = (type) => {
-    switch (type) {
-      case 'danger': return { borderLeft: '4px solid #dc3545' };
-      case 'warning': return { borderLeft: '4px solid #ffc107' };
-      default: return { borderLeft: '4px solid #0d6efd' };
-    }
+    return () => clearTimeout(delayDebounceFn);
+  }, [currentPage, searchTerm, actionFilter, startDate, endDate]);
+
+  // Função genérica para resets ao alterar filtros
+  const handleFilterChange = (setter) => (e) => {
+    setter(e.target.value);
+    setCurrentPage(1); // Volta sempre à página 1 quando filtra
   };
 
-  // Garante que logs é sempre um array antes de filtrar para evitar erros
-  const safeLogs = Array.isArray(logs) ? logs : [];
-
-  // 1. FILTRAR OS DADOS (Pesquisa + Datas)
-  const filteredLogs = safeLogs.filter(log => {
-    // A) Verifica a pesquisa de texto (Agora pesquisa pelo ID ou Ação)
-    const matchesSearch =
-      (log.user_id && log.user_id.toString().includes(searchTerm)) ||
-      log.action?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // B) Verifica o intervalo de datas 
-    let matchesDate = true;
-    if (startDate || endDate) {
-      // O createdAt vem assim: "2026-05-25T14:30:00.000Z". O split('T')[0] tira só a data "2026-05-25"
-      const logDate = log.createdAt ? log.createdAt.split('T')[0] : '';
-      
-      if (startDate && endDate) {
-        matchesDate = logDate >= startDate && logDate <= endDate;
-      } else if (startDate) {
-        matchesDate = logDate >= startDate; // Só tem data inicial
-      } else if (endDate) {
-        matchesDate = logDate <= endDate;   // Só tem data final
-      }
+  const getSeverityStyle = (action = '') => {
+    const act = action.toLowerCase();
+    if (act.includes('falha') || act.includes('erro') || act.includes('unauthorized')) {
+      return { borderLeft: '4px solid #dc3545' };
     }
+    return { borderLeft: '4px solid #0d6efd' };
+  };
 
-    return matchesSearch && matchesDate;
-  });
-
-  // 2. MATEMÁTICA DA PAGINAÇÃO
-  const indexOfLastLog = currentPage * logsPerPage;
-  const indexOfFirstLog = indexOfLastLog - logsPerPage;
-  // Apenas os logs que pertencem à página atual
-  const currentLogs = filteredLogs.slice(indexOfFirstLog, indexOfLastLog);
-  // Quantidade total de páginas
-  const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
-
-  // 3. GERAR OS BOTÕES DE NÚMEROS DA PAGINAÇÃO
   let paginationItems = [];
   for (let number = 1; number <= totalPages; number++) {
     paginationItems.push(
-      <Pagination.Item
-        key={number}
-        active={number === currentPage}
-        onClick={() => setCurrentPage(number)}
-      >
+      <Pagination.Item key={number} active={number === currentPage} onClick={() => setCurrentPage(number)}>
         {number}
       </Pagination.Item>
     );
   }
-
-  // Função para lidar com a pesquisa (Garante que volta à página 1 se pesquisar algo novo)
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
-  };
 
   return (
     <div className="animate-fade-in py-2">
@@ -113,32 +80,31 @@ const AdminLogs = () => {
             <FontAwesomeIcon icon={faHistory} className="text-primary me-2" />
             Activity Logs (Monitorização)
           </h2>
-          <p className="text-muted small">Registo de auditoria inalterável de todas as ações no sistema.</p>
+          <p className="text-muted small">Registo de auditoria inalterável com suporte a pesquisa por Empresa e Utilizador.</p>
         </div>
         <Button variant="outline-primary" className="rounded-3 border-2 fw-bold d-flex align-items-center gap-2">
           <FontAwesomeIcon icon={faDownload} /> Exportar CSV
         </Button>
       </div>
 
+      {/* BARRA DE FILTROS LIGADA AO BACKEND */}
       <Card className="border-0 shadow-sm rounded-4 mb-4">
         <Card.Body className="p-3">
           <Row className="g-3 align-items-end">
-            {/* Input de Pesquisa */}
             <Col md={12} lg={4}>
               <InputGroup className="bg-light rounded-3 border-0 px-2">
                 <InputGroup.Text className="bg-transparent border-0 text-muted">
                   <FontAwesomeIcon icon={faSearch} />
                 </InputGroup.Text>
                 <Form.Control
-                  placeholder="Pesquisar por utilizador ou ação..."
+                  placeholder="Pesquisar utilizador, empresa ou ação..."
                   className="bg-transparent border-0 shadow-none py-2"
                   value={searchTerm}
-                  onChange={handleSearch}
+                  onChange={handleFilterChange(setSearchTerm)}
                 />
               </InputGroup>
             </Col>
 
-            {/* Input Data Início */}
             <Col xs={6} md={3} lg={2}>
               <Form.Group>
                 <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.7rem' }}>DATA INÍCIO</Form.Label>
@@ -146,12 +112,11 @@ const AdminLogs = () => {
                   type="date"
                   className="bg-light border-0 py-2 rounded-3 shadow-none text-muted"
                   value={startDate}
-                  onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }}
+                  onChange={handleFilterChange(setStartDate)}
                 />
               </Form.Group>
             </Col>
 
-            {/* Input Data Fim */}
             <Col xs={6} md={3} lg={2}>
               <Form.Group>
                 <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.7rem' }}>DATA FIM</Form.Label>
@@ -159,20 +124,31 @@ const AdminLogs = () => {
                   type="date"
                   className="bg-light border-0 py-2 rounded-3 shadow-none text-muted"
                   value={endDate}
-                  onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }}
+                  onChange={handleFilterChange(setEndDate)}
                 />
               </Form.Group>
             </Col>
 
-            {/* Dropdown de Tipo (Opcional, podes implementar a lógica no futuro) */}
             <Col md={6} lg={4}>
               <Form.Group>
                 <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.7rem' }}>TIPO DE AÇÃO</Form.Label>
-                <Form.Select className="bg-light border-0 py-2 rounded-3 shadow-none text-muted">
-                  <option>Todos os tipos</option>
-                  <option>Login/Acesso</option>
-                  <option>Conteúdo</option>
-                  <option>Utilizadores</option>
+                <Form.Select
+                  className="bg-light border-0 py-2 rounded-3 shadow-none text-muted"
+                  value={actionFilter}
+                  onChange={handleFilterChange(setActionFilter)}
+                >
+                  <option value="">Todos os tipos</option>
+                  <option value="USER_LOGIN_SUCCESS">Logins com Sucesso</option>
+                  <option value="UNAUTHORIZED_ACCESS_ATTEMPT">Tentativas Não Autorizadas</option>
+                  <option value="TICKET_CREATED">Criação de Tickets</option>
+                  <option value="TICKET_UPDATED">Atualização de Tickets</option>
+                  <option value="DOCUMENT_UPLOADED">Upload de Documentos</option>
+                  <option value="DOCUMENT_DELETED">Remoção de Documentos</option>
+                  <option value="USER_CREATED">Criação de Utilizadores</option>
+                  <option value="USER_UPDATED">Atualização de Utilizadores</option>
+                  <option value="USER_DELETED">Remoção de Utilizadores</option>
+                  <option value="ROLE_ASSIGNED">Atribuição de Cargos</option>
+                  <option value="ROLE_REMOVED">Remoção de Cargos</option>
                 </Form.Select>
               </Form.Group>
             </Col>
@@ -186,88 +162,111 @@ const AdminLogs = () => {
             <thead className="bg-light border-bottom text-uppercase" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
               <tr>
                 <th className="px-4 py-3 text-muted">Data / Hora</th>
-                <th className="py-3 text-muted">Utilizador</th>
+                <th className="py-3 text-muted">Utilizador & Empresa</th>
                 <th className="py-3 text-muted">Ação Realizada</th>
                 <th className="px-4 py-3 text-muted text-end">Endereço IP</th>
               </tr>
             </thead>
             <tbody style={{ fontSize: '0.85rem' }}>
               {loading ? (
-                <tr>
-                  <td colSpan="4" className="text-center py-5 text-muted">
-                    A carregar dados do servidor...
-                  </td>
-                </tr>
+                // SKELETON LOADING (Framer Motion + Bootstrap)
+                Array.from({ length: 5 }).map((_, index) => (
+                  <motion.tr
+                    key={`skeleton-${index}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    className="placeholder-glow border-bottom"
+                  >
+                    <td className="px-4 py-4">
+                      <span className="placeholder col-5 rounded bg-secondary opacity-50 me-2"></span>
+                      <span className="placeholder col-4 rounded bg-secondary opacity-25"></span>
+                    </td>
+                    <td className="py-4">
+                      <div className="d-flex flex-column gap-1">
+                        <span className="placeholder col-8 rounded bg-secondary opacity-50"></span>
+                        <span className="placeholder col-4 rounded bg-secondary opacity-25"></span>
+                      </div>
+                    </td>
+                    <td className="py-4">
+                      <div className="d-flex align-items-center">
+                        <span className="placeholder rounded-circle bg-secondary opacity-50 me-2" style={{ width: '16px', height: '16px' }}></span>
+                        <span className="placeholder col-8 rounded bg-secondary opacity-50"></span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-end">
+                      <span className="placeholder col-5 rounded bg-secondary opacity-50"></span>
+                    </td>
+                  </motion.tr>
+                ))
               ) : error ? (
-                <tr>
-                  <td colSpan="4" className="text-center py-5 text-danger">
-                    Erro: {error}
-                  </td>
-                </tr>
-              ) : currentLogs.length > 0 ? (
-                currentLogs.map((log) => {
+                <tr><td colSpan="4" className="text-center py-5 text-danger">Erro: {error}</td></tr>
+              ) : logs.length > 0 ? (
+                logs.map((log) => {
                   const dateObj = new Date(log.createdAt);
                   const formattedDate = dateObj.toLocaleDateString('pt-PT');
-                  const formattedTime = dateObj.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-                  const severity = log.action.toLowerCase().includes('falha') || log.action.toLowerCase().includes('erro')
-                    ? 'danger'
-                    : 'info';
+                  const formattedTime = dateObj.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
 
                   return (
-                    <tr key={log.id} style={getSeverityStyle(severity)}>
+                    <tr key={log.id} style={getSeverityStyle(log.action)}>
                       <td className="px-4 py-3 text-muted font-monospace">
                         {formattedDate} <span className="ms-2 opacity-50">{formattedTime}</span>
                       </td>
                       <td className="py-3">
-                        <div className="d-flex align-items-center gap-2">
-                          {/* Como a DB só tem o ID, mostramos o ID por agora */}
-                          <span className="fw-bold text-dark">User ID: {log.user_id || 'Sistema'}</span>
+                        <div className="d-flex flex-column">
+                          <div className="d-flex align-items-center gap-2 mb-1">
+                            <span className="fw-bold text-dark">{log.User ? log.User.email : 'Sistema'}</span>
+                            {log.User && log.User.Role && (
+                              <Badge bg="light" text="dark" className="border fw-normal" style={{ fontSize: '0.65rem' }}>
+                                {log.User.Role.name}
+                              </Badge>
+                            )}
+                          </div>
+                          {log.User && log.User.Company && (
+                            <small className="text-muted d-flex align-items-center gap-1">
+                              <FontAwesomeIcon icon={faBuilding} className="opacity-50" style={{ fontSize: '0.7rem' }} />
+                              {log.User.Company.name}
+                            </small>
+                          )}
                         </div>
                       </td>
                       <td className="py-3">
-                        {severity === 'danger' && <FontAwesomeIcon icon={faExclamationTriangle} className="text-danger me-2" />}
-                        {severity === 'info' && <FontAwesomeIcon icon={faInfoCircle} className="text-primary me-2" />}
+                        {log.action?.toLowerCase().includes('falha') && <FontAwesomeIcon icon={faExclamationTriangle} className="text-danger me-2" />}
+                        {log.action?.toLowerCase().includes('success') && <FontAwesomeIcon icon={faInfoCircle} className="text-primary me-2" />}
                         <span className="text-secondary">{log.action}</span>
                       </td>
                       <td className="px-4 py-3 text-end text-muted font-monospace">
-                        {/* Mapear para o nome correto da base de dados */}
-                        {log.ip_address || 'N/A'}
+                        {log.ip_address === '::1' ? '127.0.0.1 (Local)' : (log.ip_address || 'N/A')}
                       </td>
                     </tr>
                   );
                 })
               ) : (
-                <tr>
-                  <td colSpan="4" className="text-center py-5 text-muted">Nenhum registo encontrado.</td>
-                </tr>
+                <tr><td colSpan="4" className="text-center py-5 text-muted">Nenhum registo encontrado.</td></tr>
               )}
             </tbody>
           </Table>
         </div>
 
-        {/* PAGINAÇÃO DINÂMICA */}
+        {/* PAGINAÇÃO */}
         <Card.Footer className="bg-white border-0 p-3 d-flex justify-content-between align-items-center">
-          <small className="text-muted">
-            A mostrar {filteredLogs.length === 0 ? 0 : indexOfFirstLog + 1} a {Math.min(indexOfLastLog, filteredLogs.length)} de {filteredLogs.length} registos
-          </small>
+          <small className="text-muted">Total de registos: {totalRecords}</small>
 
-          {totalPages > 1 && (
-            <Pagination className="mb-0">
-              <Pagination.Prev
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              />
+          <Pagination className="mb-0">
+            <Pagination.Prev
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+            />
 
-              {paginationItems}
+            {paginationItems}
 
-              <Pagination.Next
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              />
-            </Pagination>
-          )}
+            <Pagination.Next
+              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+            />
+          </Pagination>
         </Card.Footer>
+
       </Card>
     </div>
   );
