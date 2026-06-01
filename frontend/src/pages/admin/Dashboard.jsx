@@ -1,21 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Row, Col, Card, Badge, Table, Button, Spinner, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  faShieldAlt, faExclamationCircle, faSpinner, faCheckCircle, faChartLine, faRefresh 
+  faShieldAlt, faExclamationCircle, faSpinner, faCheckCircle, faChartLine 
 } from '@fortawesome/free-solid-svg-icons';
 import { dashboardApi } from '../../api/dashboardApi';
-
-// Importações do Chart.js
 import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip as ChartTooltip, Legend, ArcElement
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 
-// Registar os componentes do Chart.js
+// Registar os componentes do Chart
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, ChartTooltip, Legend, ArcElement);
 
 const Dashboard = () => {
+  // Inicializar o hook de navegação (Isto faltava!)
+  const navigate = useNavigate();
+
   // LÓGICA DE PERMISSÕES
   const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
   const isAdmin = loggedInUser.permissions?.includes('VIEW_ALL_INCIDENTS') || loggedInUser.role_id === 1;
@@ -25,7 +27,7 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Função para carregar os dados reais da Base de Dados
+  // Função para carregar os dados da BD
   const loadData = async () => {
     setIsLoading(true);
     setError(null);
@@ -59,9 +61,6 @@ const Dashboard = () => {
       <Alert variant="danger" className="rounded-4 border-0 shadow-sm mt-4">
         <FontAwesomeIcon icon={faExclamationCircle} className="me-2" />
         <strong>Erro:</strong> {error}
-        <Button variant="outline-danger" size="sm" className="ms-3 rounded-pill" onClick={loadData}>
-          Tentar Novamente
-        </Button>
       </Alert>
     );
   }
@@ -69,7 +68,7 @@ const Dashboard = () => {
   // Desestruturar os dados vindos do Backend
   const { kpis, barChartData, pieChartData, recentIncidents } = dashboardData;
 
-  // --- PREPARAÇÃO DOS DADOS PARA O CHART.JS ---
+  // --- PREPARAÇÃO DOS DADOS PARA O CHART ---
   const barData = {
     labels: barChartData.map(item => item.name),
     datasets: [
@@ -121,13 +120,13 @@ const Dashboard = () => {
             <FontAwesomeIcon icon={faChartLine} className="text-primary me-2" /> Dashboard
           </h2>
           <p className="text-muted small mb-0">
-            Olá, <strong>{loggedInUser.name || 'Utilizador'}</strong> 👋. 
+            Olá, <strong>{loggedInUser.name || 'Utilizador'}</strong>. 
             {isAdmin ? ' Aqui tens o resumo global da plataforma.' : ' Aqui tens o resumo dos teus serviços.'}
           </p>
         </div>
       </div>
 
-      {/* SECÇÃO 1: CARTÕES KPI */}
+      {/* CARTÕES KPI */}
       <Row className="g-3 mb-4">
         <Col md={3} sm={6}>
           <Card className="border-0 shadow-sm rounded-4 h-100 overflow-hidden">
@@ -186,7 +185,7 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* SECÇÃO 2: GRÁFICOS */}
+      {/* GRÁFICOS */}
       <Row className="g-4 mb-4">
         <Col lg={8}>
           <Card className="border-0 shadow-sm rounded-4 h-100 overflow-hidden">
@@ -211,7 +210,7 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* SECÇÃO 3: TABELA DE AÇÃO RÁPIDA */}
+      {/* TABELA DE AÇÃO */}
       <Card className="border-0 shadow-sm rounded-4 overflow-hidden mb-4">
         <Card.Header className="bg-white border-0 pt-4 pb-0 px-4">
           <h5 className="fs-6 fw-bold text-dark mb-2">Incidentes Recentes</h5>
@@ -236,7 +235,11 @@ const Dashboard = () => {
                 </tr>
               ) : (
                 recentIncidents.map((inc) => (
-                  <tr key={inc.id} style={{ cursor: 'pointer' }}>
+                  <tr 
+                    key={inc.id} 
+                    style={{ cursor: 'pointer' }} 
+                    onClick={() => navigate(`/admin/incidentes/${inc.id}`)} // Aplicação do clique e da navegação!
+                  >
                     <td className="px-4 py-3 fw-bold text-secondary">#{inc.id}</td>
                     <td className="py-3 fw-medium text-dark">{inc.title}</td>
                     <td className="py-3">
