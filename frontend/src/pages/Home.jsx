@@ -1,29 +1,15 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
-import HelpCard from "../components/HelpCard";
-import ContactInfo from "../components/ContactInfo";
-import ContactForm from "../components/ContactForm";
-import Hero from "../components/Hero";
-import ContextoAtual from "../components/ContextoAtual";
-import Regulamentacao from "../components/Regulamentacao";
-import Servicos from "../components/Servicos";
-import PorqueEscolher from "../components/PorqueEscolher";
-
-// --- OS IMPORTS DOS ÍCONES QUE FALTAVAM ---
-import {
-  faCertificate,
-  faUsersGear,
-  faLaptopCode,
-  faShieldVirus,
-  faBug,
-  faServer,
-  faEnvelopeOpenText,
-  faTriangleExclamation,
-  faUserShield,
-  faCircleCheck,
-  faShieldHalved,
-  faUserGraduate,
-} from "@fortawesome/free-solid-svg-icons";
+import HelpCard from "../components/home/HelpCard";
+import ContactInfo from "../components/home/ContactInfo";
+import ContactForm from "../components/home/ContactForm";
+import Hero from "../components/home/Hero";
+import ContextoAtual from "../components/home/ContextoAtual";
+import Regulamentacao from "../components/home/Regulamentacao";
+import Servicos from "../components/home/Servicos";
+import PorqueEscolher from "../components/home/PorqueEscolher";
 
 const darkSection = {
   backgroundColor: "#0f172a",
@@ -136,12 +122,41 @@ const listaServicos = [
 ];
 
 const Home = () => {
+  const [dadosDoBackoffice, setDadosDoBackoffice] = useState(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    const carregarDados = async () => {
+      try {
+        const dados = await getConteudoHome();
+        setDadosDoBackoffice(dados);
+      } catch (erro) {
+        console.log("Falha ao carregar API, a usar textos por defeito.");
+      }
+    };
+
+    carregarDados();
+  }, []);
+
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.replace("#", "");
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [location]);
+
   return (
     <div className="overflow-hidden">
       <Hero
         titulo="Cibersegurança para organizações que não podem parar"
         subtitulo="Num contexto em que os ataques cibernéticos aumentam todos os dias, as organizações precisam de proteger os seus sistemas, dados e serviços críticos."
-        textoBotao="Contactos"
+        textoBotao="Começar agora"
+        linkBotao="#contact"
         imagemFundo="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop"
       />
       <ContextoAtual
