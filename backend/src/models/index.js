@@ -34,8 +34,16 @@ Permission.belongsToMany(Role, { through: RolePermission, foreignKey: 'permissio
 Company.hasMany(User, { foreignKey: 'company_id' });
 User.belongsTo(Company, { foreignKey: 'company_id' });
 
-User.hasMany(Company, { foreignKey: 'manager_user_id', as: 'ManagedCompanies' });
-Company.belongsTo(User, { foreignKey: 'manager_user_id', as: 'Manager' });
+// --- Companies and Admins ---
+User.hasMany(Company, { foreignKey: 'client_owner_id', as: 'OwnedCompanies' });
+Company.belongsTo(User, { foreignKey: 'client_owner_id', as: 'ClientOwner' });
+
+User.hasMany(Company, { foreignKey: 'emergency_admin_id', as: 'EmergencyContactCompanies' });
+Company.belongsTo(User, { foreignKey: 'emergency_admin_id', as: 'EmergencyAdmin' });
+
+// M:N Relation
+Company.belongsToMany(User, { through: 'CompanyAdmins', as: 'AssignedAdmins', foreignKey: 'company_id' });
+User.belongsToMany(Company, { through: 'CompanyAdmins', as: 'AssignedCompanies', foreignKey: 'user_id' });
 
 // --- CMS ---
 User.hasMany(Page, { foreignKey: 'author_id' });

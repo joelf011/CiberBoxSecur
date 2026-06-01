@@ -1,5 +1,10 @@
-const { Incident } = require('../models');
+const { Incident, Company, User } = require('../models');
 const auditLogService = require('./auditLogService');
+
+const includeOptions = [
+    { model: Company, as: 'Company', attributes: ['id', 'name'] },
+    { model: User, as: 'User', attributes: ['id', 'name', 'email'] }
+];
 
 const incidentService = {
     async create(user, data, ipAddress) {
@@ -23,7 +28,7 @@ const incidentService = {
         });
 
         // LOG
-        await await auditLogService.logEvent({
+        await auditLogService.logEvent({
             user_id: user.id,
             action: 'INCIDENT_CREATE',
             entity_type: 'Incident',
@@ -44,12 +49,13 @@ const incidentService = {
 
         return await Incident.findAll({
             where: whereClause,
+            include: includeOptions,
             order: [['createdAt', 'DESC']]
         });
     },
 
     async findOne(id, userCompanyId) {
-        const incident = await Incident.findByPk(id);
+        const incident = await Incident.findByPk(id, { include: includeOptions });
         if (!incident) throw new Error('Incident not found.');
 
         // Prevent a client from viewing an incident that belongs to another company
@@ -68,7 +74,7 @@ const incidentService = {
         await incident.update(updates);
 
         // LOG
-        await await auditLogService.logEvent({
+        await auditLogService.logEvent({
             user_id: user.id,
             action: 'INCIDENT_UPDATE',
             entity_type: 'Incident',
@@ -86,7 +92,7 @@ const incidentService = {
         await incident.destroy();
 
         // LOG
-        await await auditLogService.logEvent({
+        await auditLogService.logEvent({
             user_id: user.id,
             action: 'INCIDENT_DELETE',
             entity_type: 'Incident',
@@ -99,7 +105,7 @@ const incidentService = {
 
     async restore(id, user, ipAddress) {
         // To find a soft-deleted record
-        const incident = await Incident.findByPk(id, { paranoid: false });
+        const incident = await Incident.findByPk(id, { paranoid: false, include: includeOptions });
         
         if (!incident) throw new Error('Incident not found.');
         
@@ -119,7 +125,7 @@ const incidentService = {
         await incident.restore();
 
         // Log the restore event
-        await await auditLogService.logEvent({
+        await auditLogService.logEvent({
             user_id: user.id,
             action: 'INCIDENT_RESTORE',
             entity_type: 'Incident',

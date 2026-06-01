@@ -6,7 +6,9 @@ import {
   faPlus, 
   faEye, 
   faShieldAlt,
-  faExclamationTriangle
+  faExclamationTriangle,
+  faBuilding,
+  faUserTie
 } from '@fortawesome/free-solid-svg-icons';
 import { incidentsApi } from '../../api/incidentsApi';
 import { Alerts } from '../../utils/Alerts';
@@ -86,6 +88,7 @@ const ListaIncidentes = () => {
             <thead className="bg-light border-bottom text-uppercase" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
               <tr>
                 <th className="px-4 py-3 text-muted">Ticket / Data</th>
+                <th className="py-3 text-muted">Empresa / Reportado por</th>
                 <th className="py-3 text-muted">Resumo (Título)</th>
                 <th className="py-3 text-muted">Criticidade</th>
                 <th className="py-3 text-muted">Estado</th>
@@ -95,13 +98,13 @@ const ListaIncidentes = () => {
             <tbody style={{ fontSize: '0.9rem' }}>
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-5 text-muted">
+                  <td colSpan="6" className="text-center py-5 text-muted">
                     <Spinner size="sm" className="me-2" /> A carregar incidentes...
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-5 text-danger">
+                  <td colSpan="6" className="text-center py-5 text-danger">
                     <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" /> {error}
                   </td>
                 </tr>
@@ -110,12 +113,25 @@ const ListaIncidentes = () => {
                   const dateObj = new Date(inc.createdAt);
                   const formattedDate = dateObj.toLocaleDateString('pt-PT');
                   const formattedTime = dateObj.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+                  const reporterName = inc.Reporter?.name || inc.User?.name || 'Desconhecido';
+                  const companyName = inc.Company?.name || 'Sem Empresa';
 
                   return (
                     <tr key={inc.id}>
                       <td className="px-4 py-3 font-monospace text-muted">
                         <div className="fw-bold text-dark">#INC-{inc.id.toString().padStart(4, '0')}</div>
                         <small style={{ fontSize: '0.75rem' }}>{formattedDate} {formattedTime}</small>
+                      </td>
+                      {/* EMPRESA E UTILIZADOR */}
+                      <td className="py-3">
+                        <div className="fw-bold text-dark mb-1">
+                          <FontAwesomeIcon icon={faBuilding} className="text-muted me-2" style={{fontSize: '0.8rem'}} />
+                          {companyName}
+                        </div>
+                        <div className="text-muted small">
+                          <FontAwesomeIcon icon={faUserTie} className="me-2" style={{fontSize: '0.8rem'}} />
+                          {reporterName}
+                        </div>
                       </td>
                       <td className="py-3 fw-medium text-dark">
                         {inc.title}
@@ -141,7 +157,7 @@ const ListaIncidentes = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center py-5 text-muted">
+                  <td colSpan="6" className="text-center py-5 text-muted">
                     Não existem incidentes reportados no histórico.
                   </td>
                 </tr>
