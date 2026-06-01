@@ -13,10 +13,11 @@ import {
   faFileExcel, 
   faFileAlt 
 } from '@fortawesome/free-solid-svg-icons';
-import { companyApi } from '../../api/companyApi'; // Ajusta o caminho se o teu ficheiro estiver noutra pasta
+import { companyApi } from '../../api/companyApi'; 
+import { documentApi } from '../../api/documentApi'; 
 
 const RepositorioGlobal = () => {
-  // Estados dos dados vindo do Servidor
+  // Estados vindos do Servidor (BD Real)
   const [companies, setCompanies] = useState([]);
   const [globalCategories, setGlobalCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,55 +26,72 @@ const RepositorioGlobal = () => {
   // Estados de Interação da Interface (UI)
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [expandedCompanies, setExpandedCompanies] = useState({});
+  
+  // Estados para a Criação de Nova Pasta (Modal)
+  const [showModal, setShowModal] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [submittingFolder, setSubmittingFolder] = useState(false);
 
-  // Definição da cor dos ícones pedida por ti
+  // Cor padrão dos ícones
   const iconColor = "#0d6efd";
 
-  useEffect(() => {
-    const carregarDadosDoBackend = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  // Função independente para carregar os dados sem que um quebre o outro
+  const carregarDadosDoBackend = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        // 1. Procura as tuas empresas reais através da API criada acima
+      // 1. Tenta carregar as Empresas Reais da tua BD
+      try {
         const dadosEmpresas = await companyApi.getAllCompanies();
         console.log("Empresas reais carregadas da tua BD:", dadosEmpresas);
-        setCompanies(dadosEmpresas);
-
-        // 2. Mock de Pastas Globais (Podes ligar a uma rota de documentos globais no futuro)
-        setGlobalCategories([
-          {
-            id: 'cat1',
-            title: "Templates NIS2",
-            count: "12 ficheiros",
-            files: [
-              { id: 'f1', name: "Template_Matriz_Ativos.xlsx", type: "Excel", size: "850 KB", date: "10 Mar 2026" },
-              { id: 'f2', name: "Template_Analise_Risco.xlsx", type: "Excel", size: "1.2 MB", date: "08 Mar 2026" },
-              { id: 'f3', name: "Template_Politica_Seguranca.docx", type: "Word", size: "650 KB", date: "05 Mar 2026" },
-              { id: 'f4', name: "Checklist_Conformidade_NIS2.pdf", type: "PDF", size: "420 KB", date: "01 Mar 2026" }
-            ]
-          },
-          { id: 'cat2', title: "Políticas de Segurança", count: "8 ficheiros", files: [] },
-          { id: 'cat3', title: "Formulários CNCS", count: "4 ficheiros", files: [] },
-          { id: 'cat4', title: "Material Formação", count: "24 ficheiros", files: [] }
-        ]);
-
-      } catch (err) {
-        console.error("Erro na comunicação com o controlador:", err);
-        setError("Não foi possível sincronizar com o servidor. A carregar dados locais.");
-        
-        // Dados de segurança caso o token expire ou dê erro de permissão (VIEW_COMPANIES)
-        setCompanies([
-          { id: 'mock1', name: "TechCorp SA (Modo de Segurança)", compliance_status: "Approved", documents: [] },
-          { id: 'mock2', name: "Banco Financeiro (Modo de Segurança)", compliance_status: "Awaiting", documents: [] }
-        ]);
-      } finally {
-        setLoading(false);
+        setCompanies(dadosEmpresas || []);
+      } catch (empresaErr) {
+        console.error("Erro específico ao buscar empresas:", empresaErr);
+        setError("Erro ao carregar empresas do servidor.");
       }
-    };
 
+      // 2. Tenta carregar as Pastas Globais da tua BD
+      try {
+        const dadosPastas = await documentApi.getAllDocuments();
+        setGlobalCategories(dadosPastas || []);
+      } catch (pastaErr) {
+        // Se der erro aqui (porque a rota não existe no backend), não parte as empresas!
+        console.log("Rota de pastas globais ainda não encontrada ou sem dados. Fica vazia.");
+        setGlobalCategories([]); 
+      }
+
+    } catch (err) {
+      console.error("Erro geral na sincronização:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     carregarDadosDoBackend();
   }, []);
+
+  // Submeter a nova pasta para o Backend
+  const handleCreateFolder = async (e) => {
+    e.preventDefault();
+    if (!newFolderName.trim()) return;
+
+    try {
+      setSubmittingFolder(true);
+      await folderApi.createFolder({ title: newFolderName });
+      
+      setNewFolderName('');
+      setShowModal(false);
+      await carregarDadosDoBackend();
+
+    } catch (err) {
+      console.error("Erro ao criar pasta no backend:", err);
+      alert("Erro ao criar a pasta. Garante que criaste a rota POST /api/global-folders no teu backend.");
+    } finally {
+      setSubmittingFolder(false);
+    }
+  };
 
   const toggleCompany = (id) => {
     setExpandedCompanies(prev => ({ ...prev, [id]: !prev[id] }));
@@ -100,49 +118,63 @@ const RepositorioGlobal = () => {
           <p className="text-muted small">Gestão centralizada de templates, normativos e ficheiros partilhados com todos os utilizadores.</p>
         </div>
 
-        {/* Alerta de erro caso aconteça */}
-        {error && <div className="alert alert-warning py-2 small text-center">{error}</div>}
+        {error && <div className="alert alert-danger py-2 small text-center">{error}</div>}
 
         {/* PASTAS GLOBAIS */}
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h6 className="fw-bold text-secondary mb-0 small text-uppercase">Pastas Globais</h6>
-          <button className="btn btn-sm border fw-bold rounded-3 px-3 py-2 text-primary" style={{ fontSize: '13px' }}>
+          <button 
+            className="btn btn-sm border fw-bold rounded-3 px-3 py-2 text-primary" 
+            style={{ fontSize: '13px' }}
+            onClick={() => setShowModal(true)}
+          >
             <FontAwesomeIcon icon={faPlus} /> Nova Pasta
           </button>
         </div>
 
         {/* Grid de Cards das Pastas */}
-        <div className="row g-3 mb-4">
-          {globalCategories.map((cat) => {
-            const isSelected = selectedCategory?.id === cat.id;
-            return (
-              <div className="col-12 col-md-3" key={cat.id}>
-                <div 
-                  className="card p-3 rounded-3 h-100 d-flex flex-row align-items-center justify-content-between border"
-                  style={{ 
-                    cursor: 'pointer',
-                    borderColor: isSelected ? '#212529' : '#e2e8f0',
-                    borderWidth: isSelected ? '1.5px' : '1px'
-                  }}
-                  onClick={() => setSelectedCategory(isSelected ? null : cat)}
-                >
-                  <div className="d-flex align-items-center gap-3">
-                    <FontAwesomeIcon icon={isSelected ? faFolderOpen : faFolder} style={{ fontSize: '24px', color: iconColor }} />
-                    <div>
-                      <h6 className="fw-bold text-dark mb-0 small">{cat.title}</h6>
-                      <span className="text-muted" style={{ fontSize: '12px' }}>{cat.count}</span>
+        {globalCategories.length > 0 ? (
+          <div className="row g-3 mb-4">
+            {globalCategories.map((cat) => {
+              const catId = cat.id || cat._id;
+              const isSelected = selectedCategory?.id === catId || selectedCategory?._id === catId;
+              const totalFicheiros = cat.files?.length || cat.count || 0;
+
+              return (
+                <div className="col-12 col-md-3" key={catId}>
+                  <div 
+                    className="card p-3 rounded-3 h-100 d-flex flex-row align-items-center justify-content-between border"
+                    style={{ 
+                      cursor: 'pointer',
+                      borderColor: isSelected ? '#212529' : '#e2e8f0',
+                      borderWidth: isSelected ? '1.5px' : '1px'
+                    }}
+                    onClick={() => setSelectedCategory(isSelected ? null : cat)}
+                  >
+                    <div className="d-flex align-items-center gap-3">
+                      <FontAwesomeIcon icon={isSelected ? faFolderOpen : faFolder} style={{ fontSize: '24px', color: iconColor }} />
+                      <div>
+                        <h6 className="fw-bold text-dark mb-0 small">{cat.title}</h6>
+                        <span className="text-muted" style={{ fontSize: '12px' }}>
+                          {totalFicheiros} {totalFicheiros === 1 ? 'ficheiro' : 'ficheiros'}
+                        </span>
+                      </div>
                     </div>
+                    {isSelected && (
+                      <button className="btn btn-link p-0 text-muted shadow-none border-0" onClick={(e) => { e.stopPropagation(); setSelectedCategory(null); }}>
+                        <FontAwesomeIcon icon={faTimes} size="sm" />
+                      </button>
+                    )}
                   </div>
-                  {isSelected && (
-                    <button className="btn btn-link p-0 text-muted shadow-none border-0" onClick={(e) => { e.stopPropagation(); setSelectedCategory(null); }}>
-                      <FontAwesomeIcon icon={faTimes} size="sm" />
-                    </button>
-                  )}
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center text-muted border border-dashed rounded-3 py-4 mb-4 small">
+            Nenhuma pasta global criada na Base de Dados.
+          </div>
+        )}
 
         {/* PASTA GLOBAL EXPANDIDA */}
         {selectedCategory && (
@@ -160,7 +192,7 @@ const RepositorioGlobal = () => {
             {selectedCategory.files && selectedCategory.files.length > 0 ? (
               <div className="d-flex flex-column gap-3">
                 {selectedCategory.files.map((file) => (
-                  <div key={file.id} className="d-flex align-items-center justify-content-between bg-white p-3 rounded-3 border-0">
+                  <div key={file.id || file._id} className="d-flex align-items-center justify-content-between bg-white p-3 rounded-3 border-0">
                     <div className="d-flex align-items-center">
                       {getFileIcon(file.type)}
                       <div className="d-flex flex-column">
@@ -169,7 +201,7 @@ const RepositorioGlobal = () => {
                       </div>
                     </div>
                     <div className="d-flex align-items-center gap-4">
-                      <span className="text-muted small d-none d-md-inline" style={{ fontSize: '13px' }}>{file.date}</span>
+                      <span className="text-muted small d-none d-md-inline" style={{ fontSize: '13px' }}>{file.date || file.createdAt}</span>
                       <button className="btn btn-link p-1 text-primary shadow-none" style={{ color: iconColor }}>
                         <FontAwesomeIcon icon={faDownload} />
                       </button>
@@ -178,7 +210,7 @@ const RepositorioGlobal = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center text-muted py-4 small">Nenhum ficheiro guardado nesta pasta global.</div>
+              <div className="text-center text-muted py-4 small">Esta pasta na base de dados ainda não contém ficheiros.</div>
             )}
           </div>
         )}
@@ -189,75 +221,119 @@ const RepositorioGlobal = () => {
         </div>
 
         {loading ? (
-          <div className="text-center text-muted p-4">A sincronizar com a Base de Dados no Render...</div>
+          <div className="text-center text-muted p-4">A carregar dados do ecossistema...</div>
         ) : (
           <div className="d-flex flex-column gap-3">
-            {companies.map((company) => {
-              const compId = company.id || company._id;
-              const isExpanded = !!expandedCompanies[compId];
-              
-              // Se a tua BD não tiver a propriedade documents injetada, definimos como vazia para não quebrar o map
-              const docsDaEmpresa = company.documents || []; 
+            {companies.length > 0 ? (
+              companies.map((company) => {
+                const compId = company.id || company._id;
+                const isExpanded = !!expandedCompanies[compId];
+                const docsDaEmpresa = company.documents || []; 
 
-              return (
-                <div key={compId} className="border rounded-4 overflow-hidden bg-white">
-                  
-                  {/* Linha da Empresa da BD */}
-                  <div 
-                    className="p-4 d-flex justify-content-between align-items-center bg-light-subtle"
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => toggleCompany(compId)}
-                  >
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="rounded-3 text-white fw-bold d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px', backgroundColor: '#0d6efd' }}>
-                        {company.name ? company.name.substring(0, 2).toUpperCase() : 'CO'}
-                      </div>
-                      <div>
-                        <h6 className="fw-bold text-dark mb-0">{company.name}</h6>
-                        <span className="text-muted small" style={{ fontSize: '12px' }}>
-                          Estado Compliance: <b className="text-capitalize">{company.compliance_status || 'Awaiting'}</b>
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-muted">
-                      <FontAwesomeIcon icon={isExpanded ? faChevronUp : faChevronDown} />
-                    </div>
-                  </div>
-
-                  {/* Detalhes de ficheiros internos se expandido */}
-                  {isExpanded && (
-                    <div className="p-4 bg-white border-top">
-                      {docsDaEmpresa.length > 0 ? (
-                        <div className="table-responsive">
-                          <table className="table align-middle border-0 mb-0">
-                            <tbody>
-                              {docsDaEmpresa.map((doc) => (
-                                <tr key={doc.id || doc._id}>
-                                  <td className="border-bottom py-3 fw-medium text-dark d-flex align-items-center gap-2" style={{ fontSize: '14px' }}>
-                                    {getFileIcon(doc.type)}
-                                    {doc.name}
-                                  </td>
-                                  <td className="border-bottom py-3 text-end">
-                                    <button className="btn btn-link text-muted p-1"><FontAwesomeIcon icon={faDownload} /></button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                return (
+                  <div key={compId} className="border rounded-4 overflow-hidden bg-white">
+                    
+                    <div 
+                      className="p-4 d-flex justify-content-between align-items-center bg-light-subtle"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => toggleCompany(compId)}
+                    >
+                      <div className="d-flex align-items-center gap-3">
+                        <div className="rounded-3 text-white fw-bold d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px', backgroundColor: '#0d6efd' }}>
+                          {company.name ? company.name.substring(0, 2).toUpperCase() : 'CO'}
                         </div>
-                      ) : (
-                        <div className="text-center text-muted py-2 small">Nenhum documento anexado de momento a esta organização na Base de Dados.</div>
-                      )}
+                        <div>
+                          <h6 className="fw-bold text-dark mb-0">{company.name}</h6>
+                          <span className="text-muted small" style={{ fontSize: '12px' }}>
+                            Estado Compliance: <b className="text-capitalize">{company.compliance_status || 'Awaiting'}</b>
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-muted">
+                        <FontAwesomeIcon icon={isExpanded ? faChevronUp : faChevronDown} />
+                      </div>
                     </div>
-                  )}
 
-                </div>
-              );
-            })}
+                    {isExpanded && (
+                      <div className="p-4 bg-white border-top">
+                        {docsDaEmpresa.length > 0 ? (
+                          <div className="table-responsive">
+                            <table className="table align-middle border-0 mb-0">
+                              <tbody>
+                                {docsDaEmpresa.map((doc) => (
+                                  <tr key={doc.id || doc._id}>
+                                    <td className="border-bottom py-3 fw-medium text-dark d-flex align-items-center gap-2" style={{ fontSize: '14px' }}>
+                                      {getFileIcon(doc.type)}
+                                      {doc.name}
+                                    </td>
+                                    <td className="border-bottom py-3 text-end">
+                                      <button className="btn btn-link text-muted p-1"><FontAwesomeIcon icon={faDownload} /></button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <div className="text-center text-muted py-2 small">Nenhum documento anexado de momento a esta organização na Base de Dados.</div>
+                        )}
+                      </div>
+                    )}
+
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center text-muted border rounded-3 py-4 small">No momento não existem empresas registadas na base de dados.</div>
+            )}
           </div>
         )}
 
       </div>
+
+      {/* MODAL BOOTSTRAP PARA CRIAÇÃO DE NOVA PASTA */}
+      {showModal && (
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 rounded-4 shadow-lg">
+              <div className="modal-header border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                <h5 className="modal-title fw-bold text-dark">Criar Nova Pasta Global</h5>
+                <button type="button" className="btn-close shadow-none" onClick={() => setShowModal(false)}></button>
+              </div>
+              <form onSubmit={handleCreateFolder}>
+                <div className="modal-body px-4 py-3">
+                  <div className="form-group">
+                    <label className="form-label text-secondary small fw-bold mb-2">Nome da Pasta</label>
+                    <input 
+                      type="text" 
+                      className="form-control rounded-3 p-3 shadow-none" 
+                      placeholder="Ex: Políticas NIS2, Manuais..."
+                      value={newFolderName}
+                      onChange={(e) => setNewFolderName(e.target.value)}
+                      required
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer border-0 pb-4 px-4 gap-2">
+                  <button type="button" className="btn btn-light rounded-3 px-4 py-2 fw-semibold text-secondary" onClick={() => setShowModal(false)}>
+                    Cancelar
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary rounded-3 px-4 py-2 fw-semibold"
+                    style={{ backgroundColor: iconColor, borderColor: iconColor }}
+                    disabled={submittingFolder}
+                  >
+                    {submittingFolder ? 'A criar...' : 'Criar Pasta'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
