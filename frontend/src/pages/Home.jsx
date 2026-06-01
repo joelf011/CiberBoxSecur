@@ -10,6 +10,20 @@ import ContextoAtual from "../components/home/ContextoAtual";
 import Regulamentacao from "../components/home/Regulamentacao";
 import Servicos from "../components/home/Servicos";
 import PorqueEscolher from "../components/home/PorqueEscolher";
+import {
+  faCertificate,
+  faUsersGear,
+  faLaptopCode,
+  faShieldVirus,
+  faBug,
+  faServer,
+  faEnvelopeOpenText,
+  faTriangleExclamation,
+  faUserShield,
+  faCircleCheck,
+  faShieldHalved,
+  faUserGraduate,
+} from "@fortawesome/free-solid-svg-icons";
 
 const darkSection = {
   backgroundColor: "#0f172a",
