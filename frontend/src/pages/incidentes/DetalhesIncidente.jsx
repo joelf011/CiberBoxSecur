@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Row, Col, Button, Spinner } from 'react-bootstrap';
+import { Row, Col, Button, Spinner, Badge } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faBuilding, faUserTie } from '@fortawesome/free-solid-svg-icons';
 import { incidentsApi } from '../../api/incidentsApi';
 import { Alerts } from '../../utils/Alerts';
 
@@ -13,19 +13,9 @@ import PainelGestao from './PainelGestao';
 const DetalhesIncidente = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
   const [incident, setIncident] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // 1. LÓGICA DE PERMISSÕES DA TUA IMAGEM
   const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
-
-  console.log("Dados do Utilizador:", loggedInUser);
-  console.log("É Admin ou Gestor?", loggedInUser.Role?.name === 'ADMIN' || loggedInUser.Role?.name === 'MANAGER');
-  
-  // Como tens o sistema de permissões ativado (aquela imagem dos botões on/off),
-  // se o utilizador for 'ADMIN' ou 'MANAGER', ele tem permissão para "Editar".
-  // Se for cliente, não tem.
   const hasEditPermission = loggedInUser.permissions?.includes('UPDATE_INCIDENT');
 
   const fetchIncidentDetails = async () => {
@@ -53,23 +43,39 @@ const DetalhesIncidente = () => {
     );
   }
 
+  // Nomes da Empresa e Utilizador
+  const reporterName = incident.Reporter?.name || incident.User?.name || 'Desconhecido';
+  const companyName = incident.Company?.name || 'Empresa Desconhecida';
+
   return (
     <div className="animate-fade-in py-2 max-w-5xl mx-auto">
       {/* Botão Voltar */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex justify-content-between align-items-center mb-3">
         <Button variant="outline-secondary" size="sm" onClick={() => navigate('/admin/incidentes')}>
           <FontAwesomeIcon icon={faArrowLeft} className="me-2" /> Voltar ao Histórico
         </Button>
-        <div className="text-muted small">Ticket #INC-{incident.id.toString().padStart(4, '0')}</div>
+        <div className="text-muted small fw-bold font-monospace">Ticket #INC-{incident.id.toString().padStart(4, '0')}</div>
+      </div>
+
+      {/* --- CONTEXTO DO INCIDENTE --- */}
+      <div className="mb-4 d-flex gap-3 flex-wrap">
+         <Badge bg="white" text="dark" className="border px-3 py-2 fs-6 shadow-sm fw-medium">
+             <FontAwesomeIcon icon={faBuilding} className="text-primary me-2"/>
+             {companyName}
+         </Badge>
+         <Badge bg="white" text="dark" className="border px-3 py-2 fs-6 shadow-sm fw-medium">
+             <FontAwesomeIcon icon={faUserTie} className="text-secondary me-2"/>
+             Reportado por: {reporterName}
+         </Badge>
       </div>
 
       <Row className="g-4">
-        {/* COLUNA ESQUERDA: Sempre visível (Para todos que tenham a permissão "Visualizar") */}
+        {/* COLUNA ESQUERDA */}
         <Col lg={hasEditPermission ? 6 : 12}>
           <ResumoCliente incident={incident} />
         </Col>
 
-        {/* COLUNA DIREITA: Visível apenas se tiver a permissão "Editar" da tua grelha */}
+        {/* COLUNA DIREITA */}
         {hasEditPermission && (
           <Col lg={6}>
             <PainelGestao incident={incident} onUpdateSuccess={fetchIncidentDetails} />
