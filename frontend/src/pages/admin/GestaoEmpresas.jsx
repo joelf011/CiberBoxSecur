@@ -202,8 +202,8 @@ const GestaoEmpresas = () => {
               <thead className="bg-light border-bottom text-uppercase" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
                 <tr>
                   <th className="px-4 py-3 text-muted">Empresa (NIF)</th>
-                  <th className="py-3 text-muted">Dono / Cliente</th>
-                  <th className="py-3 text-muted">Contacto SOS (Cibersecur)</th>
+                  <th className="py-3 text-muted">Cliente</th>
+                  <th className="py-3 text-muted">Contacto SOS (Ciberbox)</th>
                   <th className="py-3 text-muted">Estado</th>
                   <th className="px-4 py-3 text-muted text-end">Ações</th>
                 </tr>
@@ -301,7 +301,7 @@ const GestaoEmpresas = () => {
             <h6 className="fw-bold text-primary mb-3 pb-2 border-bottom">Estrutura e Acessos</h6>
             <Row className="g-3">
               
-              {/* PESQUISA DE DONO / CLIENTE */}
+              {/* PESQUISA DE CLIENTE */}
               <Col md={6}>
                 <Form.Label className="small fw-bold text-secondary">Dono / Representante Legal</Form.Label>
                 <Card className="shadow-none border border-secondary border-opacity-25 rounded-3">
