@@ -14,8 +14,12 @@ const authService = {
         tokenExpiresAt.setHours(tokenExpiresAt.getHours() + 24);
 
         const newUser = await User.create({
-            name, email, role_id: role_id || null,
-            activation_token: activationToken, token_expires_at: tokenExpiresAt, is_active: true
+            name, 
+            email, 
+            role_id: role_id || null,
+            activation_token: activationToken, 
+            token_expires_at: tokenExpiresAt, 
+            is_active: false
         });
 
         await auditLogService.logEvent({
@@ -35,6 +39,7 @@ const authService = {
         user.password = await bcrypt.hash(newPassword, 10);
         user.activation_token = null;
         user.token_expires_at = null;
+        user.is_active = true;
         await user.save();
 
         await auditLogService.logEvent({
@@ -54,6 +59,7 @@ const authService = {
 
         user.activation_token = newActivationToken;
         user.token_expires_at = newTokenExpiresAt;
+        user.is_active = false; 
         await user.save();
 
         await auditLogService.logEvent({
