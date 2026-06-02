@@ -1,88 +1,1328 @@
-import React, { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faSave, 
-  faEdit, 
-  faHome, 
-  faInfoCircle, 
-  faConciergeBell, 
-  faNewspaper, 
-  faPhone 
-} from '@fortawesome/free-solid-svg-icons';
-import Hero from './gestao/Hero.jsx';
-import About from './gestao/About.jsx';
-import Services from './gestao/Services.jsx';
-import News from './gestao/News.jsx';
-import Contacts from './gestao/Contacts.jsx';
+import React, { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faSave,
+  faEdit,
+  faImage,
+  faChartLine,
+  faScaleBalanced,
+  faConciergeBell,
+  faStar,
+  faPhone,
+  faShieldVirus,
+  faBug,
+  faServer,
+  faEnvelopeOpenText,
+  faTriangleExclamation,
+  faUserShield,
+  faCircleCheck,
+  faShieldHalved,
+  faUserGraduate,
+  faCertificate,
+  faUsersGear,
+  faLaptopCode,
+} from "@fortawesome/free-solid-svg-icons";
+
+const iconesDisponiveis = {
+  faShieldVirus: {
+    icon: faShieldVirus,
+    label: "Escudo/Vírus",
+    colorClass: "bg-danger-subtle text-danger",
+  },
+  faBug: {
+    icon: faBug,
+    label: "Inseto/Bug",
+    colorClass: "bg-warning-subtle text-warning-emphasis",
+  },
+  faServer: {
+    icon: faServer,
+    label: "Servidor",
+    colorClass: "bg-secondary-subtle text-secondary-emphasis",
+  },
+  faEnvelopeOpenText: {
+    icon: faEnvelopeOpenText,
+    label: "Email",
+    colorClass: "bg-primary-subtle text-primary",
+  },
+  faScaleBalanced: {
+    icon: faScaleBalanced,
+    label: "Balança/Lei",
+    colorClass: "bg-info-subtle text-info-emphasis",
+  },
+  faStar: {
+    icon: faStar,
+    label: "Estrela",
+    colorClass: "bg-success-subtle text-success",
+  },
+  faChartLine: {
+    icon: faChartLine,
+    label: "Gráfico/Estatística",
+    colorClass: "bg-dark-subtle text-dark",
+  },
+  faTriangleExclamation: {
+    icon: faTriangleExclamation,
+    label: "Alerta",
+    colorClass: "bg-danger-subtle text-danger",
+  },
+  faUserShield: {
+    icon: faUserShield,
+    label: "Responsabilidade",
+    colorClass: "bg-warning-subtle text-warning-emphasis",
+  },
+  faCircleCheck: {
+    icon: faCircleCheck,
+    label: "Check/Certo",
+    colorClass: "bg-primary-subtle text-primary",
+  },
+  faShieldHalved: {
+    icon: faShieldHalved,
+    label: "Escudo Bicolor",
+    colorClass: "bg-dark-subtle text-dark",
+  },
+  faUserGraduate: {
+    icon: faUserGraduate,
+    label: "Formação",
+    colorClass: "bg-secondary-subtle text-secondary",
+  },
+  faCertificate: {
+    icon: faCertificate,
+    label: "Certificado",
+    colorClass: "bg-primary-subtle text-primary",
+  },
+  faUsersGear: {
+    icon: faUsersGear,
+    label: "Equipa/Gestão",
+    colorClass: "bg-warning-subtle text-warning-emphasis",
+  },
+  faLaptopCode: {
+    icon: faLaptopCode,
+    label: "Tecnologia",
+    colorClass: "bg-info-subtle text-info-emphasis",
+  },
+};
 
 const GestaoConteudos = () => {
-  const [activeTab, setActiveTab] = useState('hero');
+  const [activeTab, setActiveTab] = useState("hero");
+
+  const [iconesContexto, setIconesContexto] = useState({
+    topico1: "faShieldVirus",
+    topico2: "faBug",
+    topico3: "faServer",
+    topico4: "faEnvelopeOpenText",
+  });
+
+  const [iconesRegulamentacao, setIconesRegulamentacao] = useState({
+    card1: "faTriangleExclamation",
+    card2: "faUserShield",
+    card3: "faServer",
+  });
+
+  const [iconesServicos, setIconesServicos] = useState({
+    servico1: "faCircleCheck",
+    servico2: "faShieldHalved",
+    servico3: "faBug",
+    servico4: "faUserGraduate",
+  });
+
+  const [iconesDiferenciais, setIconesDiferenciais] = useState({
+    card1: "faCertificate",
+    card2: "faUsersGear",
+    card3: "faLaptopCode",
+  });
 
   const menuItems = [
-    { id: 'hero', label: 'Hero', icon: faHome },
-    { id: 'sobre', label: 'Sobre', icon: faInfoCircle },
-    { id: 'servicos', label: 'Serviços', icon: faConciergeBell },
-    { id: 'noticias', label: 'Notícias', icon: faNewspaper },
-    { id: 'contactos', label: 'Contactos', icon: faPhone },
+    { id: "hero", label: "Hero", icon: faImage },
+    { id: "contexto", label: "Contexto", icon: faChartLine },
+    { id: "regulamentacao", label: "Regulamentação", icon: faScaleBalanced },
+    { id: "servicos", label: "Serviços", icon: faConciergeBell },
+    { id: "porque-escolher", label: "Diferenciais", icon: faStar },
+    { id: "contactos", label: "Contactos", icon: faPhone },
   ];
+
+  const renderConteudo = () => {
+    switch (activeTab) {
+      case "hero":
+        return (
+          <div className="animate__animated animate__fadeIn">
+            <h4 className="mb-1 text-dark fw-bold">Hero Section</h4>
+            <p className="text-muted small mb-4">
+              Configura o banner principal da tua página inicial.
+            </p>
+
+            <div className="mb-4">
+              <label className="form-label fw-semibold text-secondary">
+                Título Principal
+              </label>
+              <input
+                type="text"
+                className="form-control p-3 bg-light"
+                defaultValue="Cibersegurança para organizações que não podem parar"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="form-label fw-semibold text-secondary">
+                Subtítulo
+              </label>
+              <textarea
+                className="form-control p-3 bg-light"
+                rows="3"
+                defaultValue="Num contexto em que os ataques cibernéticos aumentam todos os dias, as organizações precisam de proteger os seus sistemas, dados e serviços críticos."
+              ></textarea>
+            </div>
+
+            <div className="row">
+              <div className="col-md-4 mb-4">
+                <label className="form-label fw-semibold text-secondary">
+                  Texto do Botão
+                </label>
+                <input
+                  type="text"
+                  className="form-control p-3 bg-light"
+                  defaultValue="Começar agora"
+                />
+              </div>
+              <div className="col-md-4 mb-4">
+                <label className="form-label fw-semibold text-secondary">
+                  Link do Botão
+                </label>
+                <input
+                  type="text"
+                  className="form-control p-3 bg-light"
+                  defaultValue="#contact"
+                />
+              </div>
+              <div className="col-md-4 mb-4">
+                <label className="form-label fw-semibold text-secondary">
+                  Imagem de Fundo (URL)
+                </label>
+                <input
+                  type="text"
+                  className="form-control p-3 bg-light"
+                  defaultValue="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop"
+                />
+              </div>
+            </div>
+          </div>
+        );
+
+      case "contexto":
+        return (
+          <div className="animate__animated animate__fadeIn">
+            <h4 className="mb-1 text-dark fw-bold">Contexto Atual</h4>
+            <p className="text-muted small mb-4">
+              Edita os textos introdutórios e a grelha de tópicos de ameaças.
+            </p>
+
+            <div className="mb-4">
+              <label className="form-label fw-semibold text-secondary">
+                Título da Secção
+              </label>
+              <input
+                type="text"
+                className="form-control p-3 bg-light"
+                defaultValue="Cibersegurança"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="form-label fw-semibold text-secondary">
+                Texto Inicial
+              </label>
+              <textarea
+                className="form-control p-3 bg-light"
+                rows="2"
+                defaultValue="A cibersegurança tornou-se uma prioridade estratégica para organizações públicas e privadas."
+              ></textarea>
+            </div>
+
+            <div className="card bg-secondary bg-opacity-10 border-0 p-4 mb-4 rounded-4">
+              <h5 className="h6 fw-bold mb-4 text-dark">
+                Tópicos (Grelha de Ícones)
+              </h5>
+              <div className="row g-4">
+                {/* TÓPICO 1 */}
+                <div className="col-md-12 col-xl-6">
+                  <label className="form-label small fw-semibold text-secondary">
+                    Tópico 1
+                  </label>
+                  <div className="input-group shadow-sm dropdown">
+                    {/* Botão que mostra o ícone atual e abre o menu */}
+                    <button
+                      className={`btn dropdown-toggle border-0 px-3 d-flex align-items-center gap-2 ${iconesDisponiveis[iconesContexto.topico1].colorClass}`}
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      <FontAwesomeIcon
+                        icon={iconesDisponiveis[iconesContexto.topico1].icon}
+                      />
+                    </button>
+
+                    {/* Grelha de opções de ícones que abre ao clicar */}
+                    <div className="dropdown-menu shadow p-2 border-0 rounded-3">
+                      <div
+                        className="d-flex flex-wrap gap-1"
+                        style={{ width: "130px" }}
+                      >
+                        {Object.entries(iconesDisponiveis).map(
+                          ([key, data]) => (
+                            <button
+                              key={key}
+                              type="button"
+                              className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
+                              style={{ width: "32px", height: "32px" }}
+                              title={data.label}
+                              onClick={() =>
+                                setIconesContexto({
+                                  ...iconesContexto,
+                                  topico1: key,
+                                })
+                              }
+                            >
+                              <FontAwesomeIcon icon={data.icon} />
+                            </button>
+                          ),
+                        )}
+                      </div>
+                    </div>
+
+                    <input
+                      type="text"
+                      className="form-control border-0 p-2"
+                      defaultValue="Ataques de ransomware"
+                    />
+                  </div>
+                </div>
+
+                {/* TÓPICO 2 */}
+                <div className="col-md-12 col-xl-6">
+                  <label className="form-label small fw-semibold text-secondary">
+                    Tópico 2
+                  </label>
+                  <div className="input-group shadow-sm dropdown">
+                    <button
+                      className={`btn dropdown-toggle border-0 px-3 d-flex align-items-center gap-2 ${iconesDisponiveis[iconesContexto.topico2].colorClass}`}
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      <FontAwesomeIcon
+                        icon={iconesDisponiveis[iconesContexto.topico2].icon}
+                      />
+                    </button>
+
+                    <div className="dropdown-menu shadow p-2 border-0 rounded-3">
+                      <div
+                        className="d-flex flex-wrap gap-1"
+                        style={{ width: "130px" }}
+                      >
+                        {Object.entries(iconesDisponiveis).map(
+                          ([key, data]) => (
+                            <button
+                              key={key}
+                              type="button"
+                              className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
+                              style={{ width: "32px", height: "32px" }}
+                              title={data.label}
+                              onClick={() =>
+                                setIconesContexto({
+                                  ...iconesContexto,
+                                  topico2: key,
+                                })
+                              }
+                            >
+                              <FontAwesomeIcon icon={data.icon} />
+                            </button>
+                          ),
+                        )}
+                      </div>
+                    </div>
+
+                    <input
+                      type="text"
+                      className="form-control border-0 p-2"
+                      defaultValue="Exploração de vulnerabilidades"
+                    />
+                  </div>
+                </div>
+
+                {/* TÓPICO 3 */}
+                <div className="col-md-12 col-xl-6">
+                  <label className="form-label small fw-semibold text-secondary">
+                    Tópico 3
+                  </label>
+                  <div className="input-group shadow-sm dropdown">
+                    <button
+                      className={`btn dropdown-toggle border-0 px-3 d-flex align-items-center gap-2 ${iconesDisponiveis[iconesContexto.topico3].colorClass}`}
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      <FontAwesomeIcon
+                        icon={iconesDisponiveis[iconesContexto.topico3].icon}
+                      />
+                    </button>
+
+                    <div className="dropdown-menu shadow p-2 border-0 rounded-3">
+                      <div
+                        className="d-flex flex-wrap gap-1"
+                        style={{ width: "130px" }}
+                      >
+                        {Object.entries(iconesDisponiveis).map(
+                          ([key, data]) => (
+                            <button
+                              key={key}
+                              type="button"
+                              className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
+                              style={{ width: "32px", height: "32px" }}
+                              title={data.label}
+                              onClick={() =>
+                                setIconesContexto({
+                                  ...iconesContexto,
+                                  topico3: key,
+                                })
+                              }
+                            >
+                              <FontAwesomeIcon icon={data.icon} />
+                            </button>
+                          ),
+                        )}
+                      </div>
+                    </div>
+
+                    <input
+                      type="text"
+                      className="form-control border-0 p-2"
+                      defaultValue="Ataques a infraestruturas críticas"
+                    />
+                  </div>
+                </div>
+
+                {/* TÓPICO 4 */}
+                <div className="col-md-12 col-xl-6">
+                  <label className="form-label small fw-semibold text-secondary">
+                    Tópico 4
+                  </label>
+                  <div className="input-group shadow-sm dropdown">
+                    <button
+                      className={`btn dropdown-toggle border-0 px-3 d-flex align-items-center gap-2 ${iconesDisponiveis[iconesContexto.topico4].colorClass}`}
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      <FontAwesomeIcon
+                        icon={iconesDisponiveis[iconesContexto.topico4].icon}
+                      />
+                    </button>
+
+                    <div className="dropdown-menu shadow p-2 border-0 rounded-3">
+                      <div
+                        className="d-flex flex-wrap gap-1"
+                        style={{ width: "130px" }}
+                      >
+                        {Object.entries(iconesDisponiveis).map(
+                          ([key, data]) => (
+                            <button
+                              key={key}
+                              type="button"
+                              className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
+                              style={{ width: "32px", height: "32px" }}
+                              title={data.label}
+                              onClick={() =>
+                                setIconesContexto({
+                                  ...iconesContexto,
+                                  topico4: key,
+                                })
+                              }
+                            >
+                              <FontAwesomeIcon icon={data.icon} />
+                            </button>
+                          ),
+                        )}
+                      </div>
+                    </div>
+
+                    <input
+                      type="text"
+                      className="form-control border-0 p-2"
+                      defaultValue="Campanhas de phishing direcionado"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="form-label fw-semibold text-secondary">
+                Texto Final
+              </label>
+              <textarea
+                className="form-control p-3 bg-light"
+                rows="3"
+                defaultValue="Muitas organizações descobrem tarde demais que não estavam preparadas para um incidente de segurança. Além do impacto operacional, existem hoje obrigações legais e regulatórias que exigem a implementação de medidas adequadas de cibersegurança."
+              ></textarea>
+            </div>
+          </div>
+        );
+
+      case "regulamentacao":
+        return (
+          <div className="animate__animated animate__fadeIn">
+            <h4 className="mb-1 text-dark fw-bold">Regulamentação (NIS2)</h4>
+            <p className="text-muted small mb-4">
+              Configuração do bloco sobre a diretiva europeia e os seus
+              impactos.
+            </p>
+
+            <div className="mb-4">
+              <label className="form-label fw-semibold text-secondary">
+                Título da Secção
+              </label>
+              <input
+                type="text"
+                className="form-control p-3 bg-light"
+                defaultValue="Regulamentação Europeia"
+              />
+            </div>
+
+            {/* TEXTOS E LINK */}
+            <div className="card bg-secondary bg-opacity-10 border-0 p-4 mb-4 rounded-4">
+              <h5 className="h6 fw-bold mb-3 text-dark">Texto Descritivo</h5>
+              <div className="row g-3">
+                <div className="col-md-12">
+                  <label className="form-label small fw-semibold text-secondary">
+                    Texto Inicial (Antes do link)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control p-3 bg-light border-0"
+                    defaultValue="A União Europeia reforçou os requisitos de segurança através da diretiva"
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label small fw-semibold text-secondary">
+                    Nome do Link (Em destaque)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control p-3 bg-light border-0 text-info"
+                    defaultValue="NIS2 – Network and Information Security Directive"
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label small fw-semibold text-secondary">
+                    URL do Link
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control p-3 bg-light border-0"
+                    defaultValue="/nis2"
+                  />
+                </div>
+                <div className="col-md-12">
+                  <label className="form-label small fw-semibold text-secondary">
+                    Texto Final (Depois do link)
+                  </label>
+                  <textarea
+                    className="form-control p-3 bg-light border-0"
+                    rows="2"
+                    defaultValue=". Esta diretiva impõe requisitos de gestão de risco, implementação de medidas técnicas e organizacionais e comunicação de incidentes."
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            {/* OS 3 CARTÕES COM ÍCONES */}
+            <div className="card bg-secondary bg-opacity-10 border-0 p-4 mb-4 rounded-4">
+              <h5 className="h6 fw-bold mb-4 text-dark">Cartões de Impacto</h5>
+              <div className="row g-4">
+                {/* CARTÃO 1 */}
+                <div className="col-md-12 col-xl-4">
+                  <label className="form-label small fw-semibold text-secondary">
+                    Cartão 1
+                  </label>
+                  <div className="input-group shadow-sm dropdown">
+                    <button
+                      className={`btn dropdown-toggle border-0 px-3 d-flex align-items-center gap-2 ${iconesDisponiveis[iconesRegulamentacao.card1].colorClass}`}
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      <FontAwesomeIcon
+                        icon={
+                          iconesDisponiveis[iconesRegulamentacao.card1].icon
+                        }
+                      />
+                    </button>
+
+                    <div className="dropdown-menu shadow p-2 border-0 rounded-3">
+                      <div
+                        className="d-flex flex-wrap gap-1"
+                        style={{ width: "130px" }}
+                      >
+                        {Object.entries(iconesDisponiveis).map(
+                          ([key, data]) => (
+                            <button
+                              key={key}
+                              type="button"
+                              className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
+                              style={{ width: "32px", height: "32px" }}
+                              title={data.label}
+                              onClick={() =>
+                                setIconesRegulamentacao({
+                                  ...iconesRegulamentacao,
+                                  card1: key,
+                                })
+                              }
+                            >
+                              <FontAwesomeIcon icon={data.icon} />
+                            </button>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      className="form-control border-0 p-2"
+                      defaultValue="Sanções financeiras significativas"
+                    />
+                  </div>
+                </div>
+
+                {/* CARTÃO 2 */}
+                <div className="col-md-12 col-xl-4">
+                  <label className="form-label small fw-semibold text-secondary">
+                    Cartão 2
+                  </label>
+                  <div className="input-group shadow-sm dropdown">
+                    <button
+                      className={`btn dropdown-toggle border-0 px-3 d-flex align-items-center gap-2 ${iconesDisponiveis[iconesRegulamentacao.card2].colorClass}`}
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      <FontAwesomeIcon
+                        icon={
+                          iconesDisponiveis[iconesRegulamentacao.card2].icon
+                        }
+                      />
+                    </button>
+
+                    <div className="dropdown-menu shadow p-2 border-0 rounded-3">
+                      <div
+                        className="d-flex flex-wrap gap-1"
+                        style={{ width: "130px" }}
+                      >
+                        {Object.entries(iconesDisponiveis).map(
+                          ([key, data]) => (
+                            <button
+                              key={key}
+                              type="button"
+                              className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
+                              style={{ width: "32px", height: "32px" }}
+                              title={data.label}
+                              onClick={() =>
+                                setIconesRegulamentacao({
+                                  ...iconesRegulamentacao,
+                                  card2: key,
+                                })
+                              }
+                            >
+                              <FontAwesomeIcon icon={data.icon} />
+                            </button>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      className="form-control border-0 p-2"
+                      defaultValue="Responsabilidade da gestão"
+                    />
+                  </div>
+                </div>
+
+                {/* CARTÃO 3 */}
+                <div className="col-md-12 col-xl-4">
+                  <label className="form-label small fw-semibold text-secondary">
+                    Cartão 3
+                  </label>
+                  <div className="input-group shadow-sm dropdown">
+                    <button
+                      className={`btn dropdown-toggle border-0 px-3 d-flex align-items-center gap-2 ${iconesDisponiveis[iconesRegulamentacao.card3].colorClass}`}
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      <FontAwesomeIcon
+                        icon={
+                          iconesDisponiveis[iconesRegulamentacao.card3].icon
+                        }
+                      />
+                    </button>
+
+                    <div className="dropdown-menu shadow p-2 border-0 rounded-3">
+                      <div
+                        className="d-flex flex-wrap gap-1"
+                        style={{ width: "130px" }}
+                      >
+                        {Object.entries(iconesDisponiveis).map(
+                          ([key, data]) => (
+                            <button
+                              key={key}
+                              type="button"
+                              className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
+                              style={{ width: "32px", height: "32px" }}
+                              title={data.label}
+                              onClick={() =>
+                                setIconesRegulamentacao({
+                                  ...iconesRegulamentacao,
+                                  card3: key,
+                                })
+                              }
+                            >
+                              <FontAwesomeIcon icon={data.icon} />
+                            </button>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      className="form-control border-0 p-2"
+                      defaultValue="Impacto reputacional"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case "servicos":
+        return (
+          <div className="animate__animated animate__fadeIn">
+            <h4 className="mb-1 text-dark fw-bold">Serviços</h4>
+            <p className="text-muted small mb-4">
+              Edita os títulos principais e os cartões dos serviços prestados.
+            </p>
+
+            {/* TÍTULO E SUBTÍTULO GERAIS */}
+            <div className="row mb-4">
+              <div className="col-md-6 mb-3 mb-md-0">
+                <label className="form-label fw-semibold text-secondary">
+                  Título da Secção
+                </label>
+                <input
+                  type="text"
+                  className="form-control p-3 bg-light"
+                  defaultValue="Como Ajudamos"
+                />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label fw-semibold text-secondary">
+                  Subtítulo
+                </label>
+                <input
+                  type="text"
+                  className="form-control p-3 bg-light"
+                  defaultValue="Soluções especializadas para reforçar a sua postura de cibersegurança."
+                />
+              </div>
+            </div>
+
+            {/* GRELHA DOS 4 CARTÕES DE SERVIÇOS */}
+            <div className="card bg-secondary bg-opacity-10 border-0 p-4 mb-4 rounded-4">
+              <h5 className="h6 fw-bold mb-4 text-dark">Grelha de Serviços</h5>
+              <div className="row g-4">
+                {/* SERVIÇO 1 */}
+                <div className="col-md-12 col-xl-6">
+                  <div className="p-3 border rounded-3 bg-white shadow-sm">
+                    <label className="form-label small fw-semibold text-secondary">
+                      Serviço 1
+                    </label>
+                    <div className="input-group mb-2 dropdown border rounded-2">
+                      <button
+                        className={`btn dropdown-toggle border-0 px-3 d-flex align-items-center gap-2 ${iconesDisponiveis[iconesServicos.servico1].colorClass}`}
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <FontAwesomeIcon
+                          icon={iconesDisponiveis[iconesServicos.servico1].icon}
+                        />
+                      </button>
+                      <div className="dropdown-menu shadow p-2 border-0 rounded-3">
+                        <div
+                          className="d-flex flex-wrap gap-1"
+                          style={{ width: "130px" }}
+                        >
+                          {Object.entries(iconesDisponiveis).map(
+                            ([key, data]) => (
+                              <button
+                                key={key}
+                                type="button"
+                                className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
+                                style={{ width: "32px", height: "32px" }}
+                                title={data.label}
+                                onClick={() =>
+                                  setIconesServicos({
+                                    ...iconesServicos,
+                                    servico1: key,
+                                  })
+                                }
+                              >
+                                <FontAwesomeIcon icon={data.icon} />
+                              </button>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        className="form-control border-0 p-2 fw-bold"
+                        defaultValue="Avaliação de maturidade de cibersegurança"
+                      />
+                    </div>
+                    <textarea
+                      className="form-control bg-light border-0"
+                      rows="2"
+                      defaultValue="Analisamos o estado atual da sua organização e identificamos áreas de melhoria prioritárias."
+                    ></textarea>
+                  </div>
+                </div>
+
+                {/* SERVIÇO 2 */}
+                <div className="col-md-12 col-xl-6">
+                  <div className="p-3 border rounded-3 bg-white shadow-sm">
+                    <label className="form-label small fw-semibold text-secondary">
+                      Serviço 2
+                    </label>
+                    <div className="input-group mb-2 dropdown border rounded-2">
+                      <button
+                        className={`btn dropdown-toggle border-0 px-3 d-flex align-items-center gap-2 ${iconesDisponiveis[iconesServicos.servico2].colorClass}`}
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <FontAwesomeIcon
+                          icon={iconesDisponiveis[iconesServicos.servico2].icon}
+                        />
+                      </button>
+                      <div className="dropdown-menu shadow p-2 border-0 rounded-3">
+                        <div
+                          className="d-flex flex-wrap gap-1"
+                          style={{ width: "130px" }}
+                        >
+                          {Object.entries(iconesDisponiveis).map(
+                            ([key, data]) => (
+                              <button
+                                key={key}
+                                type="button"
+                                className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
+                                style={{ width: "32px", height: "32px" }}
+                                title={data.label}
+                                onClick={() =>
+                                  setIconesServicos({
+                                    ...iconesServicos,
+                                    servico2: key,
+                                  })
+                                }
+                              >
+                                <FontAwesomeIcon icon={data.icon} />
+                              </button>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        className="form-control border-0 p-2 fw-bold"
+                        defaultValue="Implementação de requisitos da diretiva NIS2"
+                      />
+                    </div>
+                    <textarea
+                      className="form-control bg-light border-0"
+                      rows="2"
+                      defaultValue="Apoiamos a sua organização no cumprimento integral dos requisitos regulamentares."
+                    ></textarea>
+                  </div>
+                </div>
+
+                {/* SERVIÇO 3 */}
+                <div className="col-md-12 col-xl-6">
+                  <div className="p-3 border rounded-3 bg-white shadow-sm">
+                    <label className="form-label small fw-semibold text-secondary">
+                      Serviço 3
+                    </label>
+                    <div className="input-group mb-2 dropdown border rounded-2">
+                      <button
+                        className={`btn dropdown-toggle border-0 px-3 d-flex align-items-center gap-2 ${iconesDisponiveis[iconesServicos.servico3].colorClass}`}
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <FontAwesomeIcon
+                          icon={iconesDisponiveis[iconesServicos.servico3].icon}
+                        />
+                      </button>
+                      <div className="dropdown-menu shadow p-2 border-0 rounded-3">
+                        <div
+                          className="d-flex flex-wrap gap-1"
+                          style={{ width: "130px" }}
+                        >
+                          {Object.entries(iconesDisponiveis).map(
+                            ([key, data]) => (
+                              <button
+                                key={key}
+                                type="button"
+                                className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
+                                style={{ width: "32px", height: "32px" }}
+                                title={data.label}
+                                onClick={() =>
+                                  setIconesServicos({
+                                    ...iconesServicos,
+                                    servico3: key,
+                                  })
+                                }
+                              >
+                                <FontAwesomeIcon icon={data.icon} />
+                              </button>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        className="form-control border-0 p-2 fw-bold"
+                        defaultValue="Auditorias de segurança e testes técnicos"
+                      />
+                    </div>
+                    <textarea
+                      className="form-control bg-light border-0"
+                      rows="2"
+                      defaultValue="Identificamos vulnerabilidades através de testes de penetração e auditorias especializadas."
+                    ></textarea>
+                  </div>
+                </div>
+
+                {/* SERVIÇO 4 */}
+                <div className="col-md-12 col-xl-6">
+                  <div className="p-3 border rounded-3 bg-white shadow-sm">
+                    <label className="form-label small fw-semibold text-secondary">
+                      Serviço 4
+                    </label>
+                    <div className="input-group mb-2 dropdown border rounded-2">
+                      <button
+                        className={`btn dropdown-toggle border-0 px-3 d-flex align-items-center gap-2 ${iconesDisponiveis[iconesServicos.servico4].colorClass}`}
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <FontAwesomeIcon
+                          icon={iconesDisponiveis[iconesServicos.servico4].icon}
+                        />
+                      </button>
+                      <div className="dropdown-menu shadow p-2 border-0 rounded-3">
+                        <div
+                          className="d-flex flex-wrap gap-1"
+                          style={{ width: "130px" }}
+                        >
+                          {Object.entries(iconesDisponiveis).map(
+                            ([key, data]) => (
+                              <button
+                                key={key}
+                                type="button"
+                                className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
+                                style={{ width: "32px", height: "32px" }}
+                                title={data.label}
+                                onClick={() =>
+                                  setIconesServicos({
+                                    ...iconesServicos,
+                                    servico4: key,
+                                  })
+                                }
+                              >
+                                <FontAwesomeIcon icon={data.icon} />
+                              </button>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        className="form-control border-0 p-2 fw-bold"
+                        defaultValue="Programas de formação e security awareness"
+                      />
+                    </div>
+                    <textarea
+                      className="form-control bg-light border-0"
+                      rows="2"
+                      defaultValue="Capacitamos as suas equipas com conhecimento e boas práticas de segurança."
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case "porque-escolher":
+        return (
+          <div className="animate__animated animate__fadeIn">
+            <h4 className="mb-1 text-dark fw-bold">Diferenciais</h4>
+            <p className="text-muted small mb-4">
+              Edita os motivos para escolher a CyberBoxSecur.
+            </p>
+
+            {/* TÍTULO E SUBTÍTULO GERAIS */}
+            <div className="row mb-4">
+              <div className="col-md-6 mb-3 mb-md-0">
+                <label className="form-label fw-semibold text-secondary">
+                  Título da Secção
+                </label>
+                <input
+                  type="text"
+                  className="form-control p-3 bg-light"
+                  defaultValue="Porquê Escolher a CyberBoxSecur?"
+                />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label fw-semibold text-secondary">
+                  Subtítulo
+                </label>
+                <input
+                  type="text"
+                  className="form-control p-3 bg-light"
+                  defaultValue="Os nossos diferenciais para proteger o seu negócio."
+                />
+              </div>
+            </div>
+
+            {/* GRELHA DOS 3 CARTÕES DE DIFERENCIAIS */}
+            <div className="card bg-secondary bg-opacity-10 border-0 p-4 mb-4 rounded-4">
+              <h5 className="h6 fw-bold mb-4 text-dark">
+                Cartões de Diferenciais
+              </h5>
+              <div className="row g-4">
+                {/* CARTÃO 1: Especialização */}
+                <div className="col-md-12 col-xl-4">
+                  <div className="p-3 border rounded-3 bg-white shadow-sm h-100">
+                    <label className="form-label small fw-semibold text-secondary">
+                      Diferencial 1
+                    </label>
+                    <div className="input-group mb-2 dropdown border rounded-2">
+                      <button
+                        className={`btn dropdown-toggle border-0 px-3 d-flex align-items-center gap-2 ${iconesDisponiveis[iconesDiferenciais.card1].colorClass}`}
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <FontAwesomeIcon
+                          icon={
+                            iconesDisponiveis[iconesDiferenciais.card1].icon
+                          }
+                        />
+                      </button>
+                      <div className="dropdown-menu shadow p-2 border-0 rounded-3">
+                        <div
+                          className="d-flex flex-wrap gap-1"
+                          style={{ width: "130px" }}
+                        >
+                          {Object.entries(iconesDisponiveis).map(
+                            ([key, data]) => (
+                              <button
+                                key={key}
+                                type="button"
+                                className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
+                                style={{ width: "32px", height: "32px" }}
+                                title={data.label}
+                                onClick={() =>
+                                  setIconesDiferenciais({
+                                    ...iconesDiferenciais,
+                                    card1: key,
+                                  })
+                                }
+                              >
+                                <FontAwesomeIcon icon={data.icon} />
+                              </button>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        className="form-control border-0 p-2 fw-bold"
+                        defaultValue="Especialização Comprovada"
+                      />
+                    </div>
+                    <textarea
+                      className="form-control bg-light border-0"
+                      rows="3"
+                      defaultValue="Equipa de especialistas certificados (CISSP, CISM, ISO 27001)."
+                    ></textarea>
+                  </div>
+                </div>
+
+                {/* CARTÃO 2: Abordagem */}
+                <div className="col-md-12 col-xl-4">
+                  <div className="p-3 border rounded-3 bg-white shadow-sm h-100">
+                    <label className="form-label small fw-semibold text-secondary">
+                      Diferencial 2
+                    </label>
+                    <div className="input-group mb-2 dropdown border rounded-2">
+                      <button
+                        className={`btn dropdown-toggle border-0 px-3 d-flex align-items-center gap-2 ${iconesDisponiveis[iconesDiferenciais.card2].colorClass}`}
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <FontAwesomeIcon
+                          icon={
+                            iconesDisponiveis[iconesDiferenciais.card2].icon
+                          }
+                        />
+                      </button>
+                      <div className="dropdown-menu shadow p-2 border-0 rounded-3">
+                        <div
+                          className="d-flex flex-wrap gap-1"
+                          style={{ width: "130px" }}
+                        >
+                          {Object.entries(iconesDisponiveis).map(
+                            ([key, data]) => (
+                              <button
+                                key={key}
+                                type="button"
+                                className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
+                                style={{ width: "32px", height: "32px" }}
+                                title={data.label}
+                                onClick={() =>
+                                  setIconesDiferenciais({
+                                    ...iconesDiferenciais,
+                                    card2: key,
+                                  })
+                                }
+                              >
+                                <FontAwesomeIcon icon={data.icon} />
+                              </button>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        className="form-control border-0 p-2 fw-bold"
+                        defaultValue="Abordagem Personalizada"
+                      />
+                    </div>
+                    <textarea
+                      className="form-control bg-light border-0"
+                      rows="3"
+                      defaultValue="Gestores dedicados que conhecem a realidade e os desafios específicos da sua organização."
+                    ></textarea>
+                  </div>
+                </div>
+
+                {/* CARTÃO 3: Tecnologia */}
+                <div className="col-md-12 col-xl-4">
+                  <div className="p-3 border rounded-3 bg-white shadow-sm h-100">
+                    <label className="form-label small fw-semibold text-secondary">
+                      Diferencial 3
+                    </label>
+                    <div className="input-group mb-2 dropdown border rounded-2">
+                      <button
+                        className={`btn dropdown-toggle border-0 px-3 d-flex align-items-center gap-2 ${iconesDisponiveis[iconesDiferenciais.card3].colorClass}`}
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <FontAwesomeIcon
+                          icon={
+                            iconesDisponiveis[iconesDiferenciais.card3].icon
+                          }
+                        />
+                      </button>
+                      <div className="dropdown-menu shadow p-2 border-0 rounded-3">
+                        <div
+                          className="d-flex flex-wrap gap-1"
+                          style={{ width: "130px" }}
+                        >
+                          {Object.entries(iconesDisponiveis).map(
+                            ([key, data]) => (
+                              <button
+                                key={key}
+                                type="button"
+                                className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
+                                style={{ width: "32px", height: "32px" }}
+                                title={data.label}
+                                onClick={() =>
+                                  setIconesDiferenciais({
+                                    ...iconesDiferenciais,
+                                    card3: key,
+                                  })
+                                }
+                              >
+                                <FontAwesomeIcon icon={data.icon} />
+                              </button>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        className="form-control border-0 p-2 fw-bold"
+                        defaultValue="Tecnologia de Ponta"
+                      />
+                    </div>
+                    <textarea
+                      className="form-control bg-light border-0"
+                      rows="3"
+                      defaultValue="Plataforma intuitiva desenvolvida com os mais altos padrões de segurança e usabilidade."
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case "contactos":
+        return (
+          <div className="animate__animated animate__fadeIn">
+            <h4 className="mb-1 text-dark fw-bold">Contactos</h4>
+            <p className="text-muted small mb-4">
+              Edita as informações de contacto (o formulário à direita é fixo e
+              gerado automaticamente).
+            </p>
+
+            {/* TÍTULO E SUBTÍTULO GERAIS */}
+            <div className="row mb-4">
+              <div className="col-md-6 mb-3 mb-md-0">
+                <label className="form-label fw-semibold text-secondary">
+                  Título da Secção
+                </label>
+                <input
+                  type="text"
+                  className="form-control p-3 bg-light"
+                  defaultValue="Contacte-nos"
+                />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label fw-semibold text-secondary">
+                  Subtítulo
+                </label>
+                <input
+                  type="text"
+                  className="form-control p-3 bg-light"
+                  defaultValue="Entre em contacto connosco para saber mais sobre as nossas soluções de cibersegurança."
+                />
+              </div>
+            </div>
+
+            {/* INFORMAÇÕES DE CONTACTO (Lado Esquerdo) */}
+            <div className="card bg-secondary bg-opacity-10 border-0 p-4 mb-4 rounded-4">
+              <h5 className="h6 fw-bold mb-4 text-dark">
+                Informações de Contacto (Lado Esquerdo)
+              </h5>
+
+              <div className="row g-4">
+                <div className="col-md-6">
+                  <label className="form-label small fw-semibold text-secondary">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    className="form-control border-0 p-3 shadow-sm"
+                    defaultValue="contacto@cyberboxsecur.pt"
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label small fw-semibold text-secondary">
+                    Telefone
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control border-0 p-3 shadow-sm"
+                    defaultValue="+351 210 000 000"
+                  />
+                </div>
+
+                <div className="col-md-12">
+                  <label className="form-label small fw-semibold text-secondary">
+                    Morada
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control border-0 p-3 shadow-sm"
+                    defaultValue="Rossio, Edifício Cyber, Viseu, Portugal"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="container-fluid my-4">
       <div className="card shadow-sm border-0 rounded-4 overflow-hidden">
-        
-        {/* Header Interno */}
         <div className="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
           <div className="d-flex align-items-center gap-3">
-            <div className="rounded-3 bg-primary text-white d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px', backgroundColor: 'rgb(139, 92, 246)' }}>
-              <FontAwesomeIcon icon={faEdit} size="lg" />
+            <div className="text-primary d-flex align-items-center justify-content-center">
+              <FontAwesomeIcon icon={faEdit} size="2x" />
             </div>
             <div>
               <h3 className="h5 fw-bold text-dark mb-1">Gestão de Conteúdos</h3>
-              <p className="text-muted small mb-0">Editor de conteúdos da página inicial</p>
+              <p className="text-muted small mb-0">
+                Editor de conteúdos da página inicial
+              </p>
             </div>
           </div>
-          
-          <button className="btn text-white px-4 py-2 rounded-3 d-flex align-items-center gap-2" style={{ backgroundColor: 'rgb(139, 92, 246)' }}>
+
+          <button className="btn btn-primary px-4 py-2 rounded-3 d-flex align-items-center gap-2">
             <FontAwesomeIcon icon={faSave} />
             Guardar Alterações
           </button>
         </div>
 
-        {/* Corpo Principal: Sidebar + Conteúdo */}
-        <div className="d-flex" style={{ minHeight: '600px' }}>
-          
-          {/* Sidebar Lateral Esquerda */}
-          <div className="bg-light border-end d-flex flex-column pt-3" style={{ width: '100px' }}>
+        <div className="d-flex" style={{ minHeight: "600px" }}>
+          <div
+            className="bg-light border-end d-flex flex-column pt-4"
+            style={{ width: "120px" }}
+          >
             {menuItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`btn border-0 rounded-0 py-3 d-flex flex-column align-items-center gap-2 text-uppercase fw-bold style-none shadow-none`}
+                  className={`btn border-0 rounded-3 py-3 mx-2 mb-2 d-flex flex-column align-items-center gap-2 text-uppercase fw-bold style-none shadow-none`}
                   style={{
-                    fontSize: '10px',
-                    color: isActive ? '#ffffff' : '#0d6efd',
-                    backgroundColor: isActive ? '#0d6efd' : 'transparent',
-                    borderLeft: isActive ? '4px solid #0d6efd' : 'none'
+                    fontSize: "10px",
+                    color: isActive ? "#ffffff" : "#0d6efd",
+                    backgroundColor: isActive ? "#0d6efd" : "transparent",
+                    transition: "all 0.2s ease-in-out",
                   }}
                 >
-                  <FontAwesomeIcon icon={item.icon} style={{ fontSize: '18px' }} />
+                  <FontAwesomeIcon
+                    icon={item.icon}
+                    style={{ fontSize: "18px" }}
+                  />
                   {item.label}
                 </button>
               );
             })}
           </div>
 
-          {/* Área Direita do Conteúdo */}
-          <div className="flex-grow-1 p-4 bg-white">
-            {activeTab === 'hero' && <Hero />}
-            {activeTab === 'sobre' && <About />}
-            {activeTab === 'servicos' && <Services />}
-            {activeTab === 'noticias' && <News />}
-            {activeTab === 'contactos' && <Contacts />}
+          <div className="flex-grow-1 p-4 p-md-5 bg-white">
+            {renderConteudo()}
           </div>
-
         </div>
       </div>
     </div>
