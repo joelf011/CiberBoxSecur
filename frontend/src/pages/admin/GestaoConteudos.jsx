@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSave,
@@ -102,6 +103,105 @@ const iconesDisponiveis = {
 };
 
 const GestaoConteudos = () => {
+  const [dadosSite, setDadosSite] = useState({
+    hero: {
+      titulo: "",
+      subtitulo: "",
+      botaoTexto: "",
+      botaoLink: "",
+      imagemFundo: "",
+    },
+    contexto: {
+      titulo: "",
+      textoInicial: "",
+      textoFinal: "",
+      topico1: "",
+      topico2: "",
+      topico3: "",
+      topico4: "",
+    },
+    regulamentacao: {
+      titulo: "",
+      textoInicial: "",
+      linkNome: "",
+      linkUrl: "",
+      textoFinal: "",
+      card1: "",
+      card2: "",
+      card3: "",
+    },
+    servicos: {
+      titulo: "",
+      subtitulo: "",
+      servico1Titulo: "",
+      servico1Texto: "",
+      servico2Titulo: "",
+      servico2Texto: "",
+      servico3Titulo: "",
+      servico3Texto: "",
+      servico4Titulo: "",
+      servico4Texto: "",
+    },
+    diferenciais: {
+      titulo: "",
+      subtitulo: "",
+      card1Titulo: "",
+      card1Texto: "",
+      card2Titulo: "",
+      card2Texto: "",
+      card3Titulo: "",
+      card3Texto: "",
+    },
+    contactos: {
+      titulo: "",
+      subtitulo: "",
+      email: "",
+      telefone: "",
+      morada: "",
+    },
+  });
+
+  // 2. Carregar os dados quando a página abre (GET)
+  useEffect(() => {
+    const carregarDados = async () => {
+      try {
+        // Ajusta o URL e o porto para o do teu backend (ex: 5000)
+        const resposta = await axios.get(
+          "http://localhost:5000/api/pages/home",
+        );
+
+        // Se a BD devolver dados, atualizamos o nosso ecrã
+        if (resposta.data) {
+          setDadosSite(resposta.data);
+          // Aqui também podes atualizar os teus ícones, se estiverem guardados
+        }
+      } catch (erro) {
+        console.error("Erro ao carregar dados da Home:", erro);
+      }
+    };
+
+    carregarDados();
+  }, []);
+
+  // 3. Função para guardar quando o Admin clica no botão (PUT)
+  const guardarAlteracoes = async () => {
+    try {
+      // Como a rota é protegida, precisamos do token de quem fez login
+      const token = localStorage.getItem("token");
+
+      await axios.put(
+        "http://localhost:5000/api/pages/home",
+        dadosSite, // O pacote gigante com todos os textos
+        { headers: { Authorization: `Bearer ${token}` } }, // O passaporte para o segurança deixar passar
+      );
+
+      alert("Alterações guardadas com sucesso na Base de Dados!");
+    } catch (erro) {
+      console.error("Erro ao guardar:", erro);
+      alert("Erro ao guardar as alterações. Verifica a consola.");
+    }
+  };
+
   const [activeTab, setActiveTab] = useState("hero");
 
   const [iconesContexto, setIconesContexto] = useState({
@@ -144,7 +244,7 @@ const GestaoConteudos = () => {
       case "hero":
         return (
           <div className="animate__animated animate__fadeIn">
-            <h4 className="mb-1 text-dark fw-bold">Hero Section</h4>
+            <h4 className="mb-1 text-dark fw-bold">Hero</h4>
             <p className="text-muted small mb-4">
               Configura o banner principal da tua página inicial.
             </p>
@@ -156,7 +256,13 @@ const GestaoConteudos = () => {
               <input
                 type="text"
                 className="form-control p-3 bg-light"
-                defaultValue="Cibersegurança para organizações que não podem parar"
+                value={dadosSite.hero.titulo}
+                onChange={(e) =>
+                  setDadosSite({
+                    ...dadosSite,
+                    hero: { ...dadosSite.hero, titulo: e.target.value },
+                  })
+                }
               />
             </div>
 
@@ -167,7 +273,13 @@ const GestaoConteudos = () => {
               <textarea
                 className="form-control p-3 bg-light"
                 rows="3"
-                defaultValue="Num contexto em que os ataques cibernéticos aumentam todos os dias, as organizações precisam de proteger os seus sistemas, dados e serviços críticos."
+                value={dadosSite.hero.subtitulo}
+                onChange={(e) =>
+                  setDadosSite({
+                    ...dadosSite,
+                    hero: { ...dadosSite.hero, subtitulo: e.target.value },
+                  })
+                }
               ></textarea>
             </div>
 
@@ -179,7 +291,13 @@ const GestaoConteudos = () => {
                 <input
                   type="text"
                   className="form-control p-3 bg-light"
-                  defaultValue="Começar agora"
+                  value={dadosSite.hero.botaoTexto}
+                  onChange={(e) =>
+                    setDadosSite({
+                      ...dadosSite,
+                      hero: { ...dadosSite.hero, botaoTexto: e.target.value },
+                    })
+                  }
                 />
               </div>
               <div className="col-md-4 mb-4">
@@ -189,7 +307,13 @@ const GestaoConteudos = () => {
                 <input
                   type="text"
                   className="form-control p-3 bg-light"
-                  defaultValue="#contact"
+                  value={dadosSite.hero.botaoLink}
+                  onChange={(e) =>
+                    setDadosSite({
+                      ...dadosSite,
+                      hero: { ...dadosSite.hero, botaoLink: e.target.value },
+                    })
+                  }
                 />
               </div>
               <div className="col-md-4 mb-4">
@@ -199,7 +323,13 @@ const GestaoConteudos = () => {
                 <input
                   type="text"
                   className="form-control p-3 bg-light"
-                  defaultValue="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop"
+                  value={dadosSite.hero.imagemFundo}
+                  onChange={(e) =>
+                    setDadosSite({
+                      ...dadosSite,
+                      hero: { ...dadosSite.hero, imagemFundo: e.target.value },
+                    })
+                  }
                 />
               </div>
             </div>
@@ -1285,7 +1415,10 @@ const GestaoConteudos = () => {
             </div>
           </div>
 
-          <button className="btn btn-primary px-4 py-2 rounded-3 d-flex align-items-center gap-2">
+          <button
+            onClick={guardarAlteracoes}
+            className="btn btn-primary px-4 py-2 rounded-3 d-flex align-items-center gap-2"
+          >
             <FontAwesomeIcon icon={faSave} />
             Guardar Alterações
           </button>

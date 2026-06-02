@@ -142,10 +142,14 @@ const Home = () => {
   useEffect(() => {
     const carregarDados = async () => {
       try {
-        const dados = await getConteudoHome();
-        setDadosDoBackoffice(dados);
+        const resposta = await axios.get(
+          "http://localhost:5000/api/pages/home",
+        );
+        if (resposta.data) {
+          setDadosDoBackoffice(resposta.data);
+        }
       } catch (erro) {
-        console.log("Falha ao carregar API, a usar textos por defeito.");
+        console.log("Falha ao carregar API, a usar textos por defeito.", erro);
       }
     };
 
@@ -167,11 +171,20 @@ const Home = () => {
   return (
     <div className="overflow-hidden">
       <Hero
-        titulo="Cibersegurança para organizações que não podem parar"
-        subtitulo="Num contexto em que os ataques cibernéticos aumentam todos os dias, as organizações precisam de proteger os seus sistemas, dados e serviços críticos."
-        textoBotao="Começar agora"
-        linkBotao="#contact"
-        imagemFundo="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop"
+        titulo={
+          dadosDoBackoffice?.hero?.titulo ||
+          "Cibersegurança para organizações que não podem parar"
+        }
+        subtitulo={
+          dadosDoBackoffice?.hero?.subtitulo ||
+          "Num contexto em que os ataques cibernéticos aumentam todos os dias, as organizações precisam de proteger os seus sistemas, dados e serviços críticos."
+        }
+        textoBotao={dadosDoBackoffice?.hero?.botaoTexto || "Começar agora"}
+        linkBotao={dadosDoBackoffice?.hero?.botaoLink || "#contact"}
+        imagemFundo={
+          dadosDoBackoffice?.hero?.imagemFundo ||
+          "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop"
+        }
       />
       <ContextoAtual
         titulo="Cibersegurança"
