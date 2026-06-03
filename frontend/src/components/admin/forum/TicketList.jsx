@@ -46,7 +46,7 @@ const TicketList = ({ tickets, selectedTicketId, onSelectTicket, loading }) => {
     }
 
     return (
-        <ListGroup className="animate-fade-in custom-scrollbar" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+        <ListGroup className="animate-fade-in custom-scrollbar h-100" style={{ overflowY: 'auto' }}>
             {tickets.map((ticket) => (
                 <ListGroup.Item
                     key={ticket.id}

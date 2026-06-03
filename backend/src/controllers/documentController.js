@@ -1,6 +1,6 @@
 const { Document } = require('../models');
 const fs = require('fs');
-const auditLogController = require('./auditLogController');
+const auditLogService = require('../services/auditLogService');
 
 const documentController = {
     // CREATE
@@ -35,7 +35,7 @@ const documentController = {
             });
 
             // LOG: document created (Upload)
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: uploaded_by_user_id,
                 action: 'DOCUMENT_CREATE',
                 entity_type: 'Document',
@@ -96,7 +96,7 @@ const documentController = {
             await document.update({ title, document_category, status });
 
             // LOG: document updated
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'DOCUMENT_UPDATE',
                 entity_type: 'Document',
@@ -127,7 +127,7 @@ const documentController = {
             await document.destroy();
 
             // LOG: document deleted
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'DOCUMENT_DELETE',
                 entity_type: 'Document',
@@ -160,7 +160,7 @@ const documentController = {
             await document.restore();
 
             // LOG: documento restored
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'DOCUMENT_RESTORE',
                 entity_type: 'Document',

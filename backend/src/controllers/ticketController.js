@@ -1,17 +1,82 @@
 const { Ticket, Chat, ChatUser, Message, User } = require('../models');
 const { Op } = require('sequelize');
-const auditLogController = require('./auditLogController');
+const auditLogService = require('../services/auditLogService');
+
+// Helper to determine roles reliably without relying on nullable fields
+const getUserRoles = (user) => {
+    const roleId = Number(user.role_id);
+    const isAdmin = roleId === 1;
+    const isExplicitClient = roleId === 3; 
+
+    // Leitura à prova de bala das permissões (suporta Arrays, Arrays de Objetos e Strings)
+    let hasManagePerms = false;
+    if (user.permissions) {
+        if (Array.isArray(user.permissions)) {
+            hasManagePerms = user.permissions.some(p => p === 'UPDATE_TICKET' || p.name === 'UPDATE_TICKET');
+        } else if (typeof user.permissions === 'string') {
+            hasManagePerms = user.permissions.includes('UPDATE_TICKET');
+        }
+    }
+
+    const isManager = !isExplicitClient && (roleId === 2 || (!isAdmin && hasManagePerms));
+    const isClient = isExplicitClient || (!isAdmin && !isManager);
+    return { isAdmin, isManager, isClient };
+};
+
+// Centralized authorization helper
+const checkTicketAccess = (user, ticket) => {
+    const { isAdmin, isManager, isClient } = getUserRoles(user);
+
+    // REGRA UNIVERSAL: Qualquer utilizador tem sempre acesso aos tickets que abriu
+    if (ticket.opened_by_user_id === user.id) {
+        return true;
+    }
+
+    if (isClient) {
+        return false; // Se chegou aqui, não é o dono, e sendo cliente não pode ver mais nada
+    }
+    
+    if (isManager) {
+        // Managers can only access unclaimed tickets or tickets claimed by themselves
+        if (ticket.assigned_to_user_id !== null && ticket.assigned_to_user_id !== user.id) {
+            return false;
+        }
+        return true;
+    }
+
+    if (isAdmin) {
+        return true;
+    }
+    
+    return false;
+};
 
 const ticketController = {
     // NEW TICKET
     async create(req, res) {
         try {
             const opened_by_user_id = req.user.id; 
-            const { company_id, category, subject, description } = req.body;
+            const { category, subject, description } = req.body;
+            
+            const { isClient } = getUserRoles(req.user);
+            const isStaff = !isClient;
+
+            let company_id;
+            if (!isStaff) {
+                // Cliente: força a usar a empresa associada ao perfil
+                company_id = req.user.company_id;
+            } else {
+                // Admin/Gestor: pode definir a empresa no corpo do pedido
+                company_id = req.body.company_id || req.user.company_id;
+            }
+
+            if (!company_id) {
+                return res.status(400).json({ error: 'A tua conta ainda não está associada a nenhuma Empresa. Por favor, contacta a administração.' });
+            }
 
             const activeTicket = await Ticket.findOne({
                 where: {
-                    company_id,
+                    opened_by_user_id,
                     status: {
                         [Op.in]: ['Open', 'In Progress', 'Resolved']
                     }
@@ -33,7 +98,7 @@ const ticketController = {
             });
 
             // LOG: ticket created
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: opened_by_user_id,
                 action: 'TICKET_CREATE',
                 entity_type: 'Ticket',
@@ -60,9 +125,18 @@ const ticketController = {
     // LIST ALL
     async findAll(req, res) {
         try {
+            const { isAdmin, isManager, isClient } = getUserRoles(req.user);
+
             let whereClause = {};
-            if (req.user.company_id) {
-                whereClause.company_id = req.user.company_id;
+            
+            if (isClient) {
+                whereClause.opened_by_user_id = req.user.id;
+            } else if (isManager) {
+                whereClause[Op.or] = [
+                    { opened_by_user_id: req.user.id }, // Garante que Gestores vêm os seus próprios tickets
+                    { assigned_to_user_id: null },
+                    { assigned_to_user_id: req.user.id }
+                ];
             }
 
             const tickets = await Ticket.findAll({ 
@@ -84,7 +158,7 @@ const ticketController = {
             
             if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
 
-            if (req.user.company_id && ticket.company_id !== req.user.company_id) {
+            if (!checkTicketAccess(req.user, ticket)) {
                 return res.status(403).json({ error: 'Forbidden: Access denied to this ticket.' });
             }
 
@@ -99,42 +173,30 @@ const ticketController = {
     async update(req, res) {
         try {
             const { id } = req.params;
-
-            // Manager can update priority, state and 'self' assigned_to_user_id
-            const { category, priority, status, assigned_to_user_id } = req.body;
+            const { category, priority, status } = req.body;
 
             const ticket = await Ticket.findByPk(id);
             if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
 
-            if (req.user.company_id && ticket.company_id !== req.user.company_id) {
+            if (!checkTicketAccess(req.user, ticket)) {
                 return res.status(403).json({ error: 'Forbidden.' });
             }
-
-            // Auto-create chat when ticket is first claimed
-            let createdChat = null;
-            const wasUnassigned = !ticket.assigned_to_user_id;
-            const isBeingAssigned = assigned_to_user_id && assigned_to_user_id > 0;
-
-            if (wasUnassigned && isBeingAssigned) {
-                try {
-                    const clientId = ticket.opened_by_user_id;
-                    const managerId = assigned_to_user_id;
-                    createdChat = await findOrCreateChatForTicket(clientId, managerId, ticket.company_id);
-                } catch (chatError) {
-                    console.error('Failed to create chat for ticket:', chatError);
-                    // Don't fail the update, just log the error
-                }
+            
+            // Bloqueio extra: Clientes nunca podem editar detalhes do ticket (fechar, mudar prioridades)
+            const { isClient } = getUserRoles(req.user);
+            if (isClient) {
+                return res.status(403).json({ error: 'Clientes não têm permissão para editar os estados dos tickets.' });
             }
 
-            await ticket.update({
-                category,
-                priority,
-                status,
-                assigned_to_user_id
-            });
+            // Um cliente só pode atualizar o seu próprio ticket se o estado for 'Open'
+            if (req.user.id === ticket.opened_by_user_id && ticket.status !== 'Open') {
+                // Adicionar aqui lógica se o cliente puder editar algo depois de criado
+            }
+
+            await ticket.update({ category, priority, status });
 
             // LOG: ticket updated
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'TICKET_UPDATE',
                 entity_type: 'Ticket',
@@ -147,6 +209,74 @@ const ticketController = {
                 ticket
             };
 
+            return res.status(200).json(response);
+        } catch (error) {
+            if (error.name === 'SequelizeDatabaseError' && error.message.includes('enum')) {
+                return res.status(400).json({ error: 'Invalid value provided for priority or status.' });
+            }
+            console.error('Update Ticket error:', error);
+            return res.status(500).json({ error: 'Internal server error.' });
+        }
+    },
+
+    // CLAIM TICKET (Apenas para Gestores/Admins)
+    async claim(req, res) {
+        const t = await Ticket.sequelize.transaction();
+        try {
+            const { id } = req.params;
+            const managerId = req.user.id;
+
+            const { isClient } = getUserRoles(req.user);
+            const isStaff = !isClient;
+
+            if (!isStaff) {
+                await t.rollback();
+                return res.status(403).json({ error: 'Forbidden: Only authorized personnel can claim tickets.' });
+            }
+
+            const ticket = await Ticket.findByPk(id, { transaction: t, lock: t.LOCK.UPDATE });
+
+            if (!ticket) {
+                await t.rollback();
+                return res.status(404).json({ error: 'Ticket not found.' });
+            }
+
+            if (ticket.assigned_to_user_id) {
+                await t.rollback();
+                return res.status(409).json({ error: 'This ticket has already been claimed.' });
+            }
+            
+            // Auto-create chat when ticket is first claimed
+            let createdChat = null;
+            try {
+                const clientId = ticket.opened_by_user_id;
+                createdChat = await findOrCreateChatForTicket(clientId, managerId, ticket.company_id, t);
+            } catch (chatError) {
+                await t.rollback();
+                console.error('Failed to create chat for ticket:', chatError);
+                return res.status(500).json({ error: 'Could not create chat room for this ticket.' });
+            }
+
+            ticket.assigned_to_user_id = managerId;
+            ticket.status = 'In Progress';
+            await ticket.save({ transaction: t });
+
+            await t.commit();
+
+            // LOG: ticket updated
+            await auditLogService.logEvent({
+                user_id: req.user.id,
+                action: 'TICKET_CLAIM',
+                entity_type: 'Ticket',
+                entity_id: ticket.id,
+                ip_address: req.ip
+            });
+
+            const response = {
+                message: 'Ticket claimed successfully!',
+                ticket
+            };
+
             // Include chat info if one was created
             if (createdChat) {
                 response.chat = createdChat;
@@ -154,12 +284,6 @@ const ticketController = {
 
             return res.status(200).json(response);
         } catch (error) {
-            if (error.name === 'SequelizeForeignKeyConstraintError') {
-                return res.status(400).json({ error: 'The specified assigned user does not exist.' });
-            }
-            if (error.name === 'SequelizeDatabaseError' && error.message.includes('enum')) {
-                return res.status(400).json({ error: 'Invalid value provided for priority or status.' });
-            }
             console.error('Update Ticket error:', error);
             return res.status(500).json({ error: 'Internal server error.' });
         }
@@ -173,14 +297,14 @@ const ticketController = {
             
             if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
 
-            if (req.user.company_id && ticket.company_id !== req.user.company_id) {
+            if (!checkTicketAccess(req.user, ticket)) {
                 return res.status(403).json({ error: 'Forbidden.' });
             }
 
             await ticket.destroy();
 
             // LOG: ticket deleted
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'TICKET_DELETE',
                 entity_type: 'Ticket',
@@ -203,7 +327,7 @@ const ticketController = {
 
             if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
 
-            if (req.user.company_id && ticket.company_id !== req.user.company_id) {
+            if (!checkTicketAccess(req.user, ticket)) {
                 return res.status(403).json({ error: 'Forbidden.' });
             }
 
@@ -212,7 +336,7 @@ const ticketController = {
             await ticket.restore();
 
             // LOG: ticket restored
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'TICKET_RESTORE',
                 entity_type: 'Ticket',
@@ -235,7 +359,7 @@ const ticketController = {
             const ticket = await Ticket.findByPk(id);
             if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
 
-            if (req.user.company_id && ticket.company_id !== req.user.company_id) {
+            if (!checkTicketAccess(req.user, ticket)) {
                 return res.status(403).json({ error: 'Forbidden.' });
             }
 
@@ -258,11 +382,12 @@ const ticketController = {
 };
 
 // Helper function: Auto-create chat when ticket is claimed
-async function findOrCreateChatForTicket(clientId, managerId, companyId) {
+async function findOrCreateChatForTicket(clientId, managerId, companyId, transaction) {
     // Search for existing chat with both users
     const clientChats = await ChatUser.findAll({
         where: { user_id: clientId },
-        attributes: ['chat_id']
+        attributes: ['chat_id'],
+        transaction
     });
     const clientChatIds = clientChats.map(c => c.chat_id);
 
@@ -272,22 +397,26 @@ async function findOrCreateChatForTicket(clientId, managerId, companyId) {
                 user_id: managerId,
                 chat_id: { [Op.in]: clientChatIds }
             },
-            attributes: ['chat_id']
+            attributes: ['chat_id'],
+            transaction
         });
         const sharedChatIds = managerChats.map(c => c.chat_id);
 
         if (sharedChatIds.length > 0) {
             const existingChat = await Chat.findOne({
-                where: { company_id: companyId, id: { [Op.in]: sharedChatIds } }
+                where: { company_id: companyId, id: { [Op.in]: sharedChatIds } },
+                transaction
             });
             if (existingChat) return existingChat;
         }
     }
 
     // Create new chat with both users
-    const newChat = await Chat.create({ company_id: companyId });
-    await ChatUser.create({ chat_id: newChat.id, user_id: clientId });
-    await ChatUser.create({ chat_id: newChat.id, user_id: managerId });
+    const newChat = await Chat.create({ company_id: companyId }, { transaction });
+    await ChatUser.create({ chat_id: newChat.id, user_id: clientId }, { transaction });
+    if (clientId !== managerId) {
+        await ChatUser.create({ chat_id: newChat.id, user_id: managerId }, { transaction });
+    }
 
     return newChat;
 }

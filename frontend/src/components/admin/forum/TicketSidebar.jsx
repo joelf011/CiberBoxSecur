@@ -24,7 +24,7 @@ const TicketSidebar = ({
     });
 
     return (
-        <Card className="h-100 border-0 shadow-sm d-flex flex-column">
+        <Card className="h-100 border-0 shadow-sm rounded-4 d-flex flex-column overflow-hidden">
             {/* Header */}
             <Card.Header className="bg-gradient p-3 border-0 shrink-0">
                 <div className="d-flex align-items-center justify-content-between mb-3">

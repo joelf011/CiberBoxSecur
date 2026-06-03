@@ -1,6 +1,6 @@
 const { Report, User, Company } = require('../models');
 const fs = require('fs');
-const auditLogController = require('./auditLogController');
+const auditLogService = require('../services/auditLogService');
 
 const reportController = {
     // CREATE
@@ -23,7 +23,7 @@ const reportController = {
             });
 
             // LOG: report created
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'REPORT_CREATE',
                 entity_type: 'Report',
@@ -124,7 +124,7 @@ const reportController = {
             await report.update({ title, report_type, risk_score, status, file_path });
 
             // LOG: report updated
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'REPORT_UPDATE',
                 entity_type: 'Report',
@@ -156,7 +156,7 @@ const reportController = {
             await report.destroy();
 
             // LOG: report deleted
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'REPORT_DELETE',
                 entity_type: 'Report',

@@ -13,6 +13,7 @@ router.get('/', checkPermission('VIEW_TICKETS'), ticketController.findAll);
 router.get('/:id', checkPermission('VIEW_TICKETS'), ticketController.findOne);
 router.get('/:id/messages', checkPermission('VIEW_TICKETS'), ticketController.getMessages);
 router.put('/:id', checkPermission('UPDATE_TICKET'), ticketController.update);
+router.post('/:id/claim', checkPermission('UPDATE_TICKET'), ticketController.claim);
 router.delete('/:id', checkPermission('DELETE_TICKET'), ticketController.delete);
 router.patch('/:id/restore', checkPermission('RESTORE_TICKET'), ticketController.restore);
 

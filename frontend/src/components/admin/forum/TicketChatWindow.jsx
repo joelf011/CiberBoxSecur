@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, Button, Form, InputGroup, Spinner, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPaperPlane, faUserCircle } from '@fortawesome/free-solid-svg-icons';
+import { faPaperPlane, faUserCircle, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import forumApi from '../../../api/forumApi';
 
-const TicketChatWindow = ({ ticket, currentUserId, onMessageSent }) => {
+const TicketChatWindow = ({ ticket, currentUserId, onBack }) => {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(false);
     const [sending, setSending] = useState(false);
@@ -17,10 +17,13 @@ const TicketChatWindow = ({ ticket, currentUserId, onMessageSent }) => {
         if (ticket) {
             loadMessages();
         }
-    }, [ticket?.id]);
+    }, [ticket?.id, ticket?.assigned_to_user_id, ticket?.status]);
 
     const loadMessages = async () => {
-        setLoading(true);
+        // Só mostra o ecrã inteiro de loading se for a primeira vez que carrega o chat
+        if (messages.length === 0) {
+            setLoading(true);
+        }
         setError(null);
         try {
             const data = await forumApi.getTicketMessages(ticket.id);
@@ -45,28 +48,28 @@ const TicketChatWindow = ({ ticket, currentUserId, onMessageSent }) => {
         setSending(true);
         setError(null);
         try {
-            const newMessage = await forumApi.sendMessageToTicket(
-                null, // chatId no longer needed
-                ticket.id,
-                messageContent
-            );
+            // Passamos null no chatId, o ID do ticket no 2º argumento, e o texto no 3º
+            const newMessage = await forumApi.sendMessageToTicket(null, ticket.id, messageContent);
 
-            setMessages([...messages, newMessage]);
+            // A API devolve o formato { message: "...", data: { ... } }
+            // Extraímos a mensagem real para o React conseguir ler o sender_id e o content
+            const actualMessage = newMessage?.data ? newMessage.data : newMessage;
+            setMessages([...messages, actualMessage]);
             setMessageContent('');
             scrollToBottom();
 
-            if (onMessageSent) {
-                onMessageSent();
-            }
+            // Removido o onMessageSent() propositadamente. A mensagem já é 
+            // atualizada no chat instantaneamente pelo setMessages acima.
+            // Assim evitamos que o componente pai recarregue a lista e feche o ticket.
         } catch (error) {
             console.error('Failed to send message:', error);
-            setError('Failed to send message');
+            setError(error.response?.data?.error || 'Failed to send message. Please try again.');
         } finally {
             setSending(false);
         }
     };
 
-    if (loading) {
+    if (loading && messages.length === 0) {
         return (
             <Card className="h-100 d-flex align-items-center justify-content-center">
                 <Card.Body className="text-center">
@@ -90,9 +93,12 @@ const TicketChatWindow = ({ ticket, currentUserId, onMessageSent }) => {
     }
 
     return (
-        <div className="d-flex flex-column h-100 animate-fade-in">
+        <Card className="d-flex flex-column h-100 animate-fade-in border-0 shadow-sm rounded-4 overflow-hidden">
             {/* Header */}
             <Card.Header className="bg-white p-3 border-bottom d-flex align-items-center gap-3 shrink-0 shadow-sm">
+                <Button variant="light" size="sm" className="rounded-circle border-0" onClick={onBack} title="Voltar à lista">
+                    <FontAwesomeIcon icon={faChevronLeft} />
+                </Button>
                 <div className="flex-grow-1">
                     <h6 className="h6 fw-bold mb-0 text-dark">Ticket #{ticket.id} - Chat</h6>
                     <small className="text-muted">{ticket.subject}</small>
@@ -123,7 +129,7 @@ const TicketChatWindow = ({ ticket, currentUserId, onMessageSent }) => {
                                         <FontAwesomeIcon icon={faUserCircle} className="text-secondary small" />
                                     )}
                                     <span className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>
-                                        {msg.sender_id === currentUserId ? 'You' : 'Manager'}
+                                        {msg.sender_id === currentUserId ? 'You' : (msg.User?.name || 'Manager')}
                                     </span>
                                     <span className="text-muted" style={{ fontSize: '0.65rem' }}>
                                         {new Date(msg.createdAt).toLocaleTimeString([], {
@@ -152,40 +158,50 @@ const TicketChatWindow = ({ ticket, currentUserId, onMessageSent }) => {
 
             {/* Message Input */}
             <Card.Footer className="bg-white p-3 border-top shrink-0">
-                <Form onSubmit={handleSendMessage}>
-                    <InputGroup className="bg-light rounded-4 border-0 p-1">
-                        <Form.Control
-                            placeholder="Type your message..."
-                            className="bg-transparent border-0 shadow-none py-2"
-                            as="textarea"
-                            rows={1}
-                            value={messageContent}
-                            onChange={(e) => setMessageContent(e.target.value)}
-                            disabled={sending}
-                            style={{ resize: 'none', maxHeight: '100px' }}
-                            onKeyPress={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSendMessage(e);
-                                }
-                            }}
-                        />
-                        <Button
-                            type="submit"
-                            className="rounded-4 px-4 ms-2 border-0 shadow-sm d-flex align-items-center"
-                            style={{ backgroundColor: '#8b5cf6' }}
-                            disabled={sending || !messageContent.trim()}
-                        >
-                            {sending ? (
-                                <Spinner animation="border" size="sm" />
-                            ) : (
-                                <FontAwesomeIcon icon={faPaperPlane} />
-                            )}
-                        </Button>
-                    </InputGroup>
-                </Form>
+                {!ticket.assigned_to_user_id ? (
+                    <div className="text-center text-muted p-2 bg-light rounded-3 border">
+                        <small>O chat será ativado assim que um gestor assumir este ticket.</small>
+                    </div>
+                ) : ticket.status === 'Closed' ? (
+                    <div className="text-center text-muted p-2 bg-light rounded-3 border">
+                        <small>Este ticket encontra-se fechado. Não é possível enviar novas mensagens.</small>
+                    </div>
+                ) : (
+                    <Form onSubmit={handleSendMessage}>
+                        <InputGroup className="bg-light rounded-4 border-0 p-1">
+                            <Form.Control
+                                placeholder="Escreva a sua mensagem..."
+                                className="bg-transparent border-0 shadow-none py-2"
+                                as="textarea"
+                                rows={1}
+                                value={messageContent}
+                                onChange={(e) => setMessageContent(e.target.value)}
+                                disabled={sending}
+                                style={{ resize: 'none', maxHeight: '100px' }}
+                                onKeyPress={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSendMessage(e);
+                                    }
+                                }}
+                            />
+                            <Button
+                                type="submit"
+                                className="rounded-4 px-4 ms-2 border-0 shadow-sm d-flex align-items-center"
+                                style={{ backgroundColor: '#8b5cf6' }}
+                                disabled={sending || !messageContent.trim()}
+                            >
+                                {sending ? (
+                                    <Spinner animation="border" size="sm" />
+                                ) : (
+                                    <FontAwesomeIcon icon={faPaperPlane} />
+                                )}
+                            </Button>
+                        </InputGroup>
+                    </Form>
+                )}
             </Card.Footer>
-        </div>
+        </Card>
     );
 };
 

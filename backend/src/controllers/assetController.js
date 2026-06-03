@@ -1,5 +1,5 @@
 const { Asset } = require('../models');
-const auditLogController = require('./auditLogController');
+const auditLogService = require('../services/auditLogService');
 
 const assetController = {
     // CREATE
@@ -28,7 +28,7 @@ const assetController = {
             });
 
             // LOG
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: created_by_user_id,
                 action: 'ASSET_CREATE',
                 entity_type: 'Asset',
@@ -114,7 +114,7 @@ const assetController = {
             await asset.update(updates);
 
             // LOG: updated
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'ASSET_UPDATE',
                 entity_type: 'Asset',
@@ -146,7 +146,7 @@ const assetController = {
             await asset.destroy();
 
             // LOG: deleted
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'ASSET_DELETE',
                 entity_type: 'Asset',
@@ -182,7 +182,7 @@ const assetController = {
             await asset.restore();
 
             // LOG: restored
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'ASSET_RESTORE',
                 entity_type: 'Asset',

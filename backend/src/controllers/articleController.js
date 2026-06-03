@@ -1,7 +1,7 @@
 const { Article } = require('../models');
 const { Op } = require('sequelize');
 const fs = require('fs');
-const auditLogController = require('./auditLogController');
+const auditLogService = require('../services/auditLogService');
 
 const articleController = {
     // CREATE
@@ -18,7 +18,7 @@ const articleController = {
             });
 
             // LOG: article created
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: author_id,
                 action: 'ARTICLE_CREATE',
                 entity_type: 'Article',
@@ -122,7 +122,7 @@ const articleController = {
             await article.update({ title, slug, summary, content_body, cover_image, published_date, status });
 
             // LOG: update article
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'ARTICLE_UPDATE',
                 entity_type: 'Article',
@@ -151,7 +151,7 @@ const articleController = {
             await article.destroy();
 
             // LOG: article deleted
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'ARTICLE_DELETE',
                 entity_type: 'Article',

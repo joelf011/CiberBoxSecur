@@ -39,9 +39,7 @@ const forumApi = {
 
     async claimTicket(id, assignedToUserId) {
         try {
-            const response = await axiosConfig.put(`/tickets/${id}`, {
-                assigned_to_user_id: assignedToUserId
-            });
+            const response = await axiosConfig.post(`/tickets/${id}/claim`);
             Alerts.success('Ticket claimed successfully!');
             return response.data;
         } catch (error) {

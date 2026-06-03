@@ -1,6 +1,6 @@
 const { Chat, ChatUser, Message, User, Ticket } = require('../models');
 const { Op } = require('sequelize');
-const auditLogController = require('./auditLogController');
+const auditLogService = require('../services/auditLogService');
 
 const chatController = {
 
@@ -44,7 +44,7 @@ const chatController = {
             ]);
 
             // LOG: new room created
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: my_id,
                 action: 'CHAT_CREATE',
                 entity_type: 'Chat',
@@ -92,23 +92,35 @@ const chatController = {
                         return res.status(404).json({ error: "Ticket not found." });
                     }
 
-                    // Find a chat that has both the sender and ticket opener as participants
-                    const senderChats = await ChatUser.findAll({
-                        where: { user_id: sender_id },
-                        attributes: ['chat_id']
-                    });
-                    const senderChatIds = senderChats.map(c => c.chat_id);
+                    // BUGFIX: Não permitir mensagens em tickets fechados
+                    if (ticket.status === 'Closed') {
+                        return res.status(403).json({ error: "This ticket is closed and cannot receive new messages." });
+                    }
 
-                    if (senderChatIds.length > 0) {
-                        const openerChats = await ChatUser.findAll({
-                            where: { 
-                                user_id: ticket.opened_by_user_id,
-                                chat_id: { [Op.in]: senderChatIds }
-                            }
+                    const userA = ticket.opened_by_user_id;
+                    const userB = ticket.assigned_to_user_id;
+
+                    if (!userB) {
+                        return res.status(400).json({ error: "Cannot send messages. The ticket must be claimed by a manager first." });
+                    }
+
+                    if (sender_id !== userA && sender_id !== userB) {
+                        return res.status(403).json({ error: "Access denied. You are not a participant of this ticket." });
+                    }
+
+                    // Procura um chat que tenha EXATAMENTE o userA e o userB
+                    const userAChats = await ChatUser.findAll({ where: { user_id: userA }, attributes: ['chat_id'] });
+                    const userAChatIds = userAChats.map(c => c.chat_id);
+
+                    if (userAChatIds.length > 0) {
+                        const sharedChats = await ChatUser.findAll({
+                            where: { user_id: userB, chat_id: { [Op.in]: userAChatIds } },
+                            attributes: ['chat_id']
                         });
-                        const sharedChatIds = openerChats.map(c => c.chat_id);
+                        const sharedChatIds = sharedChats.map(c => c.chat_id);
 
                         if (sharedChatIds.length > 0) {
+                            // Encontra o chat correspondente à empresa do ticket
                             const chatWithBoth = await Chat.findOne({
                                 where: { company_id: ticket.company_id, id: { [Op.in]: sharedChatIds } }
                             });
@@ -116,6 +128,16 @@ const chatController = {
                                 chat_id = chatWithBoth.id;
                             }
                         }
+                    }
+
+                    // FALLBACK: Se o chat ainda não existir, cria um novo
+                    if (!chat_id) {
+                        const newChat = await Chat.create({ company_id: ticket.company_id });
+                        await ChatUser.create({ chat_id: newChat.id, user_id: userA });
+                        if (userA !== userB) {
+                            await ChatUser.create({ chat_id: newChat.id, user_id: userB });
+                        }
+                        chat_id = newChat.id;
                     }
                 }
             }
@@ -140,7 +162,7 @@ const chatController = {
             });
 
             // LOG: message sent
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: sender_id,
                 action: 'MESSAGE_SEND',
                 entity_type: 'Message',
@@ -160,6 +182,15 @@ const chatController = {
         try {
             const my_id = req.user.id;
             const { chat_id } = req.params;
+
+            // BUGFIX: Enforce participation to prevent IDOR
+            const isParticipant = await ChatUser.findOne({
+                where: { chat_id, user_id: my_id }
+            });
+
+            if (!isParticipant && req.user.role_id !== 1) {
+                return res.status(403).json({ error: 'Forbidden: You do not have access to this chat.' });
+            }
 
             // LOAD
             const messages = await Message.findAll({

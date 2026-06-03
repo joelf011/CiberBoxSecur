@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faComments } from "@fortawesome/free-solid-svg-icons";
+import { faComments, faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 
 import TicketSidebar from '../../components/admin/forum/TicketSidebar';
 import TicketDetailsPanel from '../../components/admin/forum/TicketDetailsPanel';
@@ -49,15 +49,9 @@ const AdminForum = () => {
         setError(null);
         try {
             const data = await forumApi.getTickets();
-
-            // Filter based on user role
-            let filtered = data;
-            if (!isAdmin()) {
-                // Clients see only their own tickets
-                filtered = data.filter(t => t.opened_by_user_id === currentUser.id);
-            }
-
-            setTickets(filtered);
+            
+            // Rely entirely on Backend constraints. No insecure client-side filtering.
+            setTickets(data);
         } catch (err) {
             console.error('Failed to load tickets:', err);
             setError('Failed to load tickets');
@@ -66,12 +60,18 @@ const AdminForum = () => {
         }
     };
 
-    const isAdmin = () => {
-        return currentUser?.role_id === 1 || currentUser?.permissions?.includes('UPDATE_TICKET');
+    const isManagerOrAdmin = () => {
+        const roleId = Number(currentUser?.role_id);
+        if (roleId === 3) return false; // Fail-safe: Cargo Cliente nunca atua como Gestor
+        return roleId === 1 || roleId === 2 || currentUser?.permissions?.includes('UPDATE_TICKET');
     };
 
     const handleSelectTicket = (ticketId) => {
         setSelectedTicketId(ticketId);
+    };
+
+    const handleBack = () => {
+        setSelectedTicketId(null);
     };
 
     const handleRefresh = () => {
@@ -95,11 +95,11 @@ const AdminForum = () => {
     }
 
     return (
-        <div className="py-2 h-100">
-            <div className="mb-4">
+        <div className="py-2 d-flex flex-column" style={{ height: 'calc(100vh - 85px)' }}>
+            <div className="mb-3 flex-shrink-0">
                 <h2 className="fs-4 fw-bold text-dark">Support Helpdesk</h2>
                 <p className="text-muted small">
-                    {isAdmin()
+                    {isManagerOrAdmin()
                         ? 'Manage and respond to support tickets.'
                         : 'View and manage your support tickets.'}
                 </p>
@@ -111,75 +111,62 @@ const AdminForum = () => {
                 </Alert>
             )}
 
-            <Row className="g-4 h-100">
-                {/* LEFT: TICKET SIDEBAR */}
-                <Col lg={3} className="mb-3 mb-lg-0">
-                    <TicketSidebar
-                        tickets={tickets}
-                        selectedTicketId={selectedTicketId}
-                        onSelectTicket={handleSelectTicket}
-                        onCreateNew={() => setShowCreateModal(true)}
-                        loading={loading}
-                        viewMode={isAdmin() ? 'admin' : 'client'}
-                    />
-                </Col>
-
-                {/* CENTER: TICKET DETAILS & CHAT */}
-                <Col lg={9}>
-                    <Row className="g-3 h-100">
-                        {!selectedTicket ? (
-                            <Col xs={12} className="h-100">
-                                <Card className="border-0 shadow-sm rounded-4 h-100 d-flex align-items-center justify-content-center overflow-hidden" style={{ minHeight: '600px' }}>
-                                    <Card.Body className="d-flex flex-column align-items-center justify-content-center text-center p-5">
-                                        <div className="bg-light rounded-circle p-4 mb-3">
-                                            <FontAwesomeIcon icon={faComments} size="3x" className="text-secondary opacity-25" />
+            {/* O estilo minHeight: 0 é crucial para o Flexbox não quebrar o layout e ativar o scroll interno */}
+            <Row className="g-3 flex-grow-1 m-0" style={{ minHeight: 0 }}>
+                {!selectedTicket ? (
+                    /* VIEW 1: TICKET POOL (LISTA) */
+                    <Col xs={12} lg={10} xl={8} className="mx-auto h-100 px-0">
+                        <TicketSidebar
+                            tickets={tickets}
+                            selectedTicketId={selectedTicketId}
+                            onSelectTicket={handleSelectTicket}
+                            onCreateNew={() => setShowCreateModal(true)}
+                            loading={loading}
+                            viewMode={isManagerOrAdmin() ? 'admin' : 'client'}
+                        />
+                    </Col>
+                ) : (
+                    /* VIEW 2: TICKET ABERTO (CHAT + DETALHES) */
+                    <>
+                        {/* LEFT/CENTER: CHAT WINDOW */}
+                        <Col lg={8} className="h-100 mb-3 mb-lg-0">
+                            {selectedTicket.assigned_to_user_id ? (
+                                <TicketChatWindow
+                                    ticket={selectedTicket}
+                                    currentUserId={currentUser.id}
+                                    onBack={handleBack}
+                                />
+                            ) : (
+                                <Card className="h-100 d-flex flex-column shadow-sm border-0 rounded-4 overflow-hidden">
+                                    <Card.Header className="bg-white p-3 border-bottom d-flex align-items-center gap-3 shrink-0 shadow-sm">
+                                        <Button variant="light" size="sm" className="rounded-circle border-0" onClick={handleBack} title="Voltar à lista">
+                                            <FontAwesomeIcon icon={faChevronLeft} />
+                                        </Button>
+                                        <div className="flex-grow-1">
+                                            <h6 className="h6 fw-bold mb-0 text-dark">Ticket #{selectedTicket.id}</h6>
                                         </div>
-                                        <h4 className="fw-bold text-dark">Select a Ticket</h4>
-                                        <p className="text-muted mx-auto" style={{ maxWidth: '350px' }}>
-                                            {isAdmin()
-                                                ? 'Choose a ticket from the list to view details and communicate with the client.'
-                                                : 'Select one of your tickets to view details and communicate with support.'}
+                                    </Card.Header>
+                                    <Card.Body className="d-flex align-items-center justify-content-center text-center p-4">
+                                        <p className="text-muted mb-0">
+                                            This ticket is not yet claimed. Once a manager claims it, the chat will be available.
                                         </p>
                                     </Card.Body>
                                 </Card>
-                            </Col>
-                        ) : (
-                            <>
-                                {/* TOP: TICKET DETAILS PANEL */}
-                                <Col xs={12} md={4} className="mb-3 mb-md-0">
-                                    <TicketDetailsPanel
-                                        ticket={selectedTicket}
-                                        currentUserId={currentUser.id}
-                                        isAdmin={isAdmin()}
-                                        onClaim={handleRefresh}
-                                        onRefresh={handleRefresh}
-                                    />
-                                </Col>
+                            )}
+                        </Col>
 
-                                {/* BOTTOM/RIGHT: CHAT WINDOW */}
-                                {selectedTicket.assigned_to_user_id ? (
-                                    <Col xs={12} md={8}>
-                                        <TicketChatWindow
-                                            ticket={selectedTicket}
-                                            currentUserId={currentUser.id}
-                                            onMessageSent={handleRefresh}
-                                        />
-                                    </Col>
-                                ) : (
-                                    <Col xs={12} md={8}>
-                                        <Card className="h-100 d-flex align-items-center justify-content-center shadow-sm" style={{ minHeight: '400px' }}>
-                                            <Card.Body className="text-center">
-                                                <p className="text-muted mb-0">
-                                                    This ticket is not yet claimed. Once a manager claims it, the chat will be available.
-                                                </p>
-                                            </Card.Body>
-                                        </Card>
-                                    </Col>
-                                )}
-                            </>
-                        )}
-                    </Row>
-                </Col>
+                        {/* RIGHT: TICKET DETAILS PANEL */}
+                        <Col lg={4} className="h-100">
+                            <TicketDetailsPanel
+                                ticket={selectedTicket}
+                                currentUserId={currentUser.id}
+                                isAdmin={isManagerOrAdmin()}
+                                onClaim={handleRefresh}
+                                onRefresh={handleRefresh}
+                            />
+                        </Col>
+                    </>
+                )}
             </Row>
 
             {/* CREATE TICKET MODAL */}

@@ -10,7 +10,7 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
 
     if (!ticket) {
         return (
-            <Card className="h-100 d-flex align-items-center justify-content-center">
+            <Card className="h-100 d-flex align-items-center justify-content-center border-0 shadow-sm rounded-4">
                 <Card.Body className="text-center text-muted">
                     <p>Select a ticket to view details</p>
                 </Card.Body>
@@ -67,7 +67,7 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
     const isAssignedToMe = ticket.assigned_to_user_id === currentUserId;
 
     return (
-        <Card className="h-100 shadow-sm animate-fade-in">
+        <Card className="h-100 border-0 shadow-sm rounded-4 animate-fade-in d-flex flex-column overflow-hidden">
             {/* Header */}
             <Card.Header className="bg-white border-bottom p-3 shrink-0">
                 <h5 className="mb-2 fw-bold text-dark">{ticket.subject}</h5>

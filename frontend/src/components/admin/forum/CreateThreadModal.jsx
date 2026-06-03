@@ -1,19 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Spinner, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faPen, faAlignLeft, faTag, faFlag } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faPen, faAlignLeft, faTag, faFlag, faBuilding } from "@fortawesome/free-solid-svg-icons";
 import forumApi from '../../../api/forumApi';
 import { Alerts } from '../../../utils/Alerts';
+import api from '../../../api/axiosConfig';
 
 const CreateTicketModal = ({ show, onHide, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [companies, setCompanies] = useState([]);
   const [formData, setFormData] = useState({
     subject: '',
     description: '',
     category: 'Support',
-    priority: 'Medium'
+    priority: 'Medium',
+    company_id: ''
   });
+
+  const user = JSON.parse(localStorage.getItem('user'));
+  // Impede que um Cliente (Role 3) veja o dropdown da empresa mesmo com permissões em cache
+  const isStaff = user && Number(user.role_id) !== 3 && (Number(user.role_id) === 1 || Number(user.role_id) === 2 || (user.permissions && user.permissions.includes('UPDATE_TICKET')));
+
+  // Carrega as empresas do backend se for Administrador
+  useEffect(() => {
+    if (show && isStaff) {
+      const fetchCompanies = async () => {
+        try {
+          // A chamada via 'api' já utiliza o URL do .env e injeta o Token de Autorização!
+          const response = await api.get('/companies');
+          setCompanies(response.data);
+        } catch (err) {
+          console.error('Failed to load companies:', err);
+        }
+      };
+      fetchCompanies();
+    }
+  }, [show, isStaff]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -37,17 +60,20 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
       return;
     }
 
+    if (isStaff && !formData.company_id) {
+      setError('Please select a company for this ticket.');
+      return;
+    }
+
     setLoading(true);
     try {
       const payload = {
         subject: formData.subject,
         description: formData.description,
         category: formData.category,
-        priority: formData.priority
+        priority: formData.priority,
+        company_id: isStaff ? formData.company_id : user?.company_id
       };
-
-      const user = JSON.parse(localStorage.getItem('user'));
-      payload.company_id = user?.company_id;
 
       await forumApi.createTicket(payload);
 
@@ -56,7 +82,8 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
         subject: '',
         description: '',
         category: 'Support',
-        priority: 'Medium'
+        priority: 'Medium',
+        company_id: ''
       });
 
       onHide();
@@ -65,7 +92,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
       }
     } catch (error) {
       console.error('Failed to create ticket:', error);
-      setError('Failed to create ticket. Please try again.');
+      setError(error.response?.data?.error || 'Failed to create ticket. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -122,6 +149,30 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
               style={{ resize: 'none' }}
             />
           </Form.Group>
+
+          {/* Company Field (Admins Only) */}
+          {isStaff && (
+            <Form.Group className="mb-4">
+              <Form.Label className="small fw-bold text-secondary text-uppercase">
+                <FontAwesomeIcon icon={faBuilding} className="me-2" /> Company
+              </Form.Label>
+              <Form.Select
+                name="company_id"
+                value={formData.company_id}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                className="py-2 rounded-3 border-light-subtle shadow-sm shadow-none"
+              >
+                <option value="">Select a company...</option>
+                {companies.map(company => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          )}
 
           {/* Category Field */}
           <Form.Group className="mb-4">
