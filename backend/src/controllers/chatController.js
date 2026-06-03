@@ -93,24 +93,28 @@ const chatController = {
                     }
 
                     // Find a chat that has both the sender and ticket opener as participants
-                    const chatWithBoth = await Chat.findOne({
-                        where: { company_id: ticket.company_id },
-                        include: [{
-                            model: ChatUser,
-                            where: { user_id: sender_id },
-                            required: true
-                        }]
+                    const senderChats = await ChatUser.findAll({
+                        where: { user_id: sender_id },
+                        attributes: ['chat_id']
                     });
+                    const senderChatIds = senderChats.map(c => c.chat_id);
 
-                    if (chatWithBoth) {
-                        const hasTicketOpener = await ChatUser.findOne({
-                            where: {
-                                chat_id: chatWithBoth.id,
-                                user_id: ticket.opened_by_user_id
+                    if (senderChatIds.length > 0) {
+                        const openerChats = await ChatUser.findAll({
+                            where: { 
+                                user_id: ticket.opened_by_user_id,
+                                chat_id: { [Op.in]: senderChatIds }
                             }
                         });
-                        if (hasTicketOpener) {
-                            chat_id = chatWithBoth.id;
+                        const sharedChatIds = openerChats.map(c => c.chat_id);
+
+                        if (sharedChatIds.length > 0) {
+                            const chatWithBoth = await Chat.findOne({
+                                where: { company_id: ticket.company_id, id: { [Op.in]: sharedChatIds } }
+                            });
+                            if (chatWithBoth) {
+                                chat_id = chatWithBoth.id;
+                            }
                         }
                     }
                 }

@@ -260,20 +260,28 @@ const ticketController = {
 // Helper function: Auto-create chat when ticket is claimed
 async function findOrCreateChatForTicket(clientId, managerId, companyId) {
     // Search for existing chat with both users
-    const existingChat = await Chat.findOne({
-        where: { company_id: companyId },
-        include: [{
-            model: ChatUser,
-            where: { user_id: clientId },
-            required: true
-        }]
+    const clientChats = await ChatUser.findAll({
+        where: { user_id: clientId },
+        attributes: ['chat_id']
     });
+    const clientChatIds = clientChats.map(c => c.chat_id);
 
-    if (existingChat) {
-        const hasManager = await ChatUser.findOne({
-            where: { chat_id: existingChat.id, user_id: managerId }
+    if (clientChatIds.length > 0) {
+        const managerChats = await ChatUser.findAll({
+            where: {
+                user_id: managerId,
+                chat_id: { [Op.in]: clientChatIds }
+            },
+            attributes: ['chat_id']
         });
-        if (hasManager) return existingChat;
+        const sharedChatIds = managerChats.map(c => c.chat_id);
+
+        if (sharedChatIds.length > 0) {
+            const existingChat = await Chat.findOne({
+                where: { company_id: companyId, id: { [Op.in]: sharedChatIds } }
+            });
+            if (existingChat) return existingChat;
+        }
     }
 
     // Create new chat with both users
