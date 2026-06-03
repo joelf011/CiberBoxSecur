@@ -1,4 +1,4 @@
-const { Ticket } = require('../models');
+const { Ticket, Chat, ChatUser, Message, User } = require('../models');
 const { Op } = require('sequelize');
 const auditLogController = require('./auditLogController');
 
@@ -99,7 +99,7 @@ const ticketController = {
     async update(req, res) {
         try {
             const { id } = req.params;
-            
+
             // Manager can update priority, state and 'self' assigned_to_user_id
             const { category, priority, status, assigned_to_user_id } = req.body;
 
@@ -110,11 +110,27 @@ const ticketController = {
                 return res.status(403).json({ error: 'Forbidden.' });
             }
 
-            await ticket.update({ 
-                category, 
-                priority, 
-                status, 
-                assigned_to_user_id 
+            // Auto-create chat when ticket is first claimed
+            let createdChat = null;
+            const wasUnassigned = !ticket.assigned_to_user_id;
+            const isBeingAssigned = assigned_to_user_id && assigned_to_user_id > 0;
+
+            if (wasUnassigned && isBeingAssigned) {
+                try {
+                    const clientId = ticket.opened_by_user_id;
+                    const managerId = assigned_to_user_id;
+                    createdChat = await findOrCreateChatForTicket(clientId, managerId, ticket.company_id);
+                } catch (chatError) {
+                    console.error('Failed to create chat for ticket:', chatError);
+                    // Don't fail the update, just log the error
+                }
+            }
+
+            await ticket.update({
+                category,
+                priority,
+                status,
+                assigned_to_user_id
             });
 
             // LOG: ticket updated
@@ -126,7 +142,17 @@ const ticketController = {
                 ip_address: req.ip
             });
 
-            return res.status(200).json({ message: 'Ticket updated successfully!', ticket });
+            const response = {
+                message: 'Ticket updated successfully!',
+                ticket
+            };
+
+            // Include chat info if one was created
+            if (createdChat) {
+                response.chat = createdChat;
+            }
+
+            return res.status(200).json(response);
         } catch (error) {
             if (error.name === 'SequelizeForeignKeyConstraintError') {
                 return res.status(400).json({ error: 'The specified assigned user does not exist.' });
@@ -174,7 +200,7 @@ const ticketController = {
         try {
             const { id } = req.params;
             const ticket = await Ticket.findByPk(id, { paranoid: false });
-            
+
             if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
 
             if (req.user.company_id && ticket.company_id !== req.user.company_id) {
@@ -199,7 +225,63 @@ const ticketController = {
             console.error('Restore Ticket error:', error);
             return res.status(500).json({ error: 'Internal server error.' });
         }
+    },
+
+    // GET TICKET MESSAGES (linked via ticket_id and chat_id)
+    async getMessages(req, res) {
+        try {
+            const { id } = req.params;
+
+            const ticket = await Ticket.findByPk(id);
+            if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
+
+            if (req.user.company_id && ticket.company_id !== req.user.company_id) {
+                return res.status(403).json({ error: 'Forbidden.' });
+            }
+
+            // Get all messages for this ticket
+            const messages = await Message.findAll({
+                where: { ticket_id: id },
+                include: [{
+                    model: User,
+                    attributes: ['id', 'name', 'email', 'avatar']
+                }],
+                order: [['createdAt', 'ASC']]
+            });
+
+            return res.status(200).json(messages);
+        } catch (error) {
+            console.error('Get Ticket Messages error:', error);
+            return res.status(500).json({ error: 'Internal server error.' });
+        }
     }
 };
+
+// Helper function: Auto-create chat when ticket is claimed
+async function findOrCreateChatForTicket(clientId, managerId, companyId) {
+    // Search for existing chat with both users
+    const existingChat = await Chat.findOne({
+        where: { company_id: companyId },
+        include: [{
+            model: ChatUser,
+            where: { user_id: clientId },
+            required: true
+        }]
+    });
+
+    if (existingChat) {
+        const hasManager = await ChatUser.findOne({
+            where: { chat_id: existingChat.id, user_id: managerId }
+        });
+        if (hasManager) return existingChat;
+    }
+
+    // Create new chat with both users
+    const newChat = await Chat.create({ company_id: companyId });
+    await ChatUser.create({ chat_id: newChat.id, user_id: clientId });
+    await ChatUser.create({ chat_id: newChat.id, user_id: managerId });
+
+    return newChat;
+}
 
 module.exports = ticketController;

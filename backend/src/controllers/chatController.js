@@ -1,4 +1,4 @@
-const { Chat, ChatUser, Message, User } = require('../models');
+const { Chat, ChatUser, Message, User, Ticket } = require('../models');
 const { Op } = require('sequelize');
 const auditLogController = require('./auditLogController');
 
@@ -67,26 +67,70 @@ const chatController = {
     async sendMessage(req, res) {
         try {
             const sender_id = req.user.id;
-            const { chat_id, ticket_id, content } = req.body;
+            let { chat_id, ticket_id, content } = req.body;
 
             // empty message
             if (!content || content.trim() === '') {
                 return res.status(400).json({ error: "Message content cannot be empty." });
             }
 
-            if (chat_id) {
-                const isParticipant = await ChatUser.findOne({
-                    where: { chat_id: chat_id, user_id: sender_id }
+            // If ticket_id is provided but chat_id is not, find the chat_id
+            if (ticket_id && !chat_id) {
+                // Try to find existing message with this ticket_id
+                const existingMessage = await Message.findOne({
+                    where: { ticket_id: ticket_id },
+                    attributes: ['chat_id']
                 });
 
-                if (!isParticipant) {
-                    return res.status(403).json({ error: "Access denied. You are not a participant of this chat room." });
+                if (existingMessage && existingMessage.chat_id) {
+                    chat_id = existingMessage.chat_id;
+                } else {
+                    // If no message exists, find the chat by looking for ticket opener in ChatUser
+                    const ticket = await Ticket.findByPk(ticket_id);
+
+                    if (!ticket) {
+                        return res.status(404).json({ error: "Ticket not found." });
+                    }
+
+                    // Find a chat that has both the sender and ticket opener as participants
+                    const chatWithBoth = await Chat.findOne({
+                        where: { company_id: ticket.company_id },
+                        include: [{
+                            model: ChatUser,
+                            where: { user_id: sender_id },
+                            required: true
+                        }]
+                    });
+
+                    if (chatWithBoth) {
+                        const hasTicketOpener = await ChatUser.findOne({
+                            where: {
+                                chat_id: chatWithBoth.id,
+                                user_id: ticket.opened_by_user_id
+                            }
+                        });
+                        if (hasTicketOpener) {
+                            chat_id = chatWithBoth.id;
+                        }
+                    }
                 }
             }
-            
+
+            if (!chat_id) {
+                return res.status(400).json({ error: "Could not find associated chat for this ticket. Please ensure the ticket has been claimed." });
+            }
+
+            const isParticipant = await ChatUser.findOne({
+                where: { chat_id: chat_id, user_id: sender_id }
+            });
+
+            if (!isParticipant) {
+                return res.status(403).json({ error: "Access denied. You are not a participant of this chat room." });
+            }
+
             const newMessage = await Message.create({
                 sender_id,
-                chat_id: chat_id || null,
+                chat_id: chat_id,
                 ticket_id: ticket_id || null,
                 content
             });
