@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSave,
@@ -102,6 +104,130 @@ const iconesDisponiveis = {
 };
 
 const GestaoConteudos = () => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [dadosSite, setDadosSite] = useState({
+    hero: {
+      titulo: "",
+      subtitulo: "",
+      botaoTexto: "",
+      botaoLink: "",
+      imagemFundo: "",
+    },
+    contexto: {
+      titulo: "",
+      textoInicial: "",
+      textoFinal: "",
+      topico1: "",
+      iconeTopico1: "",
+      topico2: "",
+      iconeTopico2: "",
+      topico3: "",
+      iconeTopico3: "",
+      topico4: "",
+      iconeTopico4: "",
+    },
+    regulamentacao: {
+      titulo: "",
+      textoInicio: "",
+      nomeDiretiva: "",
+      linkDiretiva: "",
+      textoFim: "",
+      card1: "",
+      iconeCard1: "",
+      card2: "",
+      iconeCard2: "",
+      card3: "",
+      iconeCard3: "",
+    },
+    servicos: {
+      titulo: "",
+      subtitulo: "",
+      servico1Titulo: "",
+      servico1Descricao: "",
+      iconeServico1: "",
+      servico2Titulo: "",
+      servico2Descricao: "",
+      iconeServico2: "",
+      servico3Titulo: "",
+      servico3Descricao: "",
+      iconeServico3: "",
+      servico4Titulo: "",
+      servico4Descricao: "",
+      iconeServico4: "",
+    },
+    diferenciais: {
+      titulo: "",
+      subtitulo: "",
+      motivo1Titulo: "",
+      motivo1Descricao: "",
+      iconeMotivo1: "",
+      motivo2Titulo: "",
+      motivo2Descricao: "",
+      iconeMotivo2: "",
+      motivo3Titulo: "",
+      motivo3Descricao: "",
+      iconeMotivo3: "",
+    },
+    contactos: {
+      titulo: "",
+      subtitulo: "",
+      email: "",
+      telefone: "",
+      morada: "",
+    },
+  });
+
+  // 2. Carregar os dados quando a página abre (GET)
+  useEffect(() => {
+    const carregarDados = async () => {
+      try {
+        // Ajusta o URL e o porto para o do teu backend (ex: 5000)
+        const resposta = await axios.get(
+          "http://localhost:5000/api/pages/home",
+        );
+
+        // Se a BD devolver dados, atualizamos o nosso ecrã
+        if (resposta.data) {
+          setDadosSite(resposta.data);
+          // Aqui também podes atualizar os teus ícones, se estiverem guardados
+        }
+      } catch (erro) {
+        console.error("Erro ao carregar dados da Home:", erro);
+      }
+    };
+
+    carregarDados();
+  }, []);
+
+  // 3. Função para guardar quando o Admin clica no botão (PUT)
+  const guardarAlteracoes = async () => {
+    try {
+      setIsSaving(true);
+      // Como a rota é protegida, precisamos do token de quem fez login
+      const token = localStorage.getItem("token");
+
+      await axios.put(
+        "http://localhost:5000/api/pages/home",
+        dadosSite, // O pacote gigante com todos os textos
+        { headers: { Authorization: `Bearer ${token}` } }, // O passaporte para o segurança deixar passar
+      );
+
+      Swal.fire({
+        title: "Sucesso!",
+        text: "Alterações guardadas com sucesso na Base de Dados!",
+        icon: "success",
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+    } catch (erro) {
+      console.error("Erro ao guardar:", erro);
+      Swal.fire("Erro!", "Erro ao guardar as alterações. Verifica a consola.", "error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const [activeTab, setActiveTab] = useState("hero");
 
   const [iconesContexto, setIconesContexto] = useState({
@@ -144,9 +270,12 @@ const GestaoConteudos = () => {
       case "hero":
         return (
           <div className="animate__animated animate__fadeIn">
-            <h4 className="mb-1 text-dark fw-bold">Hero Section</h4>
-            <p className="text-muted small mb-4">
+            <h4 className="mb-1 text-dark fw-bold">Hero</h4>
+            <p className="text-muted small mb-1">
               Configura o banner principal da tua página inicial.
+            </p>
+            <p className="text-secondary small fst-italic mb-4">
+              Dica: Se deixares os campos em branco, o site utilizará automaticamente o texto padrão da plataforma.
             </p>
 
             <div className="mb-4">
@@ -156,7 +285,14 @@ const GestaoConteudos = () => {
               <input
                 type="text"
                 className="form-control p-3 bg-light"
-                defaultValue="Cibersegurança para organizações que não podem parar"
+                placeholder="Cibersegurança para organizações que não podem parar"
+                value={dadosSite.hero.titulo}
+                onChange={(e) =>
+                  setDadosSite({
+                    ...dadosSite,
+                    hero: { ...dadosSite.hero, titulo: e.target.value },
+                  })
+                }
               />
             </div>
 
@@ -167,7 +303,14 @@ const GestaoConteudos = () => {
               <textarea
                 className="form-control p-3 bg-light"
                 rows="3"
-                defaultValue="Num contexto em que os ataques cibernéticos aumentam todos os dias, as organizações precisam de proteger os seus sistemas, dados e serviços críticos."
+                placeholder="Num contexto em que os ataques cibernéticos aumentam todos os dias, as organizações precisam de proteger os seus sistemas, dados e serviços críticos."
+                value={dadosSite.hero.subtitulo}
+                onChange={(e) =>
+                  setDadosSite({
+                    ...dadosSite,
+                    hero: { ...dadosSite.hero, subtitulo: e.target.value },
+                  })
+                }
               ></textarea>
             </div>
 
@@ -179,7 +322,14 @@ const GestaoConteudos = () => {
                 <input
                   type="text"
                   className="form-control p-3 bg-light"
-                  defaultValue="Começar agora"
+                  placeholder="Começar agora"
+                  value={dadosSite.hero.botaoTexto}
+                  onChange={(e) =>
+                    setDadosSite({
+                      ...dadosSite,
+                      hero: { ...dadosSite.hero, botaoTexto: e.target.value },
+                    })
+                  }
                 />
               </div>
               <div className="col-md-4 mb-4">
@@ -189,7 +339,14 @@ const GestaoConteudos = () => {
                 <input
                   type="text"
                   className="form-control p-3 bg-light"
-                  defaultValue="#contact"
+                  placeholder="<#contact>"
+                  value={dadosSite.hero.botaoLink}
+                  onChange={(e) =>
+                    setDadosSite({
+                      ...dadosSite,
+                      hero: { ...dadosSite.hero, botaoLink: e.target.value },
+                    })
+                  }
                 />
               </div>
               <div className="col-md-4 mb-4">
@@ -199,7 +356,14 @@ const GestaoConteudos = () => {
                 <input
                   type="text"
                   className="form-control p-3 bg-light"
-                  defaultValue="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop"
+                  placeholder="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop"
+                  value={dadosSite.hero.imagemFundo}
+                  onChange={(e) =>
+                    setDadosSite({
+                      ...dadosSite,
+                      hero: { ...dadosSite.hero, imagemFundo: e.target.value },
+                    })
+                  }
                 />
               </div>
             </div>
@@ -210,8 +374,11 @@ const GestaoConteudos = () => {
         return (
           <div className="animate__animated animate__fadeIn">
             <h4 className="mb-1 text-dark fw-bold">Contexto Atual</h4>
-            <p className="text-muted small mb-4">
+            <p className="text-muted small mb-1">
               Edita os textos introdutórios e a grelha de tópicos de ameaças.
+            </p>
+            <p className="text-secondary small fst-italic mb-4">
+              Dica: Se deixares os campos em branco, o site utilizará automaticamente o texto padrão da plataforma.
             </p>
 
             <div className="mb-4">
@@ -221,7 +388,14 @@ const GestaoConteudos = () => {
               <input
                 type="text"
                 className="form-control p-3 bg-light"
-                defaultValue="Cibersegurança"
+                placeholder="Cibersegurança"
+                value={dadosSite.contexto.titulo}
+                onChange={(e) =>
+                  setDadosSite({
+                    ...dadosSite,
+                    contexto: { ...dadosSite.contexto, titulo: e.target.value },
+                  })
+                }
               />
             </div>
 
@@ -232,7 +406,17 @@ const GestaoConteudos = () => {
               <textarea
                 className="form-control p-3 bg-light"
                 rows="2"
-                defaultValue="A cibersegurança tornou-se uma prioridade estratégica para organizações públicas e privadas."
+                placeholder="A cibersegurança tornou-se uma prioridade estratégica para organizações públicas e privadas."
+                value={dadosSite.contexto.textoInicial}
+                onChange={(e) =>
+                  setDadosSite({
+                    ...dadosSite,
+                    contexto: {
+                      ...dadosSite.contexto,
+                      textoInicial: e.target.value,
+                    },
+                  })
+                }
               ></textarea>
             </div>
 
@@ -247,7 +431,6 @@ const GestaoConteudos = () => {
                     Tópico 1
                   </label>
                   <div className="input-group shadow-sm dropdown">
-                    {/* Botão que mostra o ícone atual e abre o menu */}
                     <button
                       className={`btn dropdown-toggle border-0 px-3 d-flex align-items-center gap-2 ${iconesDisponiveis[iconesContexto.topico1].colorClass}`}
                       type="button"
@@ -259,7 +442,6 @@ const GestaoConteudos = () => {
                       />
                     </button>
 
-                    {/* Grelha de opções de ícones que abre ao clicar */}
                     <div className="dropdown-menu shadow p-2 border-0 rounded-3">
                       <div
                         className="d-flex flex-wrap gap-1"
@@ -273,12 +455,19 @@ const GestaoConteudos = () => {
                               className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
                               style={{ width: "32px", height: "32px" }}
                               title={data.label}
-                              onClick={() =>
+                              onClick={() => {
                                 setIconesContexto({
                                   ...iconesContexto,
                                   topico1: key,
-                                })
-                              }
+                                });
+                                setDadosSite({
+                                  ...dadosSite,
+                                  contexto: {
+                                    ...dadosSite.contexto,
+                                    iconeTopico1: key,
+                                  },
+                                });
+                              }}
                             >
                               <FontAwesomeIcon icon={data.icon} />
                             </button>
@@ -290,7 +479,17 @@ const GestaoConteudos = () => {
                     <input
                       type="text"
                       className="form-control border-0 p-2"
-                      defaultValue="Ataques de ransomware"
+                      placeholder="Ataques de ransomware"
+                      value={dadosSite.contexto.topico1}
+                      onChange={(e) =>
+                        setDadosSite({
+                          ...dadosSite,
+                          contexto: {
+                            ...dadosSite.contexto,
+                            topico1: e.target.value,
+                          },
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -325,12 +524,19 @@ const GestaoConteudos = () => {
                               className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
                               style={{ width: "32px", height: "32px" }}
                               title={data.label}
-                              onClick={() =>
+                              onClick={() => {
                                 setIconesContexto({
                                   ...iconesContexto,
                                   topico2: key,
-                                })
-                              }
+                                });
+                                setDadosSite({
+                                  ...dadosSite,
+                                  contexto: {
+                                    ...dadosSite.contexto,
+                                    iconeTopico2: key,
+                                  },
+                                });
+                              }}
                             >
                               <FontAwesomeIcon icon={data.icon} />
                             </button>
@@ -342,7 +548,17 @@ const GestaoConteudos = () => {
                     <input
                       type="text"
                       className="form-control border-0 p-2"
-                      defaultValue="Exploração de vulnerabilidades"
+                      placeholder="Exploração de vulnerabilidades"
+                      value={dadosSite.contexto.topico2}
+                      onChange={(e) =>
+                        setDadosSite({
+                          ...dadosSite,
+                          contexto: {
+                            ...dadosSite.contexto,
+                            topico2: e.target.value,
+                          },
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -377,12 +593,19 @@ const GestaoConteudos = () => {
                               className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
                               style={{ width: "32px", height: "32px" }}
                               title={data.label}
-                              onClick={() =>
+                              onClick={() => {
                                 setIconesContexto({
                                   ...iconesContexto,
                                   topico3: key,
-                                })
-                              }
+                                });
+                                setDadosSite({
+                                  ...dadosSite,
+                                  contexto: {
+                                    ...dadosSite.contexto,
+                                    iconeTopico3: key,
+                                  },
+                                });
+                              }}
                             >
                               <FontAwesomeIcon icon={data.icon} />
                             </button>
@@ -394,7 +617,17 @@ const GestaoConteudos = () => {
                     <input
                       type="text"
                       className="form-control border-0 p-2"
-                      defaultValue="Ataques a infraestruturas críticas"
+                      placeholder="Ataques a infraestruturas críticas"
+                      value={dadosSite.contexto.topico3}
+                      onChange={(e) =>
+                        setDadosSite({
+                          ...dadosSite,
+                          contexto: {
+                            ...dadosSite.contexto,
+                            topico3: e.target.value,
+                          },
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -429,12 +662,19 @@ const GestaoConteudos = () => {
                               className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
                               style={{ width: "32px", height: "32px" }}
                               title={data.label}
-                              onClick={() =>
+                              onClick={() => {
                                 setIconesContexto({
                                   ...iconesContexto,
-                                  topico4: key,
-                                })
-                              }
+                                  topico3: key,
+                                });
+                                setDadosSite({
+                                  ...dadosSite,
+                                  contexto: {
+                                    ...dadosSite.contexto,
+                                    iconeTopico3: key,
+                                  },
+                                });
+                              }}
                             >
                               <FontAwesomeIcon icon={data.icon} />
                             </button>
@@ -446,7 +686,17 @@ const GestaoConteudos = () => {
                     <input
                       type="text"
                       className="form-control border-0 p-2"
-                      defaultValue="Campanhas de phishing direcionado"
+                      placeholder="Campanhas de phishing direcionado"
+                      value={dadosSite.contexto.topico4}
+                      onChange={(e) =>
+                        setDadosSite({
+                          ...dadosSite,
+                          contexto: {
+                            ...dadosSite.contexto,
+                            topico4: e.target.value,
+                          },
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -460,7 +710,17 @@ const GestaoConteudos = () => {
               <textarea
                 className="form-control p-3 bg-light"
                 rows="3"
-                defaultValue="Muitas organizações descobrem tarde demais que não estavam preparadas para um incidente de segurança. Além do impacto operacional, existem hoje obrigações legais e regulatórias que exigem a implementação de medidas adequadas de cibersegurança."
+                placeholder="Muitas organizações descobrem tarde demais que não estavam preparadas para um incidente de segurança. Além do impacto operacional, existem hoje obrigações legais e regulatórias que exigem a implementação de medidas adequadas de cibersegurança."
+                value={dadosSite.contexto.textoFinal}
+                onChange={(e) =>
+                  setDadosSite({
+                    ...dadosSite,
+                    contexto: {
+                      ...dadosSite.contexto,
+                      textoFinal: e.target.value,
+                    },
+                  })
+                }
               ></textarea>
             </div>
           </div>
@@ -470,9 +730,12 @@ const GestaoConteudos = () => {
         return (
           <div className="animate__animated animate__fadeIn">
             <h4 className="mb-1 text-dark fw-bold">Regulamentação (NIS2)</h4>
-            <p className="text-muted small mb-4">
+            <p className="text-muted small mb-1">
               Configuração do bloco sobre a diretiva europeia e os seus
               impactos.
+            </p>
+            <p className="text-secondary small fst-italic mb-4">
+              Dica: Se deixares os campos em branco, o site utilizará automaticamente o texto padrão da plataforma.
             </p>
 
             <div className="mb-4">
@@ -482,7 +745,14 @@ const GestaoConteudos = () => {
               <input
                 type="text"
                 className="form-control p-3 bg-light"
-                defaultValue="Regulamentação Europeia"
+                placeholder="Regulamentação Europeia"
+                value={dadosSite.regulamentacao.titulo}
+                onChange={(e) =>
+                  setDadosSite({
+                    ...dadosSite,
+                    regulamentacao: { ...dadosSite.regulamentacao, titulo: e.target.value },
+                  })
+                }
               />
             </div>
 
@@ -497,7 +767,14 @@ const GestaoConteudos = () => {
                   <input
                     type="text"
                     className="form-control p-3 bg-light border-0"
-                    defaultValue="A União Europeia reforçou os requisitos de segurança através da diretiva"
+                    placeholder="A União Europeia reforçou os requisitos de segurança através da diretiva"
+                    value={dadosSite.regulamentacao.textoInicio}
+                    onChange={(e) =>
+                      setDadosSite({
+                        ...dadosSite,
+                        regulamentacao: { ...dadosSite.regulamentacao, textoInicio: e.target.value },
+                      })
+                    }
                   />
                 </div>
                 <div className="col-md-6">
@@ -507,7 +784,14 @@ const GestaoConteudos = () => {
                   <input
                     type="text"
                     className="form-control p-3 bg-light border-0 text-info"
-                    defaultValue="NIS2 – Network and Information Security Directive"
+                    placeholder="NIS2 – Network and Information Security Directive"
+                    value={dadosSite.regulamentacao.nomeDiretiva}
+                    onChange={(e) =>
+                      setDadosSite({
+                        ...dadosSite,
+                        regulamentacao: { ...dadosSite.regulamentacao, nomeDiretiva: e.target.value },
+                      })
+                    }
                   />
                 </div>
                 <div className="col-md-6">
@@ -517,7 +801,14 @@ const GestaoConteudos = () => {
                   <input
                     type="text"
                     className="form-control p-3 bg-light border-0"
-                    defaultValue="/nis2"
+                    placeholder="/nis2"
+                    value={dadosSite.regulamentacao.linkDiretiva}
+                    onChange={(e) =>
+                      setDadosSite({
+                        ...dadosSite,
+                        regulamentacao: { ...dadosSite.regulamentacao, linkDiretiva: e.target.value },
+                      })
+                    }
                   />
                 </div>
                 <div className="col-md-12">
@@ -527,7 +818,14 @@ const GestaoConteudos = () => {
                   <textarea
                     className="form-control p-3 bg-light border-0"
                     rows="2"
-                    defaultValue=". Esta diretiva impõe requisitos de gestão de risco, implementação de medidas técnicas e organizacionais e comunicação de incidentes."
+                    placeholder=". Esta diretiva impõe requisitos de gestão de risco, implementação de medidas técnicas e organizacionais e comunicação de incidentes."
+                    value={dadosSite.regulamentacao.textoFim}
+                    onChange={(e) =>
+                      setDadosSite({
+                        ...dadosSite,
+                        regulamentacao: { ...dadosSite.regulamentacao, textoFim: e.target.value },
+                      })
+                    }
                   ></textarea>
                 </div>
               </div>
@@ -569,12 +867,19 @@ const GestaoConteudos = () => {
                               className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
                               style={{ width: "32px", height: "32px" }}
                               title={data.label}
-                              onClick={() =>
+                              onClick={() => {
                                 setIconesRegulamentacao({
                                   ...iconesRegulamentacao,
                                   card1: key,
-                                })
-                              }
+                                });
+                                setDadosSite({
+                                  ...dadosSite,
+                                  regulamentacao: {
+                                    ...dadosSite.regulamentacao,
+                                    iconeCard1: key,
+                                  },
+                                });
+                              }}
                             >
                               <FontAwesomeIcon icon={data.icon} />
                             </button>
@@ -585,7 +890,14 @@ const GestaoConteudos = () => {
                     <input
                       type="text"
                       className="form-control border-0 p-2"
-                      defaultValue="Sanções financeiras significativas"
+                      placeholder="Sanções financeiras significativas"
+                      value={dadosSite.regulamentacao.card1}
+                      onChange={(e) =>
+                        setDadosSite({
+                          ...dadosSite,
+                          regulamentacao: { ...dadosSite.regulamentacao, card1: e.target.value },
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -622,12 +934,19 @@ const GestaoConteudos = () => {
                               className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
                               style={{ width: "32px", height: "32px" }}
                               title={data.label}
-                              onClick={() =>
+                              onClick={() => {
                                 setIconesRegulamentacao({
                                   ...iconesRegulamentacao,
                                   card2: key,
-                                })
-                              }
+                                });
+                                setDadosSite({
+                                  ...dadosSite,
+                                  regulamentacao: {
+                                    ...dadosSite.regulamentacao,
+                                    iconeCard2: key,
+                                  },
+                                });
+                              }}
                             >
                               <FontAwesomeIcon icon={data.icon} />
                             </button>
@@ -638,7 +957,14 @@ const GestaoConteudos = () => {
                     <input
                       type="text"
                       className="form-control border-0 p-2"
-                      defaultValue="Responsabilidade da gestão"
+                      placeholder="Responsabilidade da gestão"
+                      value={dadosSite.regulamentacao.card2}
+                      onChange={(e) =>
+                        setDadosSite({
+                          ...dadosSite,
+                          regulamentacao: { ...dadosSite.regulamentacao, card2: e.target.value },
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -675,12 +1001,19 @@ const GestaoConteudos = () => {
                               className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
                               style={{ width: "32px", height: "32px" }}
                               title={data.label}
-                              onClick={() =>
+                              onClick={() => {
                                 setIconesRegulamentacao({
                                   ...iconesRegulamentacao,
                                   card3: key,
-                                })
-                              }
+                                });
+                                setDadosSite({
+                                  ...dadosSite,
+                                  regulamentacao: {
+                                    ...dadosSite.regulamentacao,
+                                    iconeCard3: key,
+                                  },
+                                });
+                              }}
                             >
                               <FontAwesomeIcon icon={data.icon} />
                             </button>
@@ -691,7 +1024,14 @@ const GestaoConteudos = () => {
                     <input
                       type="text"
                       className="form-control border-0 p-2"
-                      defaultValue="Impacto reputacional"
+                      placeholder="Impacto reputacional"
+                      value={dadosSite.regulamentacao.card3}
+                      onChange={(e) =>
+                        setDadosSite({
+                          ...dadosSite,
+                          regulamentacao: { ...dadosSite.regulamentacao, card3: e.target.value },
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -704,8 +1044,11 @@ const GestaoConteudos = () => {
         return (
           <div className="animate__animated animate__fadeIn">
             <h4 className="mb-1 text-dark fw-bold">Serviços</h4>
-            <p className="text-muted small mb-4">
+            <p className="text-muted small mb-1">
               Edita os títulos principais e os cartões dos serviços prestados.
+            </p>
+            <p className="text-secondary small fst-italic mb-4">
+              Dica: Se deixares os campos em branco, o site utilizará automaticamente o texto padrão da plataforma.
             </p>
 
             {/* TÍTULO E SUBTÍTULO GERAIS */}
@@ -717,7 +1060,14 @@ const GestaoConteudos = () => {
                 <input
                   type="text"
                   className="form-control p-3 bg-light"
-                  defaultValue="Como Ajudamos"
+                  placeholder="Como Ajudamos"
+                  value={dadosSite.servicos.titulo}
+                  onChange={(e) =>
+                    setDadosSite({
+                      ...dadosSite,
+                      servicos: { ...dadosSite.servicos, titulo: e.target.value },
+                    })
+                  }
                 />
               </div>
               <div className="col-md-6">
@@ -727,7 +1077,14 @@ const GestaoConteudos = () => {
                 <input
                   type="text"
                   className="form-control p-3 bg-light"
-                  defaultValue="Soluções especializadas para reforçar a sua postura de cibersegurança."
+                  placeholder="Soluções especializadas para reforçar a sua postura de cibersegurança."
+                  value={dadosSite.servicos.subtitulo}
+                  onChange={(e) =>
+                    setDadosSite({
+                      ...dadosSite,
+                      servicos: { ...dadosSite.servicos, subtitulo: e.target.value },
+                    })
+                  }
                 />
               </div>
             </div>
@@ -766,12 +1123,19 @@ const GestaoConteudos = () => {
                                 className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
                                 style={{ width: "32px", height: "32px" }}
                                 title={data.label}
-                                onClick={() =>
+                                onClick={() => {
                                   setIconesServicos({
                                     ...iconesServicos,
                                     servico1: key,
-                                  })
-                                }
+                                  });
+                                  setDadosSite({
+                                    ...dadosSite,
+                                    servicos: {
+                                      ...dadosSite.servicos,
+                                      iconeServico1: key,
+                                    },
+                                  });
+                                }}
                               >
                                 <FontAwesomeIcon icon={data.icon} />
                               </button>
@@ -782,13 +1146,27 @@ const GestaoConteudos = () => {
                       <input
                         type="text"
                         className="form-control border-0 p-2 fw-bold"
-                        defaultValue="Avaliação de maturidade de cibersegurança"
+                        placeholder="Avaliação de maturidade de cibersegurança"
+                        value={dadosSite.servicos.servico1Titulo}
+                        onChange={(e) =>
+                          setDadosSite({
+                            ...dadosSite,
+                            servicos: { ...dadosSite.servicos, servico1Titulo: e.target.value },
+                          })
+                        }
                       />
                     </div>
                     <textarea
                       className="form-control bg-light border-0"
                       rows="2"
-                      defaultValue="Analisamos o estado atual da sua organização e identificamos áreas de melhoria prioritárias."
+                      placeholder="Analisamos o estado atual da sua organização e identificamos áreas de melhoria prioritárias."
+                      value={dadosSite.servicos.servico1Descricao}
+                      onChange={(e) =>
+                        setDadosSite({
+                          ...dadosSite,
+                          servicos: { ...dadosSite.servicos, servico1Descricao: e.target.value },
+                        })
+                      }
                     ></textarea>
                   </div>
                 </div>
@@ -823,12 +1201,19 @@ const GestaoConteudos = () => {
                                 className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
                                 style={{ width: "32px", height: "32px" }}
                                 title={data.label}
-                                onClick={() =>
+                                onClick={() => {
                                   setIconesServicos({
                                     ...iconesServicos,
                                     servico2: key,
-                                  })
-                                }
+                                  });
+                                  setDadosSite({
+                                    ...dadosSite,
+                                    servicos: {
+                                      ...dadosSite.servicos,
+                                      iconeServico2: key,
+                                    },
+                                  });
+                                }}
                               >
                                 <FontAwesomeIcon icon={data.icon} />
                               </button>
@@ -839,13 +1224,27 @@ const GestaoConteudos = () => {
                       <input
                         type="text"
                         className="form-control border-0 p-2 fw-bold"
-                        defaultValue="Implementação de requisitos da diretiva NIS2"
+                        placeholder="Implementação de requisitos da diretiva NIS2"
+                        value={dadosSite.servicos.servico2Titulo}
+                        onChange={(e) =>
+                          setDadosSite({
+                            ...dadosSite,
+                            servicos: { ...dadosSite.servicos, servico2Titulo: e.target.value },
+                          })
+                        }
                       />
                     </div>
                     <textarea
                       className="form-control bg-light border-0"
                       rows="2"
-                      defaultValue="Apoiamos a sua organização no cumprimento integral dos requisitos regulamentares."
+                      placeholder="Apoiamos a sua organização no cumprimento integral dos requisitos regulamentares."
+                      value={dadosSite.servicos.servico2Descricao}
+                      onChange={(e) =>
+                        setDadosSite({
+                          ...dadosSite,
+                          servicos: { ...dadosSite.servicos, servico2Descricao: e.target.value },
+                        })
+                      }
                     ></textarea>
                   </div>
                 </div>
@@ -880,12 +1279,19 @@ const GestaoConteudos = () => {
                                 className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
                                 style={{ width: "32px", height: "32px" }}
                                 title={data.label}
-                                onClick={() =>
+                                onClick={() => {
                                   setIconesServicos({
                                     ...iconesServicos,
                                     servico3: key,
-                                  })
-                                }
+                                  });
+                                  setDadosSite({
+                                    ...dadosSite,
+                                    servicos: {
+                                      ...dadosSite.servicos,
+                                      iconeServico3: key,
+                                    },
+                                  });
+                                }}
                               >
                                 <FontAwesomeIcon icon={data.icon} />
                               </button>
@@ -896,13 +1302,27 @@ const GestaoConteudos = () => {
                       <input
                         type="text"
                         className="form-control border-0 p-2 fw-bold"
-                        defaultValue="Auditorias de segurança e testes técnicos"
+                        placeholder="Auditorias de segurança e testes técnicos"
+                        value={dadosSite.servicos.servico3Titulo}
+                        onChange={(e) =>
+                          setDadosSite({
+                            ...dadosSite,
+                            servicos: { ...dadosSite.servicos, servico3Titulo: e.target.value },
+                          })
+                        }
                       />
                     </div>
                     <textarea
                       className="form-control bg-light border-0"
                       rows="2"
-                      defaultValue="Identificamos vulnerabilidades através de testes de penetração e auditorias especializadas."
+                      placeholder="Identificamos vulnerabilidades através de testes de penetração e auditorias especializadas."
+                      value={dadosSite.servicos.servico3Descricao}
+                      onChange={(e) =>
+                        setDadosSite({
+                          ...dadosSite,
+                          servicos: { ...dadosSite.servicos, servico3Descricao: e.target.value },
+                        })
+                      }
                     ></textarea>
                   </div>
                 </div>
@@ -937,12 +1357,19 @@ const GestaoConteudos = () => {
                                 className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
                                 style={{ width: "32px", height: "32px" }}
                                 title={data.label}
-                                onClick={() =>
+                                onClick={() => {
                                   setIconesServicos({
                                     ...iconesServicos,
                                     servico4: key,
-                                  })
-                                }
+                                  });
+                                  setDadosSite({
+                                    ...dadosSite,
+                                    servicos: {
+                                      ...dadosSite.servicos,
+                                      iconeServico4: key,
+                                    },
+                                  });
+                                }}
                               >
                                 <FontAwesomeIcon icon={data.icon} />
                               </button>
@@ -953,13 +1380,27 @@ const GestaoConteudos = () => {
                       <input
                         type="text"
                         className="form-control border-0 p-2 fw-bold"
-                        defaultValue="Programas de formação e security awareness"
+                        placeholder="Programas de formação e security awareness"
+                        value={dadosSite.servicos.servico4Titulo}
+                        onChange={(e) =>
+                          setDadosSite({
+                            ...dadosSite,
+                            servicos: { ...dadosSite.servicos, servico4Titulo: e.target.value },
+                          })
+                        }
                       />
                     </div>
                     <textarea
                       className="form-control bg-light border-0"
                       rows="2"
-                      defaultValue="Capacitamos as suas equipas com conhecimento e boas práticas de segurança."
+                      placeholder="Capacitamos as suas equipas com conhecimento e boas práticas de segurança."
+                      value={dadosSite.servicos.servico4Descricao}
+                      onChange={(e) =>
+                        setDadosSite({
+                          ...dadosSite,
+                          servicos: { ...dadosSite.servicos, servico4Descricao: e.target.value },
+                        })
+                      }
                     ></textarea>
                   </div>
                 </div>
@@ -972,8 +1413,11 @@ const GestaoConteudos = () => {
         return (
           <div className="animate__animated animate__fadeIn">
             <h4 className="mb-1 text-dark fw-bold">Diferenciais</h4>
-            <p className="text-muted small mb-4">
+            <p className="text-muted small mb-1">
               Edita os motivos para escolher a CyberBoxSecur.
+            </p>
+            <p className="text-secondary small fst-italic mb-4">
+              Dica: Se deixares os campos em branco, o site utilizará automaticamente o texto padrão da plataforma.
             </p>
 
             {/* TÍTULO E SUBTÍTULO GERAIS */}
@@ -985,7 +1429,14 @@ const GestaoConteudos = () => {
                 <input
                   type="text"
                   className="form-control p-3 bg-light"
-                  defaultValue="Porquê Escolher a CyberBoxSecur?"
+                  placeholder="Porquê Escolher a CyberBoxSecur?"
+                  value={dadosSite.diferenciais.titulo}
+                  onChange={(e) =>
+                    setDadosSite({
+                      ...dadosSite,
+                      diferenciais: { ...dadosSite.diferenciais, titulo: e.target.value },
+                    })
+                  }
                 />
               </div>
               <div className="col-md-6">
@@ -995,7 +1446,14 @@ const GestaoConteudos = () => {
                 <input
                   type="text"
                   className="form-control p-3 bg-light"
-                  defaultValue="Os nossos diferenciais para proteger o seu negócio."
+                  placeholder="Os nossos diferenciais para proteger o seu negócio."
+                  value={dadosSite.diferenciais.subtitulo}
+                  onChange={(e) =>
+                    setDadosSite({
+                      ...dadosSite,
+                      diferenciais: { ...dadosSite.diferenciais, subtitulo: e.target.value },
+                    })
+                  }
                 />
               </div>
             </div>
@@ -1038,12 +1496,19 @@ const GestaoConteudos = () => {
                                 className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
                                 style={{ width: "32px", height: "32px" }}
                                 title={data.label}
-                                onClick={() =>
+                                onClick={() => {
                                   setIconesDiferenciais({
                                     ...iconesDiferenciais,
                                     card1: key,
-                                  })
-                                }
+                                  });
+                                  setDadosSite({
+                                    ...dadosSite,
+                                    diferenciais: {
+                                      ...dadosSite.diferenciais,
+                                      iconeMotivo1: key,
+                                    },
+                                  });
+                                }}
                               >
                                 <FontAwesomeIcon icon={data.icon} />
                               </button>
@@ -1054,13 +1519,27 @@ const GestaoConteudos = () => {
                       <input
                         type="text"
                         className="form-control border-0 p-2 fw-bold"
-                        defaultValue="Especialização Comprovada"
+                        placeholder="Especialização Comprovada"
+                        value={dadosSite.diferenciais.motivo1Titulo}
+                        onChange={(e) =>
+                          setDadosSite({
+                            ...dadosSite,
+                            diferenciais: { ...dadosSite.diferenciais, motivo1Titulo: e.target.value },
+                          })
+                        }
                       />
                     </div>
                     <textarea
                       className="form-control bg-light border-0"
                       rows="3"
-                      defaultValue="Equipa de especialistas certificados (CISSP, CISM, ISO 27001)."
+                      placeholder="Equipa de especialistas certificados (CISSP, CISM, ISO 27001)."
+                      value={dadosSite.diferenciais.motivo1Descricao}
+                      onChange={(e) =>
+                        setDadosSite({
+                          ...dadosSite,
+                          diferenciais: { ...dadosSite.diferenciais, motivo1Descricao: e.target.value },
+                        })
+                      }
                     ></textarea>
                   </div>
                 </div>
@@ -1097,12 +1576,19 @@ const GestaoConteudos = () => {
                                 className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
                                 style={{ width: "32px", height: "32px" }}
                                 title={data.label}
-                                onClick={() =>
+                                onClick={() => {
                                   setIconesDiferenciais({
                                     ...iconesDiferenciais,
                                     card2: key,
-                                  })
-                                }
+                                  });
+                                  setDadosSite({
+                                    ...dadosSite,
+                                    diferenciais: {
+                                      ...dadosSite.diferenciais,
+                                      iconeMotivo2: key,
+                                    },
+                                  });
+                                }}
                               >
                                 <FontAwesomeIcon icon={data.icon} />
                               </button>
@@ -1113,13 +1599,27 @@ const GestaoConteudos = () => {
                       <input
                         type="text"
                         className="form-control border-0 p-2 fw-bold"
-                        defaultValue="Abordagem Personalizada"
+                        placeholder="Abordagem Personalizada"
+                        value={dadosSite.diferenciais.motivo2Titulo}
+                        onChange={(e) =>
+                          setDadosSite({
+                            ...dadosSite,
+                            diferenciais: { ...dadosSite.diferenciais, motivo2Titulo: e.target.value },
+                          })
+                        }
                       />
                     </div>
                     <textarea
                       className="form-control bg-light border-0"
                       rows="3"
-                      defaultValue="Gestores dedicados que conhecem a realidade e os desafios específicos da sua organização."
+                      placeholder="Gestores dedicados que conhecem a realidade e os desafios específicos da sua organização."
+                      value={dadosSite.diferenciais.motivo2Descricao}
+                      onChange={(e) =>
+                        setDadosSite({
+                          ...dadosSite,
+                          diferenciais: { ...dadosSite.diferenciais, motivo2Descricao: e.target.value },
+                        })
+                      }
                     ></textarea>
                   </div>
                 </div>
@@ -1156,12 +1656,19 @@ const GestaoConteudos = () => {
                                 className={`btn btn-sm border-0 d-flex align-items-center justify-content-center ${data.colorClass}`}
                                 style={{ width: "32px", height: "32px" }}
                                 title={data.label}
-                                onClick={() =>
+                                onClick={() => {
                                   setIconesDiferenciais({
                                     ...iconesDiferenciais,
                                     card3: key,
-                                  })
-                                }
+                                  });
+                                  setDadosSite({
+                                    ...dadosSite,
+                                    diferenciais: {
+                                      ...dadosSite.diferenciais,
+                                      iconeMotivo3: key,
+                                    },
+                                  });
+                                }}
                               >
                                 <FontAwesomeIcon icon={data.icon} />
                               </button>
@@ -1172,13 +1679,27 @@ const GestaoConteudos = () => {
                       <input
                         type="text"
                         className="form-control border-0 p-2 fw-bold"
-                        defaultValue="Tecnologia de Ponta"
+                        placeholder="Tecnologia de Ponta"
+                        value={dadosSite.diferenciais.motivo3Titulo}
+                        onChange={(e) =>
+                          setDadosSite({
+                            ...dadosSite,
+                            diferenciais: { ...dadosSite.diferenciais, motivo3Titulo: e.target.value },
+                          })
+                        }
                       />
                     </div>
                     <textarea
                       className="form-control bg-light border-0"
                       rows="3"
-                      defaultValue="Plataforma intuitiva desenvolvida com os mais altos padrões de segurança e usabilidade."
+                      placeholder="Plataforma intuitiva desenvolvida com os mais altos padrões de segurança e usabilidade."
+                      value={dadosSite.diferenciais.motivo3Descricao}
+                      onChange={(e) =>
+                        setDadosSite({
+                          ...dadosSite,
+                          diferenciais: { ...dadosSite.diferenciais, motivo3Descricao: e.target.value },
+                        })
+                      }
                     ></textarea>
                   </div>
                 </div>
@@ -1191,9 +1712,12 @@ const GestaoConteudos = () => {
         return (
           <div className="animate__animated animate__fadeIn">
             <h4 className="mb-1 text-dark fw-bold">Contactos</h4>
-            <p className="text-muted small mb-4">
+            <p className="text-muted small mb-1">
               Edita as informações de contacto (o formulário à direita é fixo e
               gerado automaticamente).
+            </p>
+            <p className="text-secondary small fst-italic mb-4">
+              Dica: Se deixares os campos em branco, o site utilizará automaticamente o texto padrão da plataforma.
             </p>
 
             {/* TÍTULO E SUBTÍTULO GERAIS */}
@@ -1205,7 +1729,14 @@ const GestaoConteudos = () => {
                 <input
                   type="text"
                   className="form-control p-3 bg-light"
-                  defaultValue="Contacte-nos"
+                  placeholder="Contacte-nos"
+                  value={dadosSite.contactos.titulo}
+                  onChange={(e) =>
+                    setDadosSite({
+                      ...dadosSite,
+                      contactos: { ...dadosSite.contactos, titulo: e.target.value },
+                    })
+                  }
                 />
               </div>
               <div className="col-md-6">
@@ -1215,7 +1746,14 @@ const GestaoConteudos = () => {
                 <input
                   type="text"
                   className="form-control p-3 bg-light"
-                  defaultValue="Entre em contacto connosco para saber mais sobre as nossas soluções de cibersegurança."
+                  placeholder="Entre em contacto connosco para saber mais sobre as nossas soluções de cibersegurança."
+                  value={dadosSite.contactos.subtitulo}
+                  onChange={(e) =>
+                    setDadosSite({
+                      ...dadosSite,
+                      contactos: { ...dadosSite.contactos, subtitulo: e.target.value },
+                    })
+                  }
                 />
               </div>
             </div>
@@ -1234,7 +1772,14 @@ const GestaoConteudos = () => {
                   <input
                     type="email"
                     className="form-control border-0 p-3 shadow-sm"
-                    defaultValue="contacto@cyberboxsecur.pt"
+                    placeholder="contacto@cyberboxsecur.pt"
+                    value={dadosSite.contactos.email}
+                    onChange={(e) =>
+                      setDadosSite({
+                        ...dadosSite,
+                        contactos: { ...dadosSite.contactos, email: e.target.value },
+                      })
+                    }
                   />
                 </div>
 
@@ -1245,7 +1790,14 @@ const GestaoConteudos = () => {
                   <input
                     type="text"
                     className="form-control border-0 p-3 shadow-sm"
-                    defaultValue="+351 210 000 000"
+                    placeholder="+351 210 000 000"
+                    value={dadosSite.contactos.telefone}
+                    onChange={(e) =>
+                      setDadosSite({
+                        ...dadosSite,
+                        contactos: { ...dadosSite.contactos, telefone: e.target.value },
+                      })
+                    }
                   />
                 </div>
 
@@ -1256,7 +1808,14 @@ const GestaoConteudos = () => {
                   <input
                     type="text"
                     className="form-control border-0 p-3 shadow-sm"
-                    defaultValue="Rossio, Edifício Cyber, Viseu, Portugal"
+                    placeholder="Rossio, Edifício Cyber, Viseu, Portugal"
+                    value={dadosSite.contactos.morada}
+                    onChange={(e) =>
+                      setDadosSite({
+                        ...dadosSite,
+                        contactos: { ...dadosSite.contactos, morada: e.target.value },
+                      })
+                    }
                   />
                 </div>
               </div>
@@ -1285,9 +1844,22 @@ const GestaoConteudos = () => {
             </div>
           </div>
 
-          <button className="btn btn-primary px-4 py-2 rounded-3 d-flex align-items-center gap-2">
-            <FontAwesomeIcon icon={faSave} />
-            Guardar Alterações
+          <button
+            onClick={guardarAlteracoes}
+            className="btn btn-primary px-4 py-2 rounded-3 d-flex align-items-center gap-2"
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <>
+                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                A guardar...
+              </>
+            ) : (
+              <>
+                <FontAwesomeIcon icon={faSave} />
+                Guardar Alterações
+              </>
+            )}
           </button>
         </div>
 
