@@ -36,7 +36,7 @@ const Login = () => {
       localStorage.setItem('user', JSON.stringify(data.user));
 
       // Redireciona para o painel
-      navigate('/admin/dashboard'); 
+      navigate('/portal/dashboard'); 
 
     } catch (err) {
       console.error("Erro no login:", err);

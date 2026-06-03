@@ -48,15 +48,15 @@ const LayoutBackoffice = () => {
   }, []);
 
   const allNavItems = [
-    { path: '/admin/dashboard', icon: faChartLine, label: 'Dashboard' }, // Visível para todos
-    { path: '/admin/incidentes', icon: faShieldAlt, label: 'Central de Incidentes' }, // Incidentes
-    { path: '/admin/forum', icon: faComments, label: 'Fórum de Clientes' }, // Visível para todos
-    { path: '/admin/cms', icon: faEdit, label: 'Gestão de Conteúdo', permission: 'MANAGE_CMS' },
-    { path: '/admin/empresas', icon: faBuilding, label: 'Gestão de Empresas', permission: 'VIEW_COMPANIES' }, // <--- NOVO BOTÃO NO MENU
-    { path: '/admin/users', icon: faUsers, label: 'Gestão de Utilizadores', permission: 'VIEW_USERS' },
-    { path: '/admin/cargos', icon: faUserShield, label: 'Cargos e Permissões', permission: 'VIEW_ROLES' },
-    { path: '/admin/docs', icon: faFolderOpen, label: 'Repositório Global' }, // Visível para todos
-    { path: '/admin/logs', icon: faHistory, label: 'Activity Logs', permission: 'VIEW_AUDIT_LOGS' }
+    { path: '/portal/dashboard', icon: faChartLine, label: 'Dashboard' }, // Visível para todos
+    { path: '/portal/incidentes', icon: faShieldAlt, label: 'Central de Incidentes' }, // Incidentes
+    { path: '/portal/forum', icon: faComments, label: 'Fórum de Clientes' }, // Visível para todos
+    { path: '/portal/cms', icon: faEdit, label: 'Gestão de Conteúdo', permission: 'MANAGE_CMS' },
+    { path: '/portal/empresas', icon: faBuilding, label: 'Gestão de Empresas', permission: 'VIEW_COMPANIES' }, // <--- NOVO BOTÃO NO MENU
+    { path: '/portal/users', icon: faUsers, label: 'Gestão de Utilizadores', permission: 'VIEW_USERS' },
+    { path: '/portal/cargos', icon: faUserShield, label: 'Cargos e Permissões', permission: 'VIEW_ROLES' },
+    { path: '/portal/docs', icon: faFolderOpen, label: 'Repositório Global' }, // Visível para todos
+    { path: '/portal/logs', icon: faHistory, label: 'Activity Logs', permission: 'VIEW_AUDIT_LOGS' }
   ];
 
   // Filtrar menu
@@ -145,7 +145,7 @@ const LayoutBackoffice = () => {
         <div className="d-flex align-items-center justify-content-between px-3 overflow-hidden" style={{ height: '70px', flexShrink: 0 }}>
           {!isCollapsed && (
             <div className="d-flex align-items-center ps-2 nav-label">
-              <Link to="/admin/dashboard" className="d-flex align-items-center ">
+              <Link to="/portal/dashboard" className="d-flex align-items-center ">
                 <img
                   src={Logo} alt="CiberBoxSecur Logo"  style={{ maxHeight: "40px", width: "145px", objectFit: "contain", display: "block"}}
                 />
@@ -172,7 +172,7 @@ const LayoutBackoffice = () => {
 
         <div className="mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 py-3 overflow-hidden" style={{ flexShrink: 0 }}>
           {/* Link para o Perfil */}
-          <Link to="/admin/perfil" className="text-decoration-none d-block mx-2 profile-section-hover">
+          <Link to="/portal/perfil" className="text-decoration-none d-block mx-2 profile-section-hover">
             <div className="d-flex align-items-center mb-3 mt-2">
               <div className="icon-wrapper">
                 {userProfile.avatar ? (
@@ -268,7 +268,7 @@ const LayoutBackoffice = () => {
 
           <div className="offcanvas-footer mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 p-4">
             {/* Link para o Perfil no Mobile --- */}
-            <Link to="/admin/perfil" className="text-decoration-none d-flex align-items-center mb-4" onClick={() => setShowMobileMenu(false)}>
+            <Link to="/portal/perfil" className="text-decoration-none d-flex align-items-center mb-4" onClick={() => setShowMobileMenu(false)}>
               {userProfile.avatar ? (
                 <img src={userProfile.avatar} alt="Avatar" className="rounded-circle object-fit-cover me-3 shadow-sm border border-secondary" style={{ width: '45px', height: '45px' }} />
               ) : (

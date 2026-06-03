@@ -40,7 +40,7 @@ function App() {
       <Route path="/recuperar-password" element={<RecuperarPassword />} />
 
       {/* Rotas do Backoffice */}
-      <Route path="/admin" element={<LayoutBackoffice />}>
+      <Route path="/portal" element={<LayoutBackoffice />}>
         {/* Redireciona /admin para /admin/dashboard automaticamente */}
         <Route index element={<Navigate to="dashboard" replace />} />
 
