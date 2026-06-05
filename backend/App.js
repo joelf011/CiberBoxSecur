@@ -40,6 +40,12 @@ app.use('/api/permissions', permissionRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/documents', documentRoutes);
+
+const documentController = require('./src/controllers/documentController');
+const authMiddleware = require('./src/middlewares/authMiddleware');
+const checkPermission = require('./src/middlewares/permissionMiddleware');
+app.post('/api/global-folders', authMiddleware, checkPermission('CREATE_DOCUMENT'), documentController.createFolder);
+
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/articles', articleRoutes);
 app.use('/api/categories', categoryRoutes);

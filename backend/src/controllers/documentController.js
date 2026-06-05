@@ -3,6 +3,51 @@ const fs = require('fs');
 const auditLogController = require('./auditLogController');
 
 const documentController = {
+    // ROTA NOVA: MÉTODOS PARA CRIAR PASTA VIRTUAL
+    async createFolder(req, res) {
+        try {
+            const { name, company_id, parent_document_id } = req.body;
+
+            if (!name) {
+                return res.status(400).json({ error: 'Folder name is required.' });
+            }
+
+            const uploaded_by_user_id = req.user.id;
+
+            // Criar o registo da pasta na Base de Dados
+            const newFolder = await Document.create({
+                company_id: company_id || req.user.company_id || 1, // Garante um ID de empresa válido
+                uploaded_by_user_id,
+                document_category: 'Other', // Valor obrigatório exigido pelo teu ENUM
+                title: name,                 // O título mapeia o nome da pasta
+                file_path: 'folder',         // Marcador textual já que o campo não aceita Null
+                is_action_required: false,
+                status: 'Informational',
+                parent_document_id: parent_document_id || null
+            });
+
+            // LOG: registar a criação da pasta na auditoria
+            await auditLogController.logEvent({
+                user_id: uploaded_by_user_id,
+                action: 'FOLDER_CREATE',
+                entity_type: 'Document',
+                entity_id: newFolder.id,
+                ip_address: req.ip
+            });
+
+            return res.status(201).json({ message: 'Folder created successfully!', document: newFolder });
+        } catch (error) {
+            if (error.name === 'SequelizeForeignKeyConstraintError') {
+                return res.status(400).json({ error: 'The specified company or parent document does not exist.' });
+            }
+            if (error.name === 'SequelizeValidationError') {
+                return res.status(400).json({ error: error.errors[0].message }); 
+            }
+            console.error('Create Folder error:', error);
+            return res.status(500).json({ error: 'Internal server error.' });
+        }
+    },
+
     // CREATE
     async create(req, res) {
         try {
