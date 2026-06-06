@@ -1,8 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const pageController = require("../controllers/pageController");
-
-// Importações sem chavetas e com os nomes corretos!
+const pageController = require("../controllers/cmsController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const checkPermission = require("../middlewares/permissionMiddleware");
 
@@ -12,7 +10,7 @@ router.get("/home", pageController.getHomeContent);
 // Rota PUT: Protegida
 router.put(
   "/home",
-  authMiddleware, // Aqui usamos o nome correto do teu middleware de autenticação
+  authMiddleware,
   checkPermission("UPDATE_CMS"),
   pageController.updateHomeContent,
 );

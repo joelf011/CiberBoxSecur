@@ -91,7 +91,6 @@ const dicionarioIcones = {
     corFundo: "bg-info-subtle",
     corTexto: "text-info-emphasis",
   },
-  // (Se tiveres mais ícones no backoffice, podes acrescentá-los aqui no futuro)
 };
 
 const topicosContexto = [
@@ -128,9 +127,7 @@ const Home = () => {
   useEffect(() => {
     const carregarDados = async () => {
       try {
-        const resposta = await axios.get(
-          "http://localhost:5000/api/pages/home",
-        );
+        const resposta = await axios.get("http://localhost:5000/api/cms/home");
         if (resposta.data) {
           setDadosDoBackoffice(resposta.data);
         }

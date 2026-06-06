@@ -182,14 +182,10 @@ const GestaoConteudos = () => {
     const carregarDados = async () => {
       try {
         // Ajusta o URL e o porto para o do teu backend (ex: 5000)
-        const resposta = await axios.get(
-          "http://localhost:5000/api/pages/home",
-        );
+        const resposta = await axios.get("http://localhost:5000/api/cms/home");
 
-        // Se a BD devolver dados, atualizamos o nosso ecrã
         if (resposta.data) {
           setDadosSite(resposta.data);
-          // Aqui também podes atualizar os teus ícones, se estiverem guardados
         }
       } catch (erro) {
         console.error("Erro ao carregar dados da Home:", erro);
@@ -207,7 +203,7 @@ const GestaoConteudos = () => {
       const token = localStorage.getItem("token");
 
       await axios.put(
-        "http://localhost:5000/api/pages/home",
+        "http://localhost:5000/api/cms/home",
         dadosSite, // O pacote gigante com todos os textos
         { headers: { Authorization: `Bearer ${token}` } }, // O passaporte para o segurança deixar passar
       );
@@ -222,7 +218,11 @@ const GestaoConteudos = () => {
       });
     } catch (erro) {
       console.error("Erro ao guardar:", erro);
-      Swal.fire("Erro!", "Erro ao guardar as alterações. Verifica a consola.", "error");
+      Swal.fire(
+        "Erro!",
+        "Erro ao guardar as alterações. Verifica a consola.",
+        "error",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -275,7 +275,8 @@ const GestaoConteudos = () => {
               Configura o banner principal da tua página inicial.
             </p>
             <p className="text-secondary small fst-italic mb-4">
-              Dica: Se deixares os campos em branco, o site utilizará automaticamente o texto padrão da plataforma.
+              Dica: Se deixares os campos em branco, o site utilizará
+              automaticamente o texto padrão da plataforma.
             </p>
 
             <div className="mb-4">
@@ -378,7 +379,8 @@ const GestaoConteudos = () => {
               Edita os textos introdutórios e a grelha de tópicos de ameaças.
             </p>
             <p className="text-secondary small fst-italic mb-4">
-              Dica: Se deixares os campos em branco, o site utilizará automaticamente o texto padrão da plataforma.
+              Dica: Se deixares os campos em branco, o site utilizará
+              automaticamente o texto padrão da plataforma.
             </p>
 
             <div className="mb-4">
@@ -735,7 +737,8 @@ const GestaoConteudos = () => {
               impactos.
             </p>
             <p className="text-secondary small fst-italic mb-4">
-              Dica: Se deixares os campos em branco, o site utilizará automaticamente o texto padrão da plataforma.
+              Dica: Se deixares os campos em branco, o site utilizará
+              automaticamente o texto padrão da plataforma.
             </p>
 
             <div className="mb-4">
@@ -750,7 +753,10 @@ const GestaoConteudos = () => {
                 onChange={(e) =>
                   setDadosSite({
                     ...dadosSite,
-                    regulamentacao: { ...dadosSite.regulamentacao, titulo: e.target.value },
+                    regulamentacao: {
+                      ...dadosSite.regulamentacao,
+                      titulo: e.target.value,
+                    },
                   })
                 }
               />
@@ -772,7 +778,10 @@ const GestaoConteudos = () => {
                     onChange={(e) =>
                       setDadosSite({
                         ...dadosSite,
-                        regulamentacao: { ...dadosSite.regulamentacao, textoInicio: e.target.value },
+                        regulamentacao: {
+                          ...dadosSite.regulamentacao,
+                          textoInicio: e.target.value,
+                        },
                       })
                     }
                   />
@@ -789,7 +798,10 @@ const GestaoConteudos = () => {
                     onChange={(e) =>
                       setDadosSite({
                         ...dadosSite,
-                        regulamentacao: { ...dadosSite.regulamentacao, nomeDiretiva: e.target.value },
+                        regulamentacao: {
+                          ...dadosSite.regulamentacao,
+                          nomeDiretiva: e.target.value,
+                        },
                       })
                     }
                   />
@@ -806,7 +818,10 @@ const GestaoConteudos = () => {
                     onChange={(e) =>
                       setDadosSite({
                         ...dadosSite,
-                        regulamentacao: { ...dadosSite.regulamentacao, linkDiretiva: e.target.value },
+                        regulamentacao: {
+                          ...dadosSite.regulamentacao,
+                          linkDiretiva: e.target.value,
+                        },
                       })
                     }
                   />
@@ -823,7 +838,10 @@ const GestaoConteudos = () => {
                     onChange={(e) =>
                       setDadosSite({
                         ...dadosSite,
-                        regulamentacao: { ...dadosSite.regulamentacao, textoFim: e.target.value },
+                        regulamentacao: {
+                          ...dadosSite.regulamentacao,
+                          textoFim: e.target.value,
+                        },
                       })
                     }
                   ></textarea>
@@ -895,7 +913,10 @@ const GestaoConteudos = () => {
                       onChange={(e) =>
                         setDadosSite({
                           ...dadosSite,
-                          regulamentacao: { ...dadosSite.regulamentacao, card1: e.target.value },
+                          regulamentacao: {
+                            ...dadosSite.regulamentacao,
+                            card1: e.target.value,
+                          },
                         })
                       }
                     />
@@ -962,7 +983,10 @@ const GestaoConteudos = () => {
                       onChange={(e) =>
                         setDadosSite({
                           ...dadosSite,
-                          regulamentacao: { ...dadosSite.regulamentacao, card2: e.target.value },
+                          regulamentacao: {
+                            ...dadosSite.regulamentacao,
+                            card2: e.target.value,
+                          },
                         })
                       }
                     />
@@ -1029,7 +1053,10 @@ const GestaoConteudos = () => {
                       onChange={(e) =>
                         setDadosSite({
                           ...dadosSite,
-                          regulamentacao: { ...dadosSite.regulamentacao, card3: e.target.value },
+                          regulamentacao: {
+                            ...dadosSite.regulamentacao,
+                            card3: e.target.value,
+                          },
                         })
                       }
                     />
@@ -1048,7 +1075,8 @@ const GestaoConteudos = () => {
               Edita os títulos principais e os cartões dos serviços prestados.
             </p>
             <p className="text-secondary small fst-italic mb-4">
-              Dica: Se deixares os campos em branco, o site utilizará automaticamente o texto padrão da plataforma.
+              Dica: Se deixares os campos em branco, o site utilizará
+              automaticamente o texto padrão da plataforma.
             </p>
 
             {/* TÍTULO E SUBTÍTULO GERAIS */}
@@ -1065,7 +1093,10 @@ const GestaoConteudos = () => {
                   onChange={(e) =>
                     setDadosSite({
                       ...dadosSite,
-                      servicos: { ...dadosSite.servicos, titulo: e.target.value },
+                      servicos: {
+                        ...dadosSite.servicos,
+                        titulo: e.target.value,
+                      },
                     })
                   }
                 />
@@ -1082,7 +1113,10 @@ const GestaoConteudos = () => {
                   onChange={(e) =>
                     setDadosSite({
                       ...dadosSite,
-                      servicos: { ...dadosSite.servicos, subtitulo: e.target.value },
+                      servicos: {
+                        ...dadosSite.servicos,
+                        subtitulo: e.target.value,
+                      },
                     })
                   }
                 />
@@ -1151,7 +1185,10 @@ const GestaoConteudos = () => {
                         onChange={(e) =>
                           setDadosSite({
                             ...dadosSite,
-                            servicos: { ...dadosSite.servicos, servico1Titulo: e.target.value },
+                            servicos: {
+                              ...dadosSite.servicos,
+                              servico1Titulo: e.target.value,
+                            },
                           })
                         }
                       />
@@ -1164,7 +1201,10 @@ const GestaoConteudos = () => {
                       onChange={(e) =>
                         setDadosSite({
                           ...dadosSite,
-                          servicos: { ...dadosSite.servicos, servico1Descricao: e.target.value },
+                          servicos: {
+                            ...dadosSite.servicos,
+                            servico1Descricao: e.target.value,
+                          },
                         })
                       }
                     ></textarea>
@@ -1229,7 +1269,10 @@ const GestaoConteudos = () => {
                         onChange={(e) =>
                           setDadosSite({
                             ...dadosSite,
-                            servicos: { ...dadosSite.servicos, servico2Titulo: e.target.value },
+                            servicos: {
+                              ...dadosSite.servicos,
+                              servico2Titulo: e.target.value,
+                            },
                           })
                         }
                       />
@@ -1242,7 +1285,10 @@ const GestaoConteudos = () => {
                       onChange={(e) =>
                         setDadosSite({
                           ...dadosSite,
-                          servicos: { ...dadosSite.servicos, servico2Descricao: e.target.value },
+                          servicos: {
+                            ...dadosSite.servicos,
+                            servico2Descricao: e.target.value,
+                          },
                         })
                       }
                     ></textarea>
@@ -1307,7 +1353,10 @@ const GestaoConteudos = () => {
                         onChange={(e) =>
                           setDadosSite({
                             ...dadosSite,
-                            servicos: { ...dadosSite.servicos, servico3Titulo: e.target.value },
+                            servicos: {
+                              ...dadosSite.servicos,
+                              servico3Titulo: e.target.value,
+                            },
                           })
                         }
                       />
@@ -1320,7 +1369,10 @@ const GestaoConteudos = () => {
                       onChange={(e) =>
                         setDadosSite({
                           ...dadosSite,
-                          servicos: { ...dadosSite.servicos, servico3Descricao: e.target.value },
+                          servicos: {
+                            ...dadosSite.servicos,
+                            servico3Descricao: e.target.value,
+                          },
                         })
                       }
                     ></textarea>
@@ -1385,7 +1437,10 @@ const GestaoConteudos = () => {
                         onChange={(e) =>
                           setDadosSite({
                             ...dadosSite,
-                            servicos: { ...dadosSite.servicos, servico4Titulo: e.target.value },
+                            servicos: {
+                              ...dadosSite.servicos,
+                              servico4Titulo: e.target.value,
+                            },
                           })
                         }
                       />
@@ -1398,7 +1453,10 @@ const GestaoConteudos = () => {
                       onChange={(e) =>
                         setDadosSite({
                           ...dadosSite,
-                          servicos: { ...dadosSite.servicos, servico4Descricao: e.target.value },
+                          servicos: {
+                            ...dadosSite.servicos,
+                            servico4Descricao: e.target.value,
+                          },
                         })
                       }
                     ></textarea>
@@ -1417,7 +1475,8 @@ const GestaoConteudos = () => {
               Edita os motivos para escolher a CyberBoxSecur.
             </p>
             <p className="text-secondary small fst-italic mb-4">
-              Dica: Se deixares os campos em branco, o site utilizará automaticamente o texto padrão da plataforma.
+              Dica: Se deixares os campos em branco, o site utilizará
+              automaticamente o texto padrão da plataforma.
             </p>
 
             {/* TÍTULO E SUBTÍTULO GERAIS */}
@@ -1434,7 +1493,10 @@ const GestaoConteudos = () => {
                   onChange={(e) =>
                     setDadosSite({
                       ...dadosSite,
-                      diferenciais: { ...dadosSite.diferenciais, titulo: e.target.value },
+                      diferenciais: {
+                        ...dadosSite.diferenciais,
+                        titulo: e.target.value,
+                      },
                     })
                   }
                 />
@@ -1451,7 +1513,10 @@ const GestaoConteudos = () => {
                   onChange={(e) =>
                     setDadosSite({
                       ...dadosSite,
-                      diferenciais: { ...dadosSite.diferenciais, subtitulo: e.target.value },
+                      diferenciais: {
+                        ...dadosSite.diferenciais,
+                        subtitulo: e.target.value,
+                      },
                     })
                   }
                 />
@@ -1524,7 +1589,10 @@ const GestaoConteudos = () => {
                         onChange={(e) =>
                           setDadosSite({
                             ...dadosSite,
-                            diferenciais: { ...dadosSite.diferenciais, motivo1Titulo: e.target.value },
+                            diferenciais: {
+                              ...dadosSite.diferenciais,
+                              motivo1Titulo: e.target.value,
+                            },
                           })
                         }
                       />
@@ -1537,7 +1605,10 @@ const GestaoConteudos = () => {
                       onChange={(e) =>
                         setDadosSite({
                           ...dadosSite,
-                          diferenciais: { ...dadosSite.diferenciais, motivo1Descricao: e.target.value },
+                          diferenciais: {
+                            ...dadosSite.diferenciais,
+                            motivo1Descricao: e.target.value,
+                          },
                         })
                       }
                     ></textarea>
@@ -1604,7 +1675,10 @@ const GestaoConteudos = () => {
                         onChange={(e) =>
                           setDadosSite({
                             ...dadosSite,
-                            diferenciais: { ...dadosSite.diferenciais, motivo2Titulo: e.target.value },
+                            diferenciais: {
+                              ...dadosSite.diferenciais,
+                              motivo2Titulo: e.target.value,
+                            },
                           })
                         }
                       />
@@ -1617,7 +1691,10 @@ const GestaoConteudos = () => {
                       onChange={(e) =>
                         setDadosSite({
                           ...dadosSite,
-                          diferenciais: { ...dadosSite.diferenciais, motivo2Descricao: e.target.value },
+                          diferenciais: {
+                            ...dadosSite.diferenciais,
+                            motivo2Descricao: e.target.value,
+                          },
                         })
                       }
                     ></textarea>
@@ -1684,7 +1761,10 @@ const GestaoConteudos = () => {
                         onChange={(e) =>
                           setDadosSite({
                             ...dadosSite,
-                            diferenciais: { ...dadosSite.diferenciais, motivo3Titulo: e.target.value },
+                            diferenciais: {
+                              ...dadosSite.diferenciais,
+                              motivo3Titulo: e.target.value,
+                            },
                           })
                         }
                       />
@@ -1697,7 +1777,10 @@ const GestaoConteudos = () => {
                       onChange={(e) =>
                         setDadosSite({
                           ...dadosSite,
-                          diferenciais: { ...dadosSite.diferenciais, motivo3Descricao: e.target.value },
+                          diferenciais: {
+                            ...dadosSite.diferenciais,
+                            motivo3Descricao: e.target.value,
+                          },
                         })
                       }
                     ></textarea>
@@ -1717,7 +1800,8 @@ const GestaoConteudos = () => {
               gerado automaticamente).
             </p>
             <p className="text-secondary small fst-italic mb-4">
-              Dica: Se deixares os campos em branco, o site utilizará automaticamente o texto padrão da plataforma.
+              Dica: Se deixares os campos em branco, o site utilizará
+              automaticamente o texto padrão da plataforma.
             </p>
 
             {/* TÍTULO E SUBTÍTULO GERAIS */}
@@ -1734,7 +1818,10 @@ const GestaoConteudos = () => {
                   onChange={(e) =>
                     setDadosSite({
                       ...dadosSite,
-                      contactos: { ...dadosSite.contactos, titulo: e.target.value },
+                      contactos: {
+                        ...dadosSite.contactos,
+                        titulo: e.target.value,
+                      },
                     })
                   }
                 />
@@ -1751,7 +1838,10 @@ const GestaoConteudos = () => {
                   onChange={(e) =>
                     setDadosSite({
                       ...dadosSite,
-                      contactos: { ...dadosSite.contactos, subtitulo: e.target.value },
+                      contactos: {
+                        ...dadosSite.contactos,
+                        subtitulo: e.target.value,
+                      },
                     })
                   }
                 />
@@ -1777,7 +1867,10 @@ const GestaoConteudos = () => {
                     onChange={(e) =>
                       setDadosSite({
                         ...dadosSite,
-                        contactos: { ...dadosSite.contactos, email: e.target.value },
+                        contactos: {
+                          ...dadosSite.contactos,
+                          email: e.target.value,
+                        },
                       })
                     }
                   />
@@ -1795,7 +1888,10 @@ const GestaoConteudos = () => {
                     onChange={(e) =>
                       setDadosSite({
                         ...dadosSite,
-                        contactos: { ...dadosSite.contactos, telefone: e.target.value },
+                        contactos: {
+                          ...dadosSite.contactos,
+                          telefone: e.target.value,
+                        },
                       })
                     }
                   />
@@ -1813,7 +1909,10 @@ const GestaoConteudos = () => {
                     onChange={(e) =>
                       setDadosSite({
                         ...dadosSite,
-                        contactos: { ...dadosSite.contactos, morada: e.target.value },
+                        contactos: {
+                          ...dadosSite.contactos,
+                          morada: e.target.value,
+                        },
                       })
                     }
                   />
@@ -1851,7 +1950,11 @@ const GestaoConteudos = () => {
           >
             {isSaving ? (
               <>
-                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span
+                  className="spinner-border spinner-border-sm"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
                 A guardar...
               </>
             ) : (

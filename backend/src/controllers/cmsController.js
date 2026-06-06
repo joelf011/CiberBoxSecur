@@ -1,4 +1,4 @@
-const pageService = require("../services/pageService");
+const pageService = require("../services/cmsService");
 
 // Vai buscar o conteúdo para mostrar na Home Pública e no Backoffice
 const getHomeContent = async (req, res) => {
@@ -23,7 +23,7 @@ const getHomeContent = async (req, res) => {
 const updateHomeContent = async (req, res) => {
   try {
     const contentBody = req.body;
-    const authorId = req.user.id; // Assumindo que o middleware de auth injeta o req.user
+    const authorId = req.user.id;
 
     const updatedPage = await pageService.upsertPageContent(
       "home",
