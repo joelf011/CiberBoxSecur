@@ -19,6 +19,7 @@ const chatRoutes = require("./src/routes/chatRoutes");
 const auditLogRoutes = require("./src/routes/auditLogRoutes");
 const reportRoutes = require("./src/routes/reportRoutes");
 const cmsRoutes = require("./src/routes/cmsRoutes");
+const dashboardRoutes = require("./src/routes/dashboardRoutes");
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use("/api/chats", chatRoutes);
 app.use("/api/audit-logs", auditLogRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/cms", cmsRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // --- Test ---
 app.get("/", (req, res) => {

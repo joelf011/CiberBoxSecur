@@ -9,6 +9,7 @@ import AdminLogs from './pages/admin/AdminLogs';
 import GestaoConteudos from './pages/admin/GestaoConteudos';
 import GestaoUtilizadores from './pages/admin/GestaoUtilizadores';
 import GestaoCargos from './pages/admin/GestaoCargos';
+import GestaoEmpresas from './pages/admin/GestaoEmpresas';
 import Perfil from './pages/admin/Perfil';
 import NovoIncidente from './pages/incidentes/NovoIncidente';
 import ListaIncidentes from './pages/incidentes/ListaIncidentes';
@@ -16,7 +17,7 @@ import DetalhesIncidente from './pages/incidentes/DetalhesIncidente';
 import Dashboard from './pages/admin/Dashboard';
 import Home from './pages/Home'; 
 import NewsPage from './pages/NewsPage';
-
+import RepositorioGlobal from './pages/admin/RepositorioGlobal';
 
 function App() {
   return (
@@ -39,7 +40,7 @@ function App() {
       <Route path="/recuperar-password" element={<RecuperarPassword />} />
 
       {/* Rotas do Backoffice */}
-      <Route path="/admin" element={<LayoutBackoffice />}>
+      <Route path="/portal" element={<LayoutBackoffice />}>
         {/* Redireciona /admin para /admin/dashboard automaticamente */}
         <Route index element={<Navigate to="dashboard" replace />} />
 
@@ -48,16 +49,17 @@ function App() {
         
         <Route path="forum" element={<AdminForum />} />
         <Route path="cms" element={<GestaoConteudos />} />
-        <Route path="logs" element={<AdminLogs />} />
-
-        <Route path="cms" element={<GestaoConteudos />} />
         <Route path="users" element={<GestaoUtilizadores />} />
         <Route path="cargos" element={<GestaoCargos />} />
-        <Route path="logs" element={<div><AdminLogs /></div>} />
+        <Route path="empresas" element={<GestaoEmpresas />} />
+        
+        <Route path="logs" element={<AdminLogs />} />
+        
         <Route path="incidentes/novo" element={<NovoIncidente />} />
         <Route path="incidentes" element={<ListaIncidentes />} />
         <Route path="incidentes/:id" element={<DetalhesIncidente />} />
-        <Route path="docs" element={<div>Repositório Global em breve...</div>} />
+        
+        <Route path="docs" element={<RepositorioGlobal />} />
         <Route path="perfil" element={<Perfil />} />
       </Route>
 
