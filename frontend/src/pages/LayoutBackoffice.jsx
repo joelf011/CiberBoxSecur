@@ -55,8 +55,8 @@ const LayoutBackoffice = () => {
     { path: '/portal/dashboard', icon: faChartLine, label: 'Dashboard' }, // Visível para todos
     { path: '/portal/incidentes', icon: faShieldAlt, label: 'Central de Incidentes' }, // Incidentes
     { path: '/portal/forum', icon: faComments, label: 'Fórum de Clientes' }, // Visível para todos
-    { path: '/portal/cms', icon: faEdit, label: 'Gestão de Conteúdo', permission: 'MANAGE_CMS' },
-    { path: '/portal/empresas', icon: faBuilding, label: 'Gestão de Empresas', permission: 'VIEW_COMPANIES' }, // <--- NOVO BOTÃO NO MENU
+    { path: '/portal/cms', icon: faEdit, label: 'Gestão de Conteúdo', permission: 'UPDATE_CMS' },
+    { path: '/portal/empresas', icon: faBuilding, label: 'Gestão de Empresas', permission: 'VIEW_COMPANIES' },
     { path: '/portal/users', icon: faUsers, label: 'Gestão de Utilizadores', permission: 'VIEW_USERS' },
     { path: '/portal/cargos', icon: faUserShield, label: 'Cargos e Permissões', permission: 'VIEW_ROLES' },
     { path: '/portal/docs', icon: faFolderOpen, label: 'Repositório Global' }, // Visível para todos
