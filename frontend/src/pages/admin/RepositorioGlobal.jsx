@@ -79,7 +79,9 @@ const RepositorioGlobal = () => {
 
     try {
       setSubmittingFolder(true);
-      await folderApi.createFolder({ title: newFolderName });
+      
+      // MUDANÇA AQUI: Usamos 'documentApi' e passamos apenas o texto limpo 'newFolderName'
+      await documentApi.createFolder(newFolderName); 
       
       setNewFolderName('');
       setShowModal(false);
@@ -87,7 +89,8 @@ const RepositorioGlobal = () => {
 
     } catch (err) {
       console.error("Erro ao criar pasta no backend:", err);
-      alert("Erro ao criar a pasta. Garante que criaste a rota POST /api/global-folders no teu backend.");
+      // Mostra o erro real que vem da API se algo falhar no banco de dados
+      alert(err.response?.data?.error || "Erro ao criar a pasta no servidor.");
     } finally {
       setSubmittingFolder(false);
     }

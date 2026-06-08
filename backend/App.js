@@ -18,8 +18,7 @@ const categoryRoutes = require("./src/routes/categoryRoutes");
 const chatRoutes = require("./src/routes/chatRoutes");
 const auditLogRoutes = require("./src/routes/auditLogRoutes");
 const reportRoutes = require("./src/routes/reportRoutes");
-const cmsRoutes = require("./src/routes/cmsRoutes");
-const dashboardRoutes = require("./src/routes/dashboardRoutes");
+const dashboardRoutes = require("./src/routes/dashboardRoutes"); 
 
 const app = express();
 
@@ -32,23 +31,29 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 // --- API ROUTES ---
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/companies", companyRoutes);
-app.use("/api/roles", roleRoutes);
-app.use("/api/permissions", permissionRoutes);
-app.use("/api/assets", assetRoutes);
-app.use("/api/incidents", incidentRoutes);
-app.use("/api/documents", documentRoutes);
-app.use("/api/tickets", ticketRoutes);
-app.use("/api/articles", articleRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/chats", chatRoutes);
-app.use("/api/audit-logs", auditLogRoutes);
-app.use("/api/reports", reportRoutes);
-app.use("/api/cms", cmsRoutes);
-app.use("/api/dashboard", dashboardRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/companies', companyRoutes);
+app.use('/api/roles', roleRoutes);
+app.use('/api/permissions', permissionRoutes);
+app.use('/api/assets', assetRoutes);
+app.use('/api/incidents', incidentRoutes);
+app.use('/api/documents', documentRoutes);
+
+// Rota de Pastas Globais (A nossa rota funcional!)
+const documentController = require('./src/controllers/documentController');
+const authMiddleware = require('./src/middlewares/authMiddleware');
+const checkPermission = require('./src/middlewares/permissionMiddleware');
+app.post('/api/global-folders', authMiddleware, checkPermission('CREATE_DOCUMENT'), documentController.createFolder);
+
+app.use('/api/tickets', ticketRoutes);
+app.use('/api/articles', articleRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/chats', chatRoutes);
+app.use('/api/audit-logs', auditLogRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/dashboard', dashboardRoutes); 
 
 // --- Test ---
 app.get("/", (req, res) => {
