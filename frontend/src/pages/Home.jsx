@@ -482,7 +482,7 @@ const Home = () => {
                     }
                     morada={
                       dadosDoBackoffice?.contactos?.morada ||
-                      "Rossio, Edifício Cyber, Viseu, Portugal"
+                      "Rua Luís A Duarte Santos, Nº 20 3030-403 Coimbra"
                     }
                   />
                 </div>
