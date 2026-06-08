@@ -14,10 +14,10 @@ const Footer = () => {
             <div className="d-flex align-items-center gap-2 fs-5 fw-bold text-white mb-3">
               <img 
                 src={Logo} 
-                alt="CiberBoxSecur Logo"
+                alt="CyberBoxSecur Logo"
                 style={{ width: '70px', height: '70px' }}
               />
-              <span>CiberBoxSecur</span>
+              <span>CyberBoxSecur</span>
             </div>
             <p className="small lh-base">
               Protegemos o seu negócio contra ameaças digitais com soluções de cibersegurança avançadas e adequadas às exigências regulatórias atuais.
@@ -68,7 +68,7 @@ const Footer = () => {
               Contactos
             </h4>
             <ul className="list-unstyled small">
-              <li className="mb-2">info@ciberboxsecur.pt</li>
+              <li className="mb-2">info@cyberboxsecur.pt</li>
               <li className="mb-2">+351 255 255 255</li>
               <li className="mb-2">Rua Luís A Duarte Santos, Nº 20 3030-403 Coimbra</li>
             </ul>
@@ -77,7 +77,7 @@ const Footer = () => {
 
         <div className="row mt-5 pt-4 border-top border-secondary text-center small">
           <div className="col-12">
-            &copy; {new Date().getFullYear()} CiberBoxSecur. Todos os direitos reservados.
+            &copy; {new Date().getFullYear()} CyberBoxSecur. Todos os direitos reservados.
           </div>
         </div>
       </div>
