@@ -12,38 +12,50 @@ const documentController = {
                 return res.status(400).json({ error: 'Folder name is required.' });
             }
 
-            const uploaded_by_user_id = req.user.id;
+            const uploaded_by_user_id = req.user?.id || 1;
+            const user_company_id = req.user?.company_id || 1;
 
-            // Criar o registo da pasta na Base de Dados
+            // 1. Cria a pasta primeiro (Ação Principal)
             const newFolder = await Document.create({
-                company_id: company_id || req.user.company_id || 1, // Garante um ID de empresa válido
+                company_id: company_id || user_company_id,
                 uploaded_by_user_id,
-                document_category: 'Other', // Valor obrigatório exigido pelo teu ENUM
-                title: name,                 // O título mapeia o nome da pasta
-                file_path: 'folder',         // Marcador textual já que o campo não aceita Null
+                document_category: 'Other', 
+                title: name,                 
+                file_path: 'folder',         
                 is_action_required: false,
                 status: 'Informational',
                 parent_document_id: parent_document_id || null
             });
 
-            // LOG: registar a criação da pasta na auditoria
-            await auditLogController.logEvent({
-                user_id: uploaded_by_user_id,
-                action: 'FOLDER_CREATE',
-                entity_type: 'Document',
-                entity_id: newFolder.id,
-                ip_address: req.ip
-            });
+            // 2. Tenta gravar o Log. Se o sistema de logs falhar, NÃO deita a app abaixo!
+            try {
+                if (auditLogController && typeof auditLogController.logEvent === 'function') {
+                    await auditLogController.logEvent({
+                        user_id: uploaded_by_user_id,
+                        action: 'FOLDER_CREATE',
+                        entity_type: 'Document',
+                        entity_id: newFolder.id,
+                        ip_address: req.ip
+                    });
+                } else {
+                    console.warn("⚠️ Alerta: auditLogController ou logEvent não estão disponíveis, mas a pasta foi criada.");
+                }
+            } catch (logError) {
+                console.error("❌ Falha segura ao registar log de auditoria:", logError);
+                // Não fazemos return aqui, deixamos o código continuar para o utilizador receber o sucesso da pasta!
+            }
 
+            // 3. Resposta de Sucesso total
             return res.status(201).json({ message: 'Folder created successfully!', document: newFolder });
+
         } catch (error) {
+            console.error('❌ ERRO REAL AO CRIAR PASTA:', error);
             if (error.name === 'SequelizeForeignKeyConstraintError') {
                 return res.status(400).json({ error: 'The specified company or parent document does not exist.' });
             }
             if (error.name === 'SequelizeValidationError') {
                 return res.status(400).json({ error: error.errors[0].message }); 
             }
-            console.error('Create Folder error:', error);
             return res.status(500).json({ error: 'Internal server error.' });
         }
     },
