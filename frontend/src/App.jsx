@@ -18,6 +18,8 @@ import Dashboard from './pages/admin/Dashboard';
 import Home from './pages/Home'; 
 import NewsPage from './pages/NewsPage';
 import RepositorioGlobal from './pages/admin/RepositorioGlobal';
+import GestaoNoticias from './pages/admin/GestaoNoticias';
+import ArticleDetailPage from './pages/ArticleDetailPage';
 
 function App() {
   return (
@@ -33,6 +35,7 @@ function App() {
       />
 
       <Route path="/noticias" element={<NewsPage />} />
+      <Route path="/noticias/:slug" element={<ArticleDetailPage />} />
 
       {/* Rota de Login */}
       <Route path="/login" element={<Login />} />
@@ -52,6 +55,7 @@ function App() {
         <Route path="users" element={<GestaoUtilizadores />} />
         <Route path="cargos" element={<GestaoCargos />} />
         <Route path="empresas" element={<GestaoEmpresas />} />
+        <Route path="noticias" element={<GestaoNoticias />} />
         
         <Route path="logs" element={<AdminLogs />} />
         
