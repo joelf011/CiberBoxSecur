@@ -29,7 +29,7 @@ const ArticleContent = ({ article }) => {
               {/* Back Button */}
               <button
                 type="button"
-                onClick={() => navigate('/news')}
+                onClick={() => navigate('/noticias')}
                 className="btn btn-link text-decoration-none text-primary p-0 d-flex align-items-center gap-2 mb-4 fw-semibold"
               >
                 <FaArrowLeft/>
