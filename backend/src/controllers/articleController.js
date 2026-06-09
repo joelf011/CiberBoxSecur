@@ -6,6 +6,11 @@ const articleController = {
     async create(req, res) {
         try {
             const data = { ...req.body };
+            
+            if (data.category_ids && typeof data.category_ids === 'string') {
+                data.category_ids = JSON.parse(data.category_ids);
+            }
+
             if (req.file) data.cover_image = `uploads/${req.file.filename}`;
 
             const newArticle = await articleService.create(data, req.user.id, req.ip);
@@ -24,10 +29,14 @@ const articleController = {
     // READ ALL
     async getPublicArticles(req, res) {
         try {
-            const limit = parseInt(req.query.limit) || 6;
-            const offset = parseInt(req.query.offset) || 0;
-
-            const result = await articleService.getPublicArticles(limit, offset);
+            const { limit, offset, category, search } = req.query;
+            
+            const result = await articleService.getPublicArticles(
+                limit || 6, 
+                offset || 0, 
+                category, 
+                search
+            );
             return res.status(200).json(result);
         } catch (error) {
             console.error('Get Public Articles error:', error);
@@ -63,6 +72,11 @@ const articleController = {
     async update(req, res) {
         try {
             const data = { ...req.body };
+            
+            if (data.category_ids && typeof data.category_ids === 'string') {
+                data.category_ids = JSON.parse(data.category_ids);
+            }
+
             if (req.file) data.cover_image = `uploads/${req.file.filename}`;
 
             const article = await articleService.update(req.params.id, data, req.user.id, req.ip);

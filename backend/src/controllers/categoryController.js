@@ -1,5 +1,5 @@
 const { Category } = require('../models');
-const auditLogController = require('./auditLogController');
+const auditLogService = require('../services/auditLogService');
 
 // Automatic slug ("NIS 2 alerts -> nis2-alerts")
 const generateSlug = (text) => {
@@ -39,7 +39,7 @@ const categoryController = {
             const newCategory = await Category.create({ name, slug });
 
             // LOG: category created
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user ? req.user.id : null,
                 action: 'CATEGORY_CREATE',
                 entity_type: 'Category',
@@ -72,7 +72,7 @@ const categoryController = {
             await category.update({ name, slug: slug || category.slug });
 
             // LOG: Category updated
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user ? req.user.id : null,
                 action: 'CATEGORY_UPDATE',
                 entity_type: 'Category',
@@ -101,7 +101,7 @@ const categoryController = {
             await category.destroy();
 
             // LOG: Category deleted
-            await auditLogController.logEvent({
+            await auditLogService.logEvent({
                 user_id: req.user ? req.user.id : null,
                 action: 'CATEGORY_DELETE',
                 entity_type: 'Category',
