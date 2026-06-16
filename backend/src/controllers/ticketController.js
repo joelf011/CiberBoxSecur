@@ -444,8 +444,9 @@ const ticketController = {
 
             return res.status(200).json(messages);
         } catch (error) {
-            console.error('Get Ticket Messages error:', error);
-            return res.status(500).json({ error: 'Internal server error.' });
+            // Log detalhado para o terminal do backend
+            console.error('Get Ticket Messages error:', error.message);
+            return res.status(500).json({ error: `Erro na Base de Dados: ${error.message}` });
         }
     }
 };
