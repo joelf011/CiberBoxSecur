@@ -3,6 +3,108 @@ const fs = require('fs');
 const auditLogController = require('./auditLogController');
 
 const documentController = {
+    // ROTA NOVA: MÉTODOS PARA CRIAR PASTA VIRTUAL
+    async createFolder(req, res) {
+        try {
+            const { name, company_id, parent_document_id } = req.body;
+
+            if (!name) {
+                return res.status(400).json({ error: 'Folder name is required.' });
+            }
+
+            const uploaded_by_user_id = req.user?.id || 1;
+            const user_company_id = req.user?.company_id || 1;
+
+            // 1. Cria a pasta primeiro (Ação Principal)
+            const newFolder = await Document.create({
+                company_id: company_id || user_company_id,
+                uploaded_by_user_id,
+                document_category: 'Other', 
+                title: name,                 
+                file_path: 'folder',         
+                is_action_required: false,
+                status: 'Informational',
+                parent_document_id: parent_document_id || null
+            });
+
+            // 2. Tenta gravar o Log. Se o sistema de logs falhar, NÃO deita a app abaixo!
+            try {
+                if (auditLogController && typeof auditLogController.logEvent === 'function') {
+                    await auditLogController.logEvent({
+                        user_id: uploaded_by_user_id,
+                        action: 'FOLDER_CREATE',
+                        entity_type: 'Document',
+                        entity_id: newFolder.id,
+                        ip_address: req.ip
+                    });
+                } else {
+                    console.warn("⚠️ Alerta: auditLogController ou logEvent não estão disponíveis, mas a pasta foi criada.");
+                }
+            } catch (logError) {
+                console.error("❌ Falha segura ao registar log de auditoria:", logError);
+                // Não fazemos return aqui, deixamos o código continuar para o utilizador receber o sucesso da pasta!
+            }
+
+            // 3. Resposta de Sucesso total
+            return res.status(201).json({ message: 'Folder created successfully!', document: newFolder });
+
+        } catch (error) {
+            console.error('❌ ERRO REAL AO CRIAR PASTA:', error);
+            if (error.name === 'SequelizeForeignKeyConstraintError') {
+                return res.status(400).json({ error: 'The specified company or parent document does not exist.' });
+            }
+            if (error.name === 'SequelizeValidationError') {
+                return res.status(400).json({ error: error.errors[0].message }); 
+            }
+            return res.status(500).json({ error: 'Internal server error.' });
+        }
+    },
+
+    // ROTA NOVA: ELIMINAR PASTA VIRTUAL
+    async deleteFolder(req, res) {
+        try {
+            const { id } = req.params;
+
+            // 1. Procurar se a pasta existe
+            const folder = await Document.findByPk(id);
+
+            if (!folder) {
+                return res.status(404).json({ error: 'Folder not found.' });
+            }
+
+            // Garantir que é mesmo uma pasta que estamos a tentar eliminar
+            if (folder.file_path !== 'folder') {
+                return res.status(400).json({ error: 'This item is a file, not a folder.' });
+            }
+
+            const uploaded_by_user_id = req.user?.id || 1;
+
+            // 2. Eliminar a pasta da Base de Dados
+            await folder.destroy();
+
+            // 3. Tenta gravar o Log de Auditoria de forma segura
+            try {
+                if (auditLogController && typeof auditLogController.logEvent === 'function') {
+                    await auditLogController.logEvent({
+                        user_id: uploaded_by_user_id,
+                        action: 'FOLDER_DELETE',
+                        entity_type: 'Document',
+                        entity_id: id,
+                        ip_address: req.ip
+                    });
+                }
+            } catch (logError) {
+                console.error("⚠️ Falha segura ao registar log de eliminação:", logError);
+            }
+
+            return res.status(200).json({ message: 'Folder deleted successfully!' });
+
+        } catch (error) {
+            console.error('❌ ERRO AO ELIMINAR PASTA:', error);
+            return res.status(500).json({ error: 'Internal server error.' });
+        }
+    },
+
     // CREATE
     async create(req, res) {
         try {

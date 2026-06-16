@@ -37,11 +37,27 @@ const authController = {
     async login(req, res) {
         try {
             const data = await authService.login(req.body.email, req.body.password, req.ip);
+
+            // SUCESSO: O utilizador acertou a password! 
+            // Vamos limpar as tentativas falhadas anteriores do IP dele para ele ter sempre 5 hipóteses novas da próxima vez.
+            try {
+                const loginRateLimiter = require('../middlewares/rateLimiter');
+                if (loginRateLimiter && typeof loginRateLimiter.resetKey === 'function') {
+                    await loginRateLimiter.resetKey(req.ip);
+                }
+            } catch (limiterError) {
+                console.error('Erro ao resetar o rate limiter:', limiterError);
+            }
+
             return res.status(200).json({
                 message: 'Login success!', token: data.token, user: data.user
             });
         } catch (error) {
             console.error('Login error:', error);
+            
+            // ERRO: Não precisamos de incrementar nada manualmente aqui. 
+            // O express-rate-limit já contou esta requisição automaticamente!
+
             const status = error.message.includes('found') || error.message.includes('password') || error.message.includes('activate') || error.message.includes('deactivated') ? 401 : 500;
             return res.status(status).json({ error: error.message || 'Internal server error.' });
         }
