@@ -31,14 +31,9 @@ const Footer = () => {
             </h4>
             <ul className="list-unstyled small">
               <li className="mb-2">
-                <a href="#" className="link-secondary text-decoration-none">
+                <Link to="/nis2" className="link-secondary text-decoration-none">
                   Diretivas NIS2
-                </a>
-              </li>
-              <li className="mb-2">
-                <a href="#" className="link-secondary text-decoration-none">
-                  Auditorias
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

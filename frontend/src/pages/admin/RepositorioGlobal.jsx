@@ -8,6 +8,7 @@ import {
   faChevronDown, 
   faChevronUp, 
   faTimes,
+  faTrash,
   faFilePdf, 
   faFileWord, 
   faFileExcel, 
@@ -15,6 +16,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { companyApi } from '../../api/companyApi'; 
 import { documentApi } from '../../api/documentApi'; 
+import { Alerts } from '../../utils/Alerts';
 
 const RepositorioGlobal = () => {
   // Estados vindos do Servidor (BD Real)
@@ -31,6 +33,7 @@ const RepositorioGlobal = () => {
   const [showModal, setShowModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [submittingFolder, setSubmittingFolder] = useState(false);
+  const [deletingFolderId, setDeletingFolderId] = useState(null);
 
   // Cor padrão dos ícones
   const iconColor = "#0d6efd";
@@ -79,20 +82,65 @@ const RepositorioGlobal = () => {
 
     try {
       setSubmittingFolder(true);
-      
-      // MUDANÇA AQUI: Usamos 'documentApi' e passamos apenas o texto limpo 'newFolderName'
       await documentApi.createFolder(newFolderName); 
       
       setNewFolderName('');
       setShowModal(false);
+
+      if (Alerts.success) {
+        Alerts.success("Sucesso!", "Pasta global criada com sucesso.");
+      }
+
       await carregarDadosDoBackend();
 
     } catch (err) {
       console.error("Erro ao criar pasta no backend:", err);
       // Mostra o erro real que vem da API se algo falhar no banco de dados
-      alert(err.response?.data?.error || "Erro ao criar a pasta no servidor.");
+      const msgErro = err.response?.data?.error || "Erro ao criar a pasta no servidor.";
+      Alerts.error("Erro!", msgErro);
     } finally {
       setSubmittingFolder(false);
+    }
+  };
+
+  // 🎯 FUNÇÃO NOVA: Chamar o Backend para eliminar a pasta
+  const handleDeleteFolder = async (folder) => {
+    const folderId = folder.id || folder._id;
+    if (!folderId) return;
+
+    // 1. Alterado para 'confirmDelete'
+    // 2. Passamos apenas 1 texto (a mensagem), porque o título "Tens a certeza?" já está fixo lá
+    const resultado = await Alerts.confirmDelete(
+      `Queres mesmo eliminar a pasta "${folder.title}"? Esta ação não pode ser desfeita.`
+    );
+    
+    // 3. Como o teu ficheiro faz "return Swal.fire", ele devolve um objeto. 
+    // Temos de verificar se o utilizador clicou em "Sim" (.isConfirmed)
+    if (!resultado || !resultado.isConfirmed) return;
+
+    try {
+      setDeletingFolderId(folderId);
+      await documentApi.deleteFolder(folderId); 
+      
+      setSelectedCategory(null); // Fecha a área expandida da pasta
+      
+      // 4. Corrigido para passar apenas a mensagem, como o teu Alerts.success espera
+      if (Alerts.success) {
+        Alerts.success("A pasta foi removida com sucesso.");
+      }
+
+      await carregarDadosDoBackend();
+
+    } catch (err) {
+      console.error("Erro ao eliminar pasta no backend:", err);
+      const msgErro = err.response?.data?.error || "Erro ao eliminar a pasta. Verifica as tuas permissões.";
+      
+      // 5. Corrigido para o teu Alerts.error
+      if (Alerts.error) {
+        Alerts.error(msgErro);
+      }
+    } finally {
+      setDeletingFolderId(null);
     }
   };
 
@@ -187,9 +235,22 @@ const RepositorioGlobal = () => {
                 <FontAwesomeIcon icon={faFolderOpen} style={{ color: iconColor }} />
                 <span>{selectedCategory.title}</span>
               </div>
-              <button className="btn p-0 text-muted border-0" onClick={() => setSelectedCategory(null)}>
-                <FontAwesomeIcon icon={faTimes} />
-              </button>
+            
+              {/* 👇 O BOTÃO ENTRA AQUI, ENVOLVIDO NESTA DIV DE ALINHAMENTO 👇 */}
+              <div className="d-flex align-items-center gap-3">
+                <button 
+                  className="btn btn-sm btn-outline-danger border-0 rounded-3 px-2 d-flex align-items-center gap-1 small"
+                  onClick={() => handleDeleteFolder(selectedCategory)}
+                  disabled={deletingFolderId !== null}
+                >
+                  <FontAwesomeIcon icon={faTrash} size="sm" /> 
+                  <span style={{ fontSize: '12px' }}>{deletingFolderId ? 'A eliminar...' : 'Eliminar Pasta'}</span>
+                </button>
+                
+                <button className="btn p-0 text-muted border-0" onClick={() => setSelectedCategory(null)}>
+                  <FontAwesomeIcon icon={faTimes} />
+                </button>
+              </div>
             </div>
 
             {selectedCategory.files && selectedCategory.files.length > 0 ? (

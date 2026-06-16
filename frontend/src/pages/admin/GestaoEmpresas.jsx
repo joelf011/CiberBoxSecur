@@ -203,7 +203,7 @@ const GestaoEmpresas = () => {
                 <tr>
                   <th className="px-4 py-3 text-muted">Empresa (NIF)</th>
                   <th className="py-3 text-muted">Cliente</th>
-                  <th className="py-3 text-muted">Contacto SOS (Ciberbox)</th>
+                  <th className="py-3 text-muted">Contacto SOS (Cyberbox)</th>
                   <th className="py-3 text-muted">Estado</th>
                   <th className="px-4 py-3 text-muted text-end">Ações</th>
                 </tr>
@@ -370,7 +370,7 @@ const GestaoEmpresas = () => {
                 <Card className="shadow-none border border-secondary border-opacity-25 rounded-3 overflow-hidden">
                   <Card.Header className="bg-light p-3 d-flex justify-content-between align-items-center border-bottom">
                     <div>
-                      <h6 className="mb-0 fw-bold text-dark fs-6">Gestores Cibersecur Alocados</h6>
+                      <h6 className="mb-0 fw-bold text-dark fs-6">Gestores Cybersecur Alocados</h6>
                       <small className="text-muted">Selecione os utilizadores da sua equipa técnica que vão gerir esta empresa.</small>
                     </div>
                     <Badge bg="primary" className="fs-6 px-3 py-2 rounded-pill shadow-sm">{formData.assigned_admins.length} selecionados</Badge>

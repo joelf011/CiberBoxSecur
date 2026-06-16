@@ -46,7 +46,10 @@ app.use('/api/documents', documentRoutes);
 const documentController = require('./src/controllers/documentController');
 const authMiddleware = require('./src/middlewares/authMiddleware');
 const checkPermission = require('./src/middlewares/permissionMiddleware');
+
 app.post('/api/global-folders', authMiddleware, checkPermission('CREATE_DOCUMENT'), documentController.createFolder);
+
+app.delete('/api/global-folders/:id', authMiddleware, checkPermission('DELETE_DOCUMENT'), documentController.deleteFolder);
 
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/articles', articleRoutes);

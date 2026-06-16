@@ -238,7 +238,7 @@ const Dashboard = () => {
                   <tr 
                     key={inc.id} 
                     style={{ cursor: 'pointer' }} 
-                    onClick={() => navigate(`/admin/incidentes/${inc.id}`)} // Aplicação do clique e da navegação!
+                    onClick={() => navigate(`/portal/incidentes/${inc.id}`)} // Aplicação do clique e da navegação!
                   >
                     <td className="px-4 py-3 fw-bold text-secondary">#{inc.id}</td>
                     <td className="py-3 fw-medium text-dark">{inc.title}</td>

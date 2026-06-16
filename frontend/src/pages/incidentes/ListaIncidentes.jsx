@@ -147,7 +147,7 @@ const ListaIncidentes = () => {
                           variant="light" 
                           size="sm" 
                           className="rounded-3 shadow-sm border"
-                          onClick={() => navigate(`/admin/incidentes/${inc.id}`)}
+                          onClick={() => navigate(`/portal/incidentes/${inc.id}`)}
                         >
                           <FontAwesomeIcon icon={faEye} className="text-primary me-1" /> Ver Detalhes
                         </Button>
