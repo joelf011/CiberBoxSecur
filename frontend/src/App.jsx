@@ -20,6 +20,7 @@ import NewsPage from './pages/NewsPage';
 import RepositorioGlobal from './pages/admin/RepositorioGlobal';
 import GestaoNoticias from './pages/admin/GestaoNoticias';
 import ArticleDetailPage from './pages/ArticleDetailPage';
+import Nis2Page from './pages/Nis2Page';
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
 
       <Route path="/noticias" element={<NewsPage />} />
       <Route path="/noticias/:slug" element={<ArticleDetailPage />} />
+      <Route path="/nis2" element={<Nis2Page />} />
 
       {/* Rota de Login */}
       <Route path="/login" element={<Login />} />
@@ -44,7 +46,6 @@ function App() {
 
       {/* Rotas do Backoffice */}
       <Route path="/portal" element={<LayoutBackoffice />}>
-        {/* Redireciona /admin para /admin/dashboard automaticamente */}
         <Route index element={<Navigate to="dashboard" replace />} />
 
         {/* Dashboard */}

@@ -25,7 +25,7 @@ const DetalhesIncidente = () => {
       setIncident(data);
     } catch (err) {
       Alerts.error('Erro ao carregar detalhes do incidente.');
-      navigate('/admin/incidentes');
+      navigate('/portal/incidentes');
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,7 @@ const DetalhesIncidente = () => {
     <div className="animate-fade-in py-2 max-w-5xl mx-auto">
       {/* Botão Voltar */}
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <Button variant="outline-secondary" size="sm" onClick={() => navigate('/admin/incidentes')}>
+        <Button variant="outline-secondary" size="sm" onClick={() => navigate('/portal/incidentes')}>
           <FontAwesomeIcon icon={faArrowLeft} className="me-2" /> Voltar ao Histórico
         </Button>
         <div className="text-muted small fw-bold font-monospace">Ticket #INC-{incident.id.toString().padStart(4, '0')}</div>
