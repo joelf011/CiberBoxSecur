@@ -2,13 +2,16 @@ const nodemailer = require('nodemailer');
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 // Email server config
-var transporter = nodemailer.createTransport({
-  service: 'smtp.gmail.com',
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
   port: 465,
-  secure: true,
+  secure: true, 
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
   }
 });
 
