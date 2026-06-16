@@ -10,11 +10,15 @@ export const documentApi = {
   // Cria um registo no servidor. 
   // Como é uma pasta vazia (sem ficheiro físico), enviamos como JSON normal
   createFolder: async (folderName) => {
-    const response = await api.post('/documents', {
-      name: folderName,
-      is_folder: true, // Ou o nome do campo que o teu controller usa para distinguir
-      type: 'folder'
+    const response = await api.post('/global-folders', {
+      name: folderName // Envia o nome que digitaste no modal (ex: 'gdg')
     });
     return response.data;
-  }
+  },
+
+  // Adiciona isto dentro do objeto exportado do documentApi:
+  deleteFolder: async (id) => {
+      const response = await api.delete(`/global-folders/${id}`); // Ajusta o prefixo 'API' se usares outro nome para o axios instance
+      return response.data;
+  },
 };

@@ -18,6 +18,10 @@ import Dashboard from './pages/admin/Dashboard';
 import Home from './pages/Home'; 
 import NewsPage from './pages/NewsPage';
 import RepositorioGlobal from './pages/admin/RepositorioGlobal';
+import GestaoNoticias from './pages/admin/GestaoNoticias';
+import ArticleDetailPage from './pages/ArticleDetailPage';
+import Nis2Page from './pages/Nis2Page';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
@@ -33,6 +37,8 @@ function App() {
       />
 
       <Route path="/noticias" element={<NewsPage />} />
+      <Route path="/noticias/:slug" element={<ArticleDetailPage />} />
+      <Route path="/nis2" element={<Nis2Page />} />
 
       {/* Rota de Login */}
       <Route path="/login" element={<Login />} />
@@ -40,8 +46,7 @@ function App() {
       <Route path="/recuperar-password" element={<RecuperarPassword />} />
 
       {/* Rotas do Backoffice */}
-      <Route path="/admin" element={<LayoutBackoffice />}>
-        {/* Redireciona /admin para /admin/dashboard automaticamente */}
+      <Route path="/portal" element={<LayoutBackoffice />}>
         <Route index element={<Navigate to="dashboard" replace />} />
 
         {/* Dashboard */}
@@ -52,6 +57,7 @@ function App() {
         <Route path="users" element={<GestaoUtilizadores />} />
         <Route path="cargos" element={<GestaoCargos />} />
         <Route path="empresas" element={<GestaoEmpresas />} />
+        <Route path="noticias" element={<GestaoNoticias />} />
         
         <Route path="logs" element={<AdminLogs />} />
         
@@ -64,7 +70,7 @@ function App() {
       </Route>
 
       {/* Rota de "catch-all" para 404 */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
