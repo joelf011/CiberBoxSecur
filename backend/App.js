@@ -27,7 +27,22 @@ const app = express();
 app.set("trust proxy", 1);
 
 // --- MIDDLEWARES ---
-app.use(cors());
+const allowedOrigins = [
+  process.env.FRONTEND_URL, // O link do Vercel
+  'http://localhost:5173'   // PC para testes
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Permite pedidos sem origem ou os que estão na lista
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Bloqueado pelo CORS'));
+    }
+  },
+  credentials: true // Importante se no futuro usares cookies
+}));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
