@@ -21,6 +21,7 @@ import RepositorioGlobal from './pages/admin/RepositorioGlobal';
 import GestaoNoticias from './pages/admin/GestaoNoticias';
 import ArticleDetailPage from './pages/ArticleDetailPage';
 import Nis2Page from './pages/Nis2Page';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
@@ -69,7 +70,7 @@ function App() {
       </Route>
 
       {/* Rota de "catch-all" para 404 */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
