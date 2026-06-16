@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axiosConfig";
 import { useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
 import HelpCard from "../components/home/HelpCard";
@@ -127,7 +127,7 @@ const Home = () => {
   useEffect(() => {
     const carregarDados = async () => {
       try {
-        const resposta = await axios.get("http://localhost:5000/api/cms/home");
+        const resposta = await api.get("/cms/home");
         if (resposta.data) {
           setDadosDoBackoffice(resposta.data);
         }

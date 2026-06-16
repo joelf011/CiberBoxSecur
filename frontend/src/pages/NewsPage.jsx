@@ -30,9 +30,12 @@ const NewsPage = () => {
   const limit = 6;
 
   const getImageUrl = (path) => {
-    if (!path) return 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800'; 
+    if (!path) return 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=1200';
     if (path.startsWith('http')) return path;
-    const baseUrl = 'http://localhost:5000';
+    const baseUrl = import.meta.env.VITE_API_URL 
+      ? import.meta.env.VITE_API_URL.replace('/api', '') 
+      : 'http://localhost:5000';
+      
     return `${baseUrl}/${path}`;
   };
 
