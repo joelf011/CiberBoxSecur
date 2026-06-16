@@ -27,7 +27,8 @@ const authService = {
             user_id: adminId, action: 'USER_REGISTER', entity_type: 'User', entity_id: newUser.id, ip_address: ipAddress
         });
 
-        await emailService.sendActivationEmail(newUser.email, newUser.name, activationToken);
+        emailService.sendActivationEmail(newUser.email, newUser.name, activationToken)
+            .catch(err => console.error("Erro ao enviar email em background:", err));
         return newUser;
     },
 
@@ -67,7 +68,8 @@ const authService = {
             user_id: adminId, action: 'ADMIN_RESENT_ACTIVATION_EMAIL', entity_type: 'User', entity_id: user.id, ip_address: ipAddress
         });
 
-        await emailService.sendActivationEmail(user.email, user.name, newActivationToken);
+        emailService.sendActivationEmail(user.email, user.name, newActivationToken)
+            .catch(err => console.error("Erro ao reenviar email em background:", err));
         return user;
     },
 

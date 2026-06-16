@@ -3,8 +3,9 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 // Email server config
 var transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: 2525,
+  service: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
