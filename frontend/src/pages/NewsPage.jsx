@@ -48,14 +48,14 @@ const NewsPage = () => {
     image: getImageUrl(dbArticle.cover_image)
   });
 
-  // 1. Carregar as categorias disponíveis para o Dropdown
+  // Carregar as categorias para o Dropdown
   useEffect(() => {
     categoriesApi.getAllCategories()
       .then(setCategoriesList)
       .catch(() => console.error("Erro ao carregar categorias"));
   }, []);
 
-  // 2. Lógica do DEBOUNCE (Pesquisa em Tempo Real)
+  // Pesquisa em Tempo Real
   useEffect(() => {
     // Define um temporizador: só atualiza a pesquisa real se o utilizador parar de escrever durante 500ms
     const handler = setTimeout(() => {
@@ -91,7 +91,7 @@ const NewsPage = () => {
     }
   };
 
-  // 4. Atualizar sempre que a Categoria ou a Pesquisa Debounced mudam
+  // Atualizar sempre que a Categoria ou a Pesquisa mudam
   useEffect(() => {
     setOffset(0);
     loadData(0, selectedCategory, debouncedSearch);
@@ -168,7 +168,7 @@ const NewsPage = () => {
           )}
         </div>
 
-        {/* RENDERIZAÇÃO DE ESTADOS */}
+        {/* ESTADOS */}
         {isLoading && offset === 0 ? (
           <div className="d-flex flex-column justify-content-center align-items-center" style={{ minHeight: '40vh' }}>
             <Spinner animation="border" variant="primary" className="mb-3" />
@@ -182,7 +182,7 @@ const NewsPage = () => {
           </Alert>
         ) : (
           <>
-            {/* Notícia em Destaque (Só aparece se NÃO estivermos a filtrar) */}
+            {/* Notícia em Destaque (Só aparece se NÃO estiver a filtrar) */}
             {featuredData && !isFiltering && <FeaturedNewsCard article={featuredData} />}
 
             {/* Grelha de Notícias */}

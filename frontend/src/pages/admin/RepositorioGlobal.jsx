@@ -175,7 +175,7 @@ const RepositorioGlobal = () => {
           </div>
         ) : (
           <div className="text-center text-muted border border-dashed rounded-3 py-4 mb-4 small">
-            Nenhuma pasta global criada na Base de Dados.
+            Nenhuma pasta global criada.
           </div>
         )}
 
@@ -213,7 +213,7 @@ const RepositorioGlobal = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center text-muted py-4 small">Esta pasta na base de dados ainda não contém ficheiros.</div>
+              <div className="text-center text-muted py-4 small">Esta pasta ainda não contém ficheiros.</div>
             )}
           </div>
         )}
@@ -278,7 +278,7 @@ const RepositorioGlobal = () => {
                             </table>
                           </div>
                         ) : (
-                          <div className="text-center text-muted py-2 small">Nenhum documento anexado de momento a esta organização na Base de Dados.</div>
+                          <div className="text-center text-muted py-2 small">Nenhum documento anexado de momento a esta organização.</div>
                         )}
                       </div>
                     )}
@@ -287,7 +287,7 @@ const RepositorioGlobal = () => {
                 );
               })
             ) : (
-              <div className="text-center text-muted border rounded-3 py-4 small">No momento não existem empresas registadas na base de dados.</div>
+              <div className="text-center text-muted border rounded-3 py-4 small">No momento não existem empresas registadas.</div>
             )}
           </div>
         )}

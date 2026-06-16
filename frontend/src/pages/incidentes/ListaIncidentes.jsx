@@ -75,7 +75,7 @@ const ListaIncidentes = () => {
         <Button 
           variant="primary" 
           className="rounded-3 fw-bold shadow-sm d-flex align-items-center gap-2"
-          onClick={() => navigate('/admin/incidentes/novo')}
+          onClick={() => navigate('/portal/incidentes/novo')}
         >
           <FontAwesomeIcon icon={faPlus} /> Reportar Incidente
         </Button>
