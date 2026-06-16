@@ -18,7 +18,8 @@ const categoryRoutes = require("./src/routes/categoryRoutes");
 const chatRoutes = require("./src/routes/chatRoutes");
 const auditLogRoutes = require("./src/routes/auditLogRoutes");
 const reportRoutes = require("./src/routes/reportRoutes");
-const dashboardRoutes = require("./src/routes/dashboardRoutes"); 
+const dashboardRoutes = require("./src/routes/dashboardRoutes");
+const cmsRoutes = require("./src/routes/cmsRoutes");
 
 const app = express();
 
@@ -53,7 +54,8 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
 app.use('/api/reports', reportRoutes);
-app.use('/api/dashboard', dashboardRoutes); 
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/cms', cmsRoutes);
 
 // --- Test ---
 app.get("/", (req, res) => {
