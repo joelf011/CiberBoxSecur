@@ -60,6 +60,51 @@ const documentController = {
         }
     },
 
+    // ROTA NOVA: ELIMINAR PASTA VIRTUAL
+    async deleteFolder(req, res) {
+        try {
+            const { id } = req.params;
+
+            // 1. Procurar se a pasta existe
+            const folder = await Document.findByPk(id);
+
+            if (!folder) {
+                return res.status(404).json({ error: 'Folder not found.' });
+            }
+
+            // Garantir que é mesmo uma pasta que estamos a tentar eliminar
+            if (folder.file_path !== 'folder') {
+                return res.status(400).json({ error: 'This item is a file, not a folder.' });
+            }
+
+            const uploaded_by_user_id = req.user?.id || 1;
+
+            // 2. Eliminar a pasta da Base de Dados
+            await folder.destroy();
+
+            // 3. Tenta gravar o Log de Auditoria de forma segura
+            try {
+                if (auditLogController && typeof auditLogController.logEvent === 'function') {
+                    await auditLogController.logEvent({
+                        user_id: uploaded_by_user_id,
+                        action: 'FOLDER_DELETE',
+                        entity_type: 'Document',
+                        entity_id: id,
+                        ip_address: req.ip
+                    });
+                }
+            } catch (logError) {
+                console.error("⚠️ Falha segura ao registar log de eliminação:", logError);
+            }
+
+            return res.status(200).json({ message: 'Folder deleted successfully!' });
+
+        } catch (error) {
+            console.error('❌ ERRO AO ELIMINAR PASTA:', error);
+            return res.status(500).json({ error: 'Internal server error.' });
+        }
+    },
+
     // CREATE
     async create(req, res) {
         try {
