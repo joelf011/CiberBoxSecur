@@ -26,6 +26,10 @@ const Message = sequelize.define('Message', {
         type: DataTypes.TEXT,
         allowNull: false
     },
+    attachment: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     is_read: {
         type: DataTypes.BOOLEAN,
         defaultValue: false

@@ -110,12 +110,20 @@ const GestaoEmpresas = () => {
   const handleSubmitCompany = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    // FIX: Garantir que IDs vazios são enviados como 'null' para não crashar a Base de Dados (PostgreSQL)
+    const payload = {
+      ...formData,
+      client_owner_id: formData.client_owner_id === '' ? null : formData.client_owner_id,
+      emergency_admin_id: formData.emergency_admin_id === '' ? null : formData.emergency_admin_id
+    };
+
     try {
       if (editingCompanyId) {
-        await companiesApi.updateCompany(editingCompanyId, formData);
+        await companiesApi.updateCompany(editingCompanyId, payload);
         Alerts.success("Empresa atualizada com sucesso!");
       } else {
-        await companiesApi.createCompany(formData);
+        await companiesApi.createCompany(payload);
         Alerts.success("Empresa criada com sucesso!");
       }
       handleClose(); fetchData(); 
