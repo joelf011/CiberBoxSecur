@@ -1,16 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, Button, Form, InputGroup, Spinner, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPaperPlane, faUserCircle, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { faPaperPlane, faUserCircle, faChevronLeft, faPaperclip, faTimes } from '@fortawesome/free-solid-svg-icons';
 import forumApi from '../../../api/forumApi';
+import api from '../../../api/axiosConfig';
 
-const TicketChatWindow = ({ ticket, currentUserId, onBack }) => {
+const TicketChatWindow = ({ ticket, currentUser, onBack }) => {
+    // 1. PREVENÇÃO DE CRASH: Garantir que o currentUser já chegou da API antes de renderizar
+    if (!currentUser) {
+        return (
+            <Card className="h-100 d-flex align-items-center justify-content-center border-0 shadow-sm rounded-4">
+                <Card.Body className="text-center text-muted">
+                    <Spinner animation="border" role="status" className="mb-3" />
+                    <p>A carregar dados de utilizador...</p>
+                </Card.Body>
+            </Card>
+        );
+    }
+
+    const currentUserId = currentUser.id;
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(false);
     const [sending, setSending] = useState(false);
     const [messageContent, setMessageContent] = useState('');
+    const [attachment, setAttachment] = useState(null);
     const [error, setError] = useState(null);
     const messagesEndRef = useRef(null);
+    const fileInputRef = useRef(null);
 
     // Load messages on component mount or when ticket changes
     useEffect(() => {
@@ -31,7 +47,7 @@ const TicketChatWindow = ({ ticket, currentUserId, onBack }) => {
             scrollToBottom();
         } catch (error) {
             console.error('Failed to load messages:', error);
-            setError('Failed to load messages');
+            setError('Falha ao carregar mensagens');
         } finally {
             setLoading(false);
         }
@@ -43,19 +59,26 @@ const TicketChatWindow = ({ ticket, currentUserId, onBack }) => {
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
-        if (!messageContent.trim()) return;
+        if (!messageContent.trim() && !attachment) return;
 
         setSending(true);
         setError(null);
         try {
-            // Passamos null no chatId, o ID do ticket no 2º argumento, e o texto no 3º
-            const newMessage = await forumApi.sendMessageToTicket(null, ticket.id, messageContent);
+            const formData = new FormData();
+            if (ticket.id) formData.append('ticket_id', ticket.id);
+            if (messageContent.trim()) formData.append('content', messageContent);
+            if (attachment) formData.append('attachment', attachment);
 
-            // A API devolve o formato { message: "...", data: { ... } }
-            // Extraímos a mensagem real para o React conseguir ler o sender_id e o content
+            const response = await api.post('/chats/messages', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            const newMessage = response.data;
+
             const actualMessage = newMessage?.data ? newMessage.data : newMessage;
             setMessages([...messages, actualMessage]);
             setMessageContent('');
+            setAttachment(null);
+            if (fileInputRef.current) fileInputRef.current.value = '';
             scrollToBottom();
 
             // Removido o onMessageSent() propositadamente. A mensagem já é 
@@ -63,7 +86,7 @@ const TicketChatWindow = ({ ticket, currentUserId, onBack }) => {
             // Assim evitamos que o componente pai recarregue a lista e feche o ticket.
         } catch (error) {
             console.error('Failed to send message:', error);
-            setError(error.response?.data?.error || 'Failed to send message. Please try again.');
+            setError(error.response?.data?.error || 'Falha ao enviar mensagem. Por favor, tente novamente.');
         } finally {
             setSending(false);
         }
@@ -74,19 +97,49 @@ const TicketChatWindow = ({ ticket, currentUserId, onBack }) => {
             <Card className="h-100 d-flex align-items-center justify-content-center">
                 <Card.Body className="text-center">
                     <Spinner animation="border" role="status" className="mb-3">
-                        <span className="visually-hidden">Loading messages...</span>
+                        <span className="visually-hidden">A carregar mensagens...</span>
                     </Spinner>
-                    <p className="text-muted">Loading messages...</p>
+                    <p className="text-muted">A carregar mensagens...</p>
                 </Card.Body>
             </Card>
         );
     }
 
+    // 2. FUNÇÃO AUXILIAR: Renderizar o Avatar ou o Ícone por defeito
+    const renderAvatar = (user) => {
+        if (!user || !user.avatar) {
+            return <FontAwesomeIcon icon={faUserCircle} className="text-secondary" style={{ fontSize: '1.75rem' }} />;
+        }
+        
+        let avatarUrl = user.avatar;
+        // Verifica se é uma string Base64 (que é como a página de Perfil guarda na Base de Dados)
+        if (!user.avatar.startsWith('data:image') && !user.avatar.startsWith('http')) {
+            // Se não for Base64 nem um URL absoluto, assume que é um caminho local do backend (ex: /uploads/...)
+            // Previne a duplicação de barras '/'
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const separator = user.avatar.startsWith('/') ? '' : '/';
+            avatarUrl = `${apiUrl}${separator}${user.avatar}`;
+        }
+
+        return (
+            <img 
+                src={avatarUrl} 
+                alt={`${user.name || 'User'}'s avatar`} 
+                className="rounded-circle object-fit-cover shadow-sm border border-secondary border-opacity-25"
+                style={{ width: '28px', height: '28px' }}
+                onError={(e) => { 
+                    e.target.onerror = null; 
+                    e.target.src = `https://ui-avatars.com/api/?name=${user.name ? user.name.charAt(0) : 'U'}&background=random`; 
+                }} 
+            />
+        );
+    };
+
     if (!ticket) {
         return (
             <Card className="h-100 d-flex align-items-center justify-content-center">
                 <Card.Body className="text-center text-muted">
-                    <p>No chat available for this ticket</p>
+                    <p>Nenhum chat disponível para este ticket</p>
                 </Card.Body>
             </Card>
         );
@@ -115,23 +168,29 @@ const TicketChatWindow = ({ ticket, currentUserId, onBack }) => {
 
                 {messages.length === 0 ? (
                     <div className="d-flex align-items-center justify-content-center h-100 text-muted">
-                        <p>No messages yet. Start the conversation!</p>
+                        <p>Ainda sem mensagens. Inicie a conversa!</p>
                     </div>
                 ) : (
                     <div className="d-flex flex-column gap-4">
-                        {messages.map((msg) => (
-                            <div
-                                key={msg.id}
-                                className={`d-flex flex-column ${msg.sender_id === currentUserId ? 'align-items-end' : 'align-items-start'}`}
-                            >
-                                <div className="d-flex align-items-center gap-2 mb-1 px-1">
-                                    {msg.sender_id !== currentUserId && (
-                                        <FontAwesomeIcon icon={faUserCircle} className="text-secondary small" />
-                                    )}
-                                    <span className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>
-                                        {msg.sender_id === currentUserId ? 'You' : (msg.User?.name || 'Manager')}
-                                    </span>
-                                    <span className="text-muted" style={{ fontSize: '0.65rem' }}>
+                        {messages.map((msg) => {
+                            const isSelf = msg.sender_id === currentUserId;
+                            
+                            // Dá prioridade a msg.User (Dados da BD) pois é lá que vem a string/imagem do avatar completa.
+                            // O currentUser do localStorage atua apenas como fallback seguro e não guarda a foto em Base64.
+                            const messageUser = isSelf ? (msg.User || currentUser) : msg.User;
+
+                            return (
+                                <div
+                                    key={msg.id}
+                                    className={`d-flex flex-column ${isSelf ? 'align-items-end' : 'align-items-start'}`}
+                                >
+                                    {/* Adicionado 'flex-row-reverse' para manter o nome/avatar no lado certo dependendo de quem fala */}
+                                    <div className={`d-flex align-items-center gap-2 mb-1 px-1 ${isSelf ? 'flex-row-reverse' : ''}`}>
+                                        {renderAvatar(messageUser)}
+                                        <span className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>
+                                            {isSelf ? 'Tu' : (msg.User?.name || 'Gestor')}
+                                        </span>
+                                        <span className="text-muted" style={{ fontSize: '0.65rem' }}>
                                         {new Date(msg.createdAt).toLocaleTimeString([], {
                                             hour: '2-digit',
                                             minute: '2-digit'
@@ -141,16 +200,30 @@ const TicketChatWindow = ({ ticket, currentUserId, onBack }) => {
 
                                 <div
                                     className={`p-3 rounded-4 shadow-sm text-sm ${
-                                        msg.sender_id === currentUserId
+                                        isSelf
                                             ? 'bg-primary text-white rounded-tr-0'
                                             : 'bg-white text-dark border rounded-tl-0'
                                     }`}
                                     style={{ maxWidth: '85%', lineHeight: '1.5', wordBreak: 'break-word' }}
                                 >
-                                    {msg.content}
+                                    {msg.content && <div>{msg.content}</div>}
+                                    {msg.attachment && (
+                                        <div className={`mt-2 p-2 rounded ${isSelf ? 'bg-white bg-opacity-25' : 'bg-light'} border`}>
+                                            <a 
+                                                href={msg.attachment.startsWith('http') ? msg.attachment : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${msg.attachment}`} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer" 
+                                                className={`text-decoration-none small d-flex align-items-center gap-2 ${isSelf ? 'text-white' : 'text-primary'}`}
+                                            >
+                                                <FontAwesomeIcon icon={faPaperclip} />
+                                                Ficheiro Anexado
+                                            </a>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                         <div ref={messagesEndRef} />
                     </div>
                 )}
@@ -168,7 +241,41 @@ const TicketChatWindow = ({ ticket, currentUserId, onBack }) => {
                     </div>
                 ) : (
                     <Form onSubmit={handleSendMessage}>
+                        {attachment && (
+                            <div className="px-3 py-2 mx-1 mb-2 bg-light border rounded-3 d-flex align-items-center justify-content-between animate-fade-in">
+                                <small className="text-muted d-flex align-items-center gap-2 text-truncate">
+                                    <FontAwesomeIcon icon={faPaperclip} />
+                                    {attachment.name}
+                                </small>
+                                <Button variant="link" size="sm" className="text-danger p-0 border-0 shadow-none" onClick={() => { setAttachment(null); if(fileInputRef.current) fileInputRef.current.value = ''; }}>
+                                    <FontAwesomeIcon icon={faTimes} />
+                                </Button>
+                            </div>
+                        )}
                         <InputGroup className="bg-light rounded-4 border-0 p-1">
+                            <Button
+                                variant="light"
+                                className="rounded-4 px-3 border-0 shadow-sm text-secondary me-2 bg-white"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={sending}
+                            >
+                                <FontAwesomeIcon icon={faPaperclip} />
+                            </Button>
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                style={{ display: 'none' }} 
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.txt,.csv"
+                                onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if (file && file.size > 50 * 1024 * 1024) {
+                                        setError('O ficheiro é demasiado grande. O limite máximo é 50MB.');
+                                        e.target.value = '';
+                                        return;
+                                    }
+                                    setAttachment(file);
+                                }}
+                            />
                             <Form.Control
                                 placeholder="Escreva a sua mensagem..."
                                 className="bg-transparent border-0 shadow-none py-2"
@@ -189,7 +296,7 @@ const TicketChatWindow = ({ ticket, currentUserId, onBack }) => {
                                 type="submit"
                                 className="rounded-4 px-4 ms-2 border-0 shadow-sm d-flex align-items-center"
                                 style={{ backgroundColor: '#8b5cf6' }}
-                                disabled={sending || !messageContent.trim()}
+                                disabled={sending || (!messageContent.trim() && !attachment)}
                             >
                                 {sending ? (
                                     <Spinner animation="border" size="sm" />

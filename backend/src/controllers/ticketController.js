@@ -1,4 +1,4 @@
-const { Ticket, Chat, ChatUser, Message, User } = require('../models');
+const { Ticket, Chat, ChatUser, Message, User, Company } = require('../models');
 const { Op } = require('sequelize');
 const auditLogService = require('../services/auditLogService');
 
@@ -56,18 +56,33 @@ const ticketController = {
     async create(req, res) {
         try {
             const opened_by_user_id = req.user.id; 
-            const { category, subject, description } = req.body;
+            const { category, priority, subject, description } = req.body;
             
             const { isClient } = getUserRoles(req.user);
             const isStaff = !isClient;
 
+            // Fetch fresh DB user to bypass stale JWT payload
+            const dbUser = await User.findByPk(opened_by_user_id);
+            
+            if (!dbUser) {
+                return res.status(401).json({ error: 'User not found. Please log in again.' });
+            }
+
             let company_id;
             if (!isStaff) {
-                // Cliente: força a usar a empresa associada ao perfil
-                company_id = req.user.company_id;
+                // Cliente: força a usar a empresa associada ao perfil real
+                company_id = dbUser.company_id;
+
+                // Fallback: verifica se é dono (client_owner_id) de alguma empresa
+                if (!company_id) {
+                    const ownedCompany = await Company.findOne({ where: { client_owner_id: dbUser.id } });
+                    if (ownedCompany) {
+                        company_id = ownedCompany.id;
+                    }
+                }
             } else {
                 // Admin/Gestor: pode definir a empresa no corpo do pedido
-                company_id = req.body.company_id || req.user.company_id;
+                company_id = req.body.company_id || dbUser.company_id;
             }
 
             if (!company_id) {
@@ -126,6 +141,7 @@ const ticketController = {
     async findAll(req, res) {
         try {
             const { isAdmin, isManager, isClient } = getUserRoles(req.user);
+            const { page, limit = 10, search, status, priority, category, company_id, startDate, endDate } = req.query;
 
             let whereClause = {};
             
@@ -139,11 +155,64 @@ const ticketController = {
                 ];
             }
 
-            const tickets = await Ticket.findAll({ 
+            // Compatibilidade com código legado: Se não pedir página, devolve todos como antigamente
+            if (!page) {
+                const tickets = await Ticket.findAll({ 
+                    where: whereClause,
+                    include: [{
+                        model: Company,
+                        attributes: ['id', 'name']
+                    }],
+                    order: [['createdAt', 'DESC']] 
+                });
+                return res.status(200).json(tickets);
+            }
+
+            // --- LÓGICA DE PAGINAÇÃO E FILTRAGEM ---
+            if (status && status !== 'all') whereClause.status = status;
+            if (priority) whereClause.priority = priority;
+            if (category) whereClause.category = category;
+            if (company_id) whereClause.company_id = company_id;
+
+            if (startDate || endDate) {
+                whereClause.createdAt = {};
+                if (startDate) whereClause.createdAt[Op.gte] = new Date(startDate);
+                if (endDate) {
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59, 999);
+                    whereClause.createdAt[Op.lte] = end;
+                }
+            }
+
+            if (search) {
+                const searchConditions = [{ subject: { [Op.iLike]: `%${search}%` } }];
+                if (!isNaN(search)) searchConditions.push({ id: parseInt(search) }); // Permite procurar por ID #
+                searchConditions.push({ '$Company.name$': { [Op.iLike]: `%${search}%` } }); // Permite procurar por nome da Empresa
+
+                if (whereClause[Op.or]) {
+                    // Junta a regra RBAC (Gestor vê X) com a pesquisa atual
+                    const rbacOr = whereClause[Op.or];
+                    delete whereClause[Op.or];
+                    whereClause[Op.and] = [{ [Op.or]: rbacOr }, { [Op.or]: searchConditions }];
+                } else {
+                    whereClause[Op.or] = searchConditions;
+                }
+            }
+
+            const offset = (parseInt(page) - 1) * parseInt(limit);
+
+            const { count, rows } = await Ticket.findAndCountAll({ 
                 where: whereClause,
-                order: [['createdAt', 'DESC']] 
+                include: [{ model: Company, attributes: ['id', 'name'] }],
+                order: [['createdAt', 'DESC']],
+                limit: parseInt(limit),
+                offset: parseInt(offset),
+                subQuery: false // Necessário quando usamos filtros num campo "include" ($Company.name$) com paginação (limit/offset)
             });
-            return res.status(200).json(tickets);
+
+            const totalPages = Math.ceil(count / parseInt(limit));
+
+            return res.status(200).json({ data: rows, total_records: count, total_pages: totalPages, current_page: parseInt(page) });
         } catch (error) {
             console.error('Find All Tickets error:', error);
             return res.status(500).json({ error: 'Internal server error.' });

@@ -69,9 +69,9 @@ const chatController = {
             const sender_id = req.user.id;
             let { chat_id, ticket_id, content } = req.body;
 
-            // empty message
-            if (!content || content.trim() === '') {
-                return res.status(400).json({ error: "Message content cannot be empty." });
+            // ALLOW empty content IF there is an attachment
+            if ((!content || content.trim() === '') && !req.file) {
+                return res.status(400).json({ error: "A mensagem ou o anexo não podem estar vazios." });
             }
 
             // If ticket_id is provided but chat_id is not, find the chat_id
@@ -158,7 +158,17 @@ const chatController = {
                 sender_id,
                 chat_id: chat_id,
                 ticket_id: ticket_id || null,
-                content
+                content: content || '',
+                attachment: req.file ? `/uploads/${req.file.filename}` : null
+            });
+
+            // Fetch the populated message to include User data (like avatar) 
+            // so the frontend can immediately render it without refreshing
+            const populatedMessage = await Message.findByPk(newMessage.id, {
+                include: [{
+                    model: User,
+                    attributes: ['id', 'name', 'avatar']
+                }]
             });
 
             // LOG: message sent
@@ -170,7 +180,7 @@ const chatController = {
                 ip_address: req.ip
             });
 
-            return res.status(201).json({ message: 'Message sent!', data: newMessage });
+            return res.status(201).json({ message: 'Message sent!', data: populatedMessage });
         } catch (error) {
             console.error('Send Message error:', error);
             return res.status(500).json({ error: 'Internal server error.' });
@@ -195,6 +205,10 @@ const chatController = {
             // LOAD
             const messages = await Message.findAll({
                 where: { chat_id },
+                include: [{
+                    model: User,
+                    attributes: ['id', 'name', 'avatar']
+                }],
                 order: [['createdAt', 'ASC']]
             });
 

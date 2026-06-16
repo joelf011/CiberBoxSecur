@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Form, InputGroup, Button } from 'react-bootstrap';
+import { Card, Form, InputGroup, Button, Row, Col, Pagination } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faPlus } from '@fortawesome/free-solid-svg-icons';
 import TicketList from './TicketList';
@@ -10,26 +10,36 @@ const TicketSidebar = ({
     onSelectTicket,
     loading,
     onCreateNew,
-    viewMode = 'admin'
+    viewMode = 'admin',
+    filters = {},
+    onFilterChange,
+    pagination = {},
+    onPageChange,
+    companies = []
 }) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState('all');
+    const { searchTerm = '', filterStatus = 'all', filterPriority = '', filterCategory = '', filterCompany = '', startDate = '', endDate = '' } = filters;
+    const { currentPage = 1, totalPages = 1, totalRecords = 0 } = pagination;
 
-    const filteredTickets = tickets.filter((ticket) => {
-        const matchesSearch = ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            ticket.id.toString().includes(searchTerm);
+    const handleChange = (field) => (e) => {
+        onFilterChange({ ...filters, [field]: e.target.value });
+    };
 
-        if (filterStatus === 'all') return matchesSearch;
-        return matchesSearch && ticket.status === filterStatus;
-    });
+    let paginationItems = [];
+    for (let number = 1; number <= totalPages; number++) {
+        paginationItems.push(
+            <Pagination.Item key={number} active={number === currentPage} onClick={() => onPageChange(number)}>
+                {number}
+            </Pagination.Item>
+        );
+    }
 
     return (
-        <Card className="h-100 border-0 shadow-sm rounded-4 d-flex flex-column overflow-hidden">
+        <Card className=" border-0 shadow-sm rounded-4 d-flex flex-column overflow-hidden">
             {/* Header */}
             <Card.Header className="bg-gradient p-3 border-0 shrink-0">
                 <div className="d-flex align-items-center justify-content-between mb-3">
                     <h5 className="mb-0 fw-bold text-dark">
-                        {viewMode === 'admin' ? 'Ticket Pool' : 'My Tickets'}
+                        {viewMode === 'admin' ? 'Fila de Tickets' : 'Os Meus Tickets'}
                     </h5>
                     <Button
                         variant="primary"
@@ -44,50 +54,81 @@ const TicketSidebar = ({
 
                 {/* Search */}
                 <InputGroup size="sm" className="mb-2">
-                    <InputGroup.Text className="bg-white border-0">
+                    <InputGroup.Text className="bg-light border-0">
                         <FontAwesomeIcon icon={faSearch} className="text-muted" />
                     </InputGroup.Text>
                     <Form.Control
-                        placeholder="Search by subject or ID..."
+                        placeholder="Pesquisar por assunto, ID ou empresa..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={handleChange('searchTerm')}
                         className="bg-light border-0"
                     />
                 </InputGroup>
 
-                {/* Filter Buttons */}
-                {viewMode === 'admin' && (
-                    <div className="d-flex gap-2 flex-wrap" style={{ marginTop: '8px' }}>
-                        {['all', 'Open', 'In Progress', 'Resolved'].map((status) => (
-                            <Button
-                                key={status}
-                                variant={filterStatus === status ? 'primary' : 'outline-secondary'}
-                                size="sm"
-                                onClick={() => setFilterStatus(status)}
-                                className="text-nowrap"
-                                style={{ fontSize: '0.75rem', padding: '4px 10px' }}
-                            >
-                                {status === 'all' ? 'All' : status}
-                            </Button>
-                        ))}
-                    </div>
-                )}
+                {/* Advanced Dropdown Filters */}
+                <Row className="g-2">
+                    <Col xs={6} md={viewMode === 'admin' ? 3 : 4}>
+                        <Form.Select size="sm" className="bg-light border-0 text-muted" value={filterStatus} onChange={handleChange('filterStatus')}>
+                            <option value="all">Todos os Estados</option>
+                            <option value="Open">Aberto</option>
+                            <option value="In Progress">Em Progresso</option>
+                            <option value="Resolved">Resolvido</option>
+                            <option value="Closed">Fechado</option>
+                        </Form.Select>
+                    </Col>
+                    <Col xs={6} md={viewMode === 'admin' ? 3 : 4}>
+                        <Form.Select size="sm" className="bg-light border-0 text-muted" value={filterPriority} onChange={handleChange('filterPriority')}>
+                            <option value="">Todas as Prioridades</option>
+                            <option value="Low">Baixa</option>
+                            <option value="Medium">Média</option>
+                            <option value="High">Alta</option>
+                            <option value="Critical">Crítica</option>
+                        </Form.Select>
+                    </Col>
+                    <Col xs={12} md={viewMode === 'admin' ? 3 : 4}>
+                        <Form.Select size="sm" className="bg-light border-0 text-muted" value={filterCategory} onChange={handleChange('filterCategory')}>
+                            <option value="">Todas as Categorias</option>
+                            <option value="Support">Suporte</option>
+                            <option value="Billing">Faturação</option>
+                            <option value="Emergency">Emergência</option>
+                            <option value="Technical">Técnico</option>
+                        </Form.Select>
+                    </Col>
+                    {viewMode === 'admin' && (
+                        <Col xs={12} md={3}>
+                            <Form.Select size="sm" className="bg-light border-0 text-muted" value={filterCompany} onChange={handleChange('filterCompany')}>
+                                <option value="">Todas as Empresas</option>
+                                {companies?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </Form.Select>
+                        </Col>
+                    )}
+                    <Col xs={6}>
+                        <Form.Control type="date" size="sm" className="bg-light border-0 text-muted" value={startDate} onChange={handleChange('startDate')} />
+                    </Col>
+                    <Col xs={6}>
+                        <Form.Control type="date" size="sm" className="bg-light border-0 text-muted" value={endDate} onChange={handleChange('endDate')} />
+                    </Col>
+                </Row>
             </Card.Header>
 
             {/* Ticket List */}
             <Card.Body className="flex-grow-1 p-0 overflow-hidden">
                 <TicketList
-                    tickets={filteredTickets}
+                    tickets={tickets}
                     selectedTicketId={selectedTicketId}
                     onSelectTicket={onSelectTicket}
                     loading={loading}
                 />
             </Card.Body>
 
-            {/* Footer - Counter */}
-            <Card.Footer className="bg-light p-3 border-top text-muted small shrink-0">
-                <span>{filteredTickets.length} ticket(s)</span>
-                {searchTerm && <span className="ms-2">matching "{searchTerm}"</span>}
+            {/* Footer - Pagination */}
+            <Card.Footer className="bg-white p-3 border-top d-flex justify-content-between align-items-center shrink-0 flex-wrap gap-2">
+                <small className="text-muted">Total: {totalRecords} ticket(s)</small>
+                <Pagination size="sm" className="mb-0">
+                    <Pagination.Prev disabled={currentPage === 1} onClick={() => onPageChange(Math.max(currentPage - 1, 1))} />
+                    {paginationItems}
+                    <Pagination.Next disabled={currentPage === totalPages || totalPages === 0} onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))} />
+                </Pagination>
             </Card.Footer>
         </Card>
     );

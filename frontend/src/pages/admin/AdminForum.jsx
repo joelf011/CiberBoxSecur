@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
+import { Row, Col, Card, Spinner, Alert, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faComments, faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 
@@ -8,6 +8,7 @@ import TicketDetailsPanel from '../../components/admin/forum/TicketDetailsPanel'
 import TicketChatWindow from '../../components/admin/forum/TicketChatWindow';
 import CreateTicketModal from '../../components/admin/forum/CreateThreadModal';
 import forumApi from '../../api/forumApi';
+import api from '../../api/axiosConfig';
 
 const AdminForum = () => {
     const [tickets, setTickets] = useState([]);
@@ -19,6 +20,14 @@ const AdminForum = () => {
     const [currentUser, setCurrentUser] = useState(null);
     const [refreshKey, setRefreshKey] = useState(0);
 
+    // Estados de Filtros e Paginação
+    const [filters, setFilters] = useState({
+        searchTerm: '', filterStatus: 'all', filterPriority: '', 
+        filterCategory: '', filterCompany: '', startDate: '', endDate: ''
+    });
+    const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalRecords: 0, limit: 10 });
+    const [companies, setCompanies] = useState([]);
+
     // Get current user from localStorage
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('user'));
@@ -27,11 +36,25 @@ const AdminForum = () => {
         }
     }, []);
 
-    // Load tickets on mount and when refreshKey changes
+    // Load tickets com debounce e monitorização dos filtros
     useEffect(() => {
         if (!currentUser) return;
-        loadTickets();
-    }, [currentUser, refreshKey]);
+        
+        const delayDebounceFn = setTimeout(() => {
+            loadTickets();
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [currentUser, refreshKey, filters, pagination.currentPage]);
+
+    // Carrega a lista de Empresas (Apenas para Gestores/Admins) para o dropdown do filtro
+    useEffect(() => {
+        if (currentUser && isManagerOrAdmin()) {
+            api.get('/companies')
+               .then(res => setCompanies(res.data))
+               .catch(err => console.error(err));
+        }
+    }, [currentUser]);
 
     // Load selected ticket details
     useEffect(() => {
@@ -48,13 +71,27 @@ const AdminForum = () => {
         setLoading(true);
         setError(null);
         try {
-            const data = await forumApi.getTickets();
+            // Realiza a pesquisa usando as query params de forma direta
+            const response = await api.get('/tickets', {
+                params: {
+                    page: pagination.currentPage, limit: pagination.limit,
+                    search: filters.searchTerm, status: filters.filterStatus,
+                    priority: filters.filterPriority, category: filters.filterCategory,
+                    company_id: filters.filterCompany, startDate: filters.startDate, endDate: filters.endDate
+                }
+            });
             
-            // Rely entirely on Backend constraints. No insecure client-side filtering.
-            setTickets(data);
+            if (response.data && response.data.data) {
+                setTickets(response.data.data);
+                setPagination(prev => ({ ...prev, totalRecords: response.data.total_records || 0, totalPages: response.data.total_pages || 1 }));
+            } else {
+                // Fallback de retro-compatibilidade
+                setTickets(response.data);
+                setPagination(prev => ({ ...prev, totalRecords: response.data.length, totalPages: 1 }));
+            }
         } catch (err) {
             console.error('Failed to load tickets:', err);
-            setError('Failed to load tickets');
+            setError('Falha ao carregar tickets');
         } finally {
             setLoading(false);
         }
@@ -64,6 +101,12 @@ const AdminForum = () => {
         const roleId = Number(currentUser?.role_id);
         if (roleId === 3) return false; // Fail-safe: Cargo Cliente nunca atua como Gestor
         return roleId === 1 || roleId === 2 || currentUser?.permissions?.includes('UPDATE_TICKET');
+    };
+
+    // Handler dinâmico para reiniciar a página se um filtro for alterado
+    const handleFilterChange = (newFilters) => {
+        setFilters(newFilters);
+        setPagination(prev => ({ ...prev, currentPage: 1 })); // Volta à página 1 sempre que pesquisa
     };
 
     const handleSelectTicket = (ticketId) => {
@@ -88,7 +131,7 @@ const AdminForum = () => {
         return (
             <div className="py-2">
                 <Spinner animation="border" role="status">
-                    <span className="visually-hidden">Loading...</span>
+                    <span className="visually-hidden">A carregar...</span>
                 </Spinner>
             </div>
         );
@@ -97,11 +140,11 @@ const AdminForum = () => {
     return (
         <div className="py-2 d-flex flex-column" style={{ height: 'calc(100vh - 85px)' }}>
             <div className="mb-3 flex-shrink-0">
-                <h2 className="fs-4 fw-bold text-dark">Support Helpdesk</h2>
+                <h2 className="fs-4 fw-bold text-dark">Fórum de Clientes</h2>
                 <p className="text-muted small">
                     {isManagerOrAdmin()
-                        ? 'Manage and respond to support tickets.'
-                        : 'View and manage your support tickets.'}
+                        ? 'Faça a gestão e responda aos tickets de suporte.'
+                        : 'Veja e faça a gestão dos seus tickets de suporte.'}
                 </p>
             </div>
 
@@ -123,6 +166,11 @@ const AdminForum = () => {
                             onCreateNew={() => setShowCreateModal(true)}
                             loading={loading}
                             viewMode={isManagerOrAdmin() ? 'admin' : 'client'}
+                            filters={filters}
+                            onFilterChange={handleFilterChange}
+                            pagination={pagination}
+                            onPageChange={(page) => setPagination(prev => ({ ...prev, currentPage: page }))}
+                            companies={companies}
                         />
                     </Col>
                 ) : (
@@ -133,7 +181,7 @@ const AdminForum = () => {
                             {selectedTicket.assigned_to_user_id ? (
                                 <TicketChatWindow
                                     ticket={selectedTicket}
-                                    currentUserId={currentUser.id}
+                                    currentUser={currentUser}
                                     onBack={handleBack}
                                 />
                             ) : (
@@ -148,7 +196,7 @@ const AdminForum = () => {
                                     </Card.Header>
                                     <Card.Body className="d-flex align-items-center justify-content-center text-center p-4">
                                         <p className="text-muted mb-0">
-                                            This ticket is not yet claimed. Once a manager claims it, the chat will be available.
+                                            Este ticket ainda não foi atribuído. O chat estará disponível assim que um gestor o assumir.
                                         </p>
                                     </Card.Body>
                                 </Card>

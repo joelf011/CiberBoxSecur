@@ -51,17 +51,17 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
     setError(null);
 
     if (!formData.subject.trim()) {
-      setError('Subject is required');
+      setError('O assunto é obrigatório');
       return;
     }
 
     if (!formData.description.trim()) {
-      setError('Description is required');
+      setError('A descrição é obrigatória');
       return;
     }
 
     if (isStaff && !formData.company_id) {
-      setError('Please select a company for this ticket.');
+      setError('Por favor, selecione uma empresa para este ticket.');
       return;
     }
 
@@ -92,7 +92,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
       }
     } catch (error) {
       console.error('Failed to create ticket:', error);
-      setError(error.response?.data?.error || 'Failed to create ticket. Please try again.');
+      setError(error.response?.data?.error || 'Falha ao criar ticket. Por favor, tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -102,7 +102,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
     <Modal show={show} onHide={onHide} centered className="animate-fade-in">
       <Modal.Header closeButton className="border-0 pb-0">
         <Modal.Title className="fs-5 fw-bold text-dark">
-          Open New Support Ticket
+          Abrir Novo Ticket de Suporte
         </Modal.Title>
       </Modal.Header>
 
@@ -117,12 +117,12 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
           {/* Subject Field */}
           <Form.Group className="mb-4">
             <Form.Label className="small fw-bold text-secondary text-uppercase">
-              <FontAwesomeIcon icon={faPen} className="me-2" /> Subject
+              <FontAwesomeIcon icon={faPen} className="me-2" /> Assunto
             </Form.Label>
             <Form.Control
               type="text"
               name="subject"
-              placeholder="Ex: Issue with password reset"
+              placeholder="Ex: Problema com a recuperação de password"
               value={formData.subject}
               onChange={handleChange}
               required
@@ -134,13 +134,13 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
           {/* Description Field */}
           <Form.Group className="mb-4">
             <Form.Label className="small fw-bold text-secondary text-uppercase">
-              <FontAwesomeIcon icon={faAlignLeft} className="me-2" /> Description
+              <FontAwesomeIcon icon={faAlignLeft} className="me-2" /> Descrição
             </Form.Label>
             <Form.Control
               as="textarea"
               rows={4}
               name="description"
-              placeholder="Describe your issue or request..."
+              placeholder="Descreva o seu problema ou pedido..."
               value={formData.description}
               onChange={handleChange}
               required
@@ -154,7 +154,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
           {isStaff && (
             <Form.Group className="mb-4">
               <Form.Label className="small fw-bold text-secondary text-uppercase">
-                <FontAwesomeIcon icon={faBuilding} className="me-2" /> Company
+                <FontAwesomeIcon icon={faBuilding} className="me-2" /> Empresa
               </Form.Label>
               <Form.Select
                 name="company_id"
@@ -164,7 +164,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
                 disabled={loading}
                 className="py-2 rounded-3 border-light-subtle shadow-sm shadow-none"
               >
-                <option value="">Select a company...</option>
+                <option value="">Selecione uma empresa...</option>
                 {companies.map(company => (
                   <option key={company.id} value={company.id}>
                     {company.name}
@@ -177,7 +177,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
           {/* Category Field */}
           <Form.Group className="mb-4">
             <Form.Label className="small fw-bold text-secondary text-uppercase">
-              <FontAwesomeIcon icon={faTag} className="me-2" /> Category
+              <FontAwesomeIcon icon={faTag} className="me-2" /> Categoria
             </Form.Label>
             <Form.Select
               name="category"
@@ -186,17 +186,17 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
               disabled={loading}
               className="py-2 rounded-3 border-light-subtle shadow-sm shadow-none"
             >
-              <option value="Support">Support</option>
-              <option value="Billing">Billing</option>
-              <option value="Emergency">Emergency</option>
-              <option value="Technical">Technical</option>
+              <option value="Support">Suporte</option>
+              <option value="Billing">Faturação</option>
+              <option value="Emergency">Emergência</option>
+              <option value="Technical">Técnico</option>
             </Form.Select>
           </Form.Group>
 
           {/* Priority Field */}
           <Form.Group className="mb-2">
             <Form.Label className="small fw-bold text-secondary text-uppercase">
-              <FontAwesomeIcon icon={faFlag} className="me-2" /> Priority (Optional)
+              <FontAwesomeIcon icon={faFlag} className="me-2" /> Prioridade (Opcional)
             </Form.Label>
             <Form.Select
               name="priority"
@@ -205,14 +205,14 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
               disabled={loading}
               className="py-2 rounded-3 border-light-subtle shadow-sm shadow-none"
             >
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-              <option value="Critical">Critical</option>
+              <option value="Low">Baixa</option>
+              <option value="Medium">Média</option>
+              <option value="High">Alta</option>
+              <option value="Critical">Crítica</option>
             </Form.Select>
           </Form.Group>
           <small className="text-muted" style={{ fontSize: '0.7rem' }}>
-            A manager will review and respond to your ticket shortly.
+            Um gestor irá rever e responder ao seu ticket em breve.
           </small>
         </Modal.Body>
 
@@ -223,7 +223,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
             className="rounded-3 px-4 fw-medium border-0"
             disabled={loading}
           >
-            Cancel
+            Cancelar
           </Button>
           <Button
             type="submit"
@@ -234,11 +234,11 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
             {loading ? (
               <>
                 <Spinner animation="border" size="sm" className="me-2" />
-                Creating...
+                A criar...
               </>
             ) : (
               <>
-                <FontAwesomeIcon icon={faPlus} className="me-2" /> Create Ticket
+                <FontAwesomeIcon icon={faPlus} className="me-2" /> Criar Ticket
               </>
             )}
           </Button>

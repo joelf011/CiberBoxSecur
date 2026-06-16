@@ -1,7 +1,7 @@
 import React from 'react';
 import { ListGroup, Badge, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFlag, faCircle } from '@fortawesome/free-solid-svg-icons';
+import { faFlag, faCircle, faBuilding } from '@fortawesome/free-solid-svg-icons';
 
 const TicketList = ({ tickets, selectedTicketId, onSelectTicket, loading }) => {
     const getStatusBadgeVariant = (status) => {
@@ -40,7 +40,7 @@ const TicketList = ({ tickets, selectedTicketId, onSelectTicket, loading }) => {
     if (tickets.length === 0) {
         return (
             <Card className="text-center p-4 bg-light border-0">
-                <p className="text-muted mb-0">No tickets found</p>
+                <p className="text-muted mb-0">Nenhum ticket encontrado</p>
             </Card>
         );
     }
@@ -63,19 +63,19 @@ const TicketList = ({ tickets, selectedTicketId, onSelectTicket, loading }) => {
                 >
                     <div className="d-flex justify-content-between align-items-start mb-2">
                         <h6 className="mb-0 fw-bold text-dark flex-grow-1 text-truncate">
-                            Ticket #{ticket.id}
+                            {ticket.subject}
                         </h6>
                         <Badge
                             bg={getStatusBadgeVariant(ticket.status)}
                             className="ms-2 flex-shrink-0"
                             style={{ fontSize: '0.65rem' }}
                         >
-                            {ticket.status}
+                            {{ 'Open': 'Aberto', 'In Progress': 'Em Progresso', 'Resolved': 'Resolvido', 'Closed': 'Fechado' }[ticket.status] || ticket.status}
                         </Badge>
                     </div>
 
-                    <p className="mb-2 text-dark small" style={{ lineHeight: '1.4' }}>
-                        {ticket.subject}
+                    <p className="mb-2 text-dark small text-truncate" style={{ lineHeight: '1.4' }}>
+                        {ticket.description}
                     </p>
 
                     <div className="d-flex gap-2 align-items-center mb-2">
@@ -85,17 +85,30 @@ const TicketList = ({ tickets, selectedTicketId, onSelectTicket, loading }) => {
                         />
                         <small className="text-muted">
                             <FontAwesomeIcon icon={faFlag} className="me-1" />
-                            {ticket.priority}
+                            {{ 'Low': 'Baixa', 'Medium': 'Média', 'High': 'Alta', 'Critical': 'Crítica' }[ticket.priority] || ticket.priority}
                         </small>
+                        <Badge 
+                            bg={ticket.category === 'Emergency' ? 'danger' : 'secondary'} 
+                            className="ms-2" 
+                            style={{ fontSize: '0.65rem', opacity: 0.8 }}
+                        >
+                            {{ 'Support': 'Suporte', 'Billing': 'Faturação', 'Emergency': 'Emergência', 'Technical': 'Técnico' }[ticket.category] || ticket.category}
+                        </Badge>
+                        {ticket.Company?.name && (
+                            <Badge bg="light" text="dark" className="border ms-1 text-truncate" style={{ fontSize: '0.65rem', maxWidth: '130px' }} title={ticket.Company.name}>
+                                <FontAwesomeIcon icon={faBuilding} className="text-secondary me-1" />
+                                {ticket.Company.name}
+                            </Badge>
+                        )}
                         {ticket.assigned_to_user_id && (
                             <Badge bg="light" text="dark" className="ms-auto" style={{ fontSize: '0.65rem' }}>
-                                Assigned
+                                Atribuído
                             </Badge>
                         )}
                     </div>
 
                     <small className="text-muted d-block">
-                        {new Date(ticket.createdAt).toLocaleDateString()} at{' '}
+                        {new Date(ticket.createdAt).toLocaleDateString()} às{' '}
                         {new Date(ticket.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </small>
                 </ListGroup.Item>

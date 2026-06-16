@@ -12,7 +12,7 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
         return (
             <Card className="h-100 d-flex align-items-center justify-content-center border-0 shadow-sm rounded-4">
                 <Card.Body className="text-center text-muted">
-                    <p>Select a ticket to view details</p>
+                    <p>Selecione um ticket para ver os detalhes</p>
                 </Card.Body>
             </Card>
         );
@@ -56,9 +56,18 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
         switch (priority) {
             case 'Low': return 'info';
             case 'Medium': return 'warning';
-            case 'High': return 'danger';
+            case 'High': return 'orange'; // Bootstrap doesn't have orange natively, we can use warning or custom
             case 'Critical': return 'danger';
             default: return 'light';
+        }
+    };
+
+    const getCategoryBadgeVariant = (category) => {
+        switch (category) {
+            case 'Emergency': return 'danger';
+            case 'Billing': return 'success';
+            case 'Technical': return 'info';
+            default: return 'secondary';
         }
     };
 
@@ -73,15 +82,15 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
                 <h5 className="mb-2 fw-bold text-dark">{ticket.subject}</h5>
                 <div className="d-flex gap-2 flex-wrap">
                     <Badge bg={getStatusBadgeVariant(ticket.status)}>
-                        {ticket.status}
+                        {{ 'Open': 'Aberto', 'In Progress': 'Em Progresso', 'Resolved': 'Resolvido', 'Closed': 'Fechado' }[ticket.status] || ticket.status}
                     </Badge>
                     <Badge bg={getPriorityBadgeVariant(ticket.priority)}>
                         <FontAwesomeIcon icon={faFlag} className="me-1" />
-                        {ticket.priority}
+                        {{ 'Low': 'Baixa', 'Medium': 'Média', 'High': 'Alta', 'Critical': 'Crítica' }[ticket.priority] || ticket.priority}
                     </Badge>
-                    <Badge bg="light" text="dark">
+                    <Badge bg={getCategoryBadgeVariant(ticket.category)} text="white">
                         <FontAwesomeIcon icon={faTag} className="me-1" />
-                        {ticket.category}
+                        {{ 'Support': 'Suporte', 'Billing': 'Faturação', 'Emergency': 'Emergência', 'Technical': 'Técnico' }[ticket.category] || ticket.category}
                     </Badge>
                 </div>
             </Card.Header>
@@ -89,7 +98,7 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
             {/* Body - Description and Details */}
             <Card.Body className="overflow-auto flex-grow-1 p-4 custom-scrollbar">
                 <div className="mb-4">
-                    <h6 className="text-muted fw-bold mb-2">Description</h6>
+                    <h6 className="text-muted fw-bold mb-2">Descrição</h6>
                     <p className="text-dark" style={{ lineHeight: '1.6' }}>
                         {ticket.description}
                     </p>
@@ -100,14 +109,14 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
                 {/* Ticket Metadata */}
                 <Row className="mb-4">
                     <Col xs={6} className="mb-3">
-                        <small className="text-muted fw-bold">Ticket ID</small>
+                        <small className="text-muted fw-bold">ID do Ticket</small>
                         <p className="text-dark font-monospace">#{ticket.id}</p>
                     </Col>
                     <Col xs={6} className="mb-3">
-                        <small className="text-muted fw-bold">Created</small>
+                        <small className="text-muted fw-bold">Criado em</small>
                         <p className="text-dark">
                             <FontAwesomeIcon icon={faClock} className="me-2 text-secondary" />
-                            {new Date(ticket.createdAt).toLocaleDateString()} at{' '}
+                            {new Date(ticket.createdAt).toLocaleDateString()} às{' '}
                             {new Date(ticket.createdAt).toLocaleTimeString([], {
                                 hour: '2-digit',
                                 minute: '2-digit'
@@ -115,23 +124,23 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
                         </p>
                     </Col>
                     <Col xs={6} className="mb-3">
-                        <small className="text-muted fw-bold">Status</small>
+                        <small className="text-muted fw-bold">Estado</small>
                         <p className="text-dark">
                             <Badge bg={getStatusBadgeVariant(ticket.status)}>
-                                {ticket.status}
+                                {{ 'Open': 'Aberto', 'In Progress': 'Em Progresso', 'Resolved': 'Resolvido', 'Closed': 'Fechado' }[ticket.status] || ticket.status}
                             </Badge>
                         </p>
                     </Col>
                     <Col xs={6} className="mb-3">
-                        <small className="text-muted fw-bold">Assigned To</small>
+                        <small className="text-muted fw-bold">Atribuído a</small>
                         <p className="text-dark">
                             {isClaimed ? (
                                 <span>
                                     <FontAwesomeIcon icon={faUser} className="me-2 text-secondary" />
-                                    {ticket.assigned_to_user_id === currentUserId ? 'You' : 'Manager'}
+                                    {ticket.assigned_to_user_id === currentUserId ? 'Tu' : 'Gestor'}
                                 </span>
                             ) : (
-                                <span className="text-muted">Unassigned</span>
+                                <span className="text-muted">Não atribuído</span>
                             )}
                         </p>
                     </Col>
@@ -142,7 +151,7 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
                 {/* Status Change Buttons */}
                 {isAssignedToMe && (
                     <div className="mb-4">
-                        <small className="text-muted fw-bold d-block mb-2">Change Status</small>
+                        <small className="text-muted fw-bold d-block mb-2">Alterar Estado</small>
                         <div className="d-flex gap-2 flex-wrap">
                             {['Open', 'In Progress', 'Resolved', 'Closed'].map((status) => (
                                 <Button
@@ -155,7 +164,7 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
                                     {updating && ticket.status !== status ? (
                                         <Spinner animation="border" size="sm" className="me-2" />
                                     ) : null}
-                                    {status}
+                                    {{ 'Open': 'Aberto', 'In Progress': 'Em Progresso', 'Resolved': 'Resolvido', 'Closed': 'Fechado' }[status] || status}
                                 </Button>
                             ))}
                         </div>
@@ -175,12 +184,12 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
                         {claiming ? (
                             <>
                                 <Spinner animation="border" size="sm" className="me-2" />
-                                Claiming...
+                                A assumir...
                             </>
                         ) : (
                             <>
                                 <FontAwesomeIcon icon={faCheck} className="me-2" />
-                                Claim This Ticket
+                                Assumir este Ticket
                             </>
                         )}
                     </Button>
@@ -192,12 +201,12 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
                         disabled={updating}
                         onClick={() => handleStatusChange('Closed')}
                     >
-                        {updating ? 'Closing...' : 'Close Ticket'}
+                        {updating ? 'A fechar...' : 'Fechar Ticket'}
                     </Button>
                 )}
                 {isOwner && !isClaimed && (
                     <div className="alert alert-info mb-0">
-                        <small>Waiting for a manager to claim this ticket...</small>
+                        <small>A aguardar que um gestor assuma este ticket...</small>
                     </div>
                 )}
             </Card.Footer>
