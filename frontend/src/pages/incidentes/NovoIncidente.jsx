@@ -60,7 +60,7 @@ const NovoIncidente = () => {
       Alerts.success('Incidente reportado com sucesso! A nossa equipa técnica foi notificada.');
       
       // Redireciona para o histórico
-      navigate('/admin/incidentes'); 
+      navigate('/portal/incidentes'); 
     } catch (error) {
       Alerts.error(error.response?.data?.error || 'Erro ao reportar o incidente. Tente novamente.');
     } finally {
