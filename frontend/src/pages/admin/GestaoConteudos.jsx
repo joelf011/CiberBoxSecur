@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -24,6 +23,7 @@ import {
   faUsersGear,
   faLaptopCode,
 } from "@fortawesome/free-solid-svg-icons";
+import { cmsApi } from "../../api/cmsApi";
 
 const iconesDisponiveis = {
   faShieldVirus: {
@@ -181,11 +181,10 @@ const GestaoConteudos = () => {
   useEffect(() => {
     const carregarDados = async () => {
       try {
-        // Ajusta o URL e o porto para o do teu backend (ex: 5000)
-        const resposta = await axios.get("http://localhost:5000/api/cms/home");
+        const dados = await cmsApi.getHomeData();
 
-        if (resposta.data) {
-          setDadosSite(resposta.data);
+        if (dados) {
+          setDadosSite(dados);
         }
       } catch (erro) {
         console.error("Erro ao carregar dados da Home:", erro);
@@ -199,14 +198,8 @@ const GestaoConteudos = () => {
   const guardarAlteracoes = async () => {
     try {
       setIsSaving(true);
-      // Como a rota é protegida, precisamos do token de quem fez login
-      const token = localStorage.getItem("token");
 
-      await axios.put(
-        "http://localhost:5000/api/cms/home",
-        dadosSite, // O pacote gigante com todos os textos
-        { headers: { Authorization: `Bearer ${token}` } }, // O passaporte para o segurança deixar passar
-      );
+      await cmsApi.updateHomeData(dadosSite);
 
       Swal.fire({
         title: "Sucesso!",
