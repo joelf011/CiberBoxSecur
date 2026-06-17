@@ -1,18 +1,20 @@
 const nodemailer = require('nodemailer');
 
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
 // Email server config
-var transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransport({
   host: "sandbox.smtp.mailtrap.io",
   port: 2525,
   auth: {
-    user: "aa74b444fc2562",
-    pass: "e73be95530e3d0"
+    user: process.env.EMAIL_USER, // Mailtrap
+    pass: process.env.EMAIL_PASS 
   }
 });
 
 const emailService = {
     async sendActivationEmail(userEmail, userName, activationToken) {
-        const activationLink = `http://localhost:5173/ativar-conta?token=${activationToken}`;
+        const activationLink = `${FRONTEND_URL}/ativar-conta?token=${activationToken}`;
 
         const mailOptions = {
             from: '"CiberBoxSecur" <nao-responder@ciberboxsecur.com>',
@@ -33,7 +35,7 @@ const emailService = {
     },
 
     async sendPasswordResetEmail(userEmail, userName, resetToken) {
-        const resetLink = `http://localhost:5173/recuperar-password?token=${resetToken}`;
+        const resetLink = `${FRONTEND_URL}/recuperar-password?token=${resetToken}`;
 
         const mailOptions = {
             from: '"CiberBoxSecur" <nao-responder@ciberboxsecur.com>',

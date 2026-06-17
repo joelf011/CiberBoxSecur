@@ -1,5 +1,6 @@
 const articleService = require('../services/articleService');
 const fs = require('fs');
+const auditLogService = require('../services/auditLogService');
 
 const articleController = {
     // CREATE
@@ -11,6 +12,14 @@ const articleController = {
                 data.category_ids = JSON.parse(data.category_ids);
             }
 
+            // LOG: article created
+            await auditLogService.logEvent({
+                user_id: author_id,
+                action: 'ARTICLE_CREATE',
+                entity_type: 'Article',
+                entity_id: newArticle.id,
+                ip_address: req.ip
+            });
             if (req.file) data.cover_image = `uploads/${req.file.filename}`;
 
             const newArticle = await articleService.create(data, req.user.id, req.ip);
@@ -77,7 +86,24 @@ const articleController = {
                 data.category_ids = JSON.parse(data.category_ids);
             }
 
-            if (req.file) data.cover_image = `uploads/${req.file.filename}`;
+            let cover_image = article.cover_image;
+            if (req.file) {
+                if (article.cover_image && fs.existsSync(article.cover_image)) {
+                    fs.unlinkSync(article.cover_image);
+                }
+                cover_image = `uploads/${req.file.filename}`;
+            }
+
+            await article.update({ title, slug, summary, content_body, cover_image, published_date, status });
+
+            // LOG: update article
+            await auditLogService.logEvent({
+                user_id: req.user.id,
+                action: 'ARTICLE_UPDATE',
+                entity_type: 'Article',
+                entity_id: article.id,
+                ip_address: req.ip
+            });
 
             const article = await articleService.update(req.params.id, data, req.user.id, req.ip);
             return res.status(200).json({ message: 'Article updated successfully!', article });
@@ -95,7 +121,21 @@ const articleController = {
     // DELETE (Soft)
     async delete(req, res) {
         try {
-            await articleService.delete(req.params.id, req.user.id, req.ip);
+            const { id } = req.params;
+            const article = await Article.findByPk(id);
+            if (!article) return res.status(404).json({ error: 'Article not found.' });
+
+            await article.destroy();
+
+            // LOG: article deleted
+            await auditLogService.logEvent({
+                user_id: req.user.id,
+                action: 'ARTICLE_DELETE',
+                entity_type: 'Article',
+                entity_id: article.id,
+                ip_address: req.ip
+            });
+
             return res.status(200).json({ message: 'Article deleted successfully!' });
         } catch (error) {
             if (error.message === 'Article not found.') return res.status(404).json({ error: error.message });

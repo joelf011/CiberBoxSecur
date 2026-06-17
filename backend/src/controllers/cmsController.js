@@ -7,8 +7,8 @@ const getHomeContent = async (req, res) => {
 
     if (!page) {
       return res
-        .status(404)
-        .json({ message: "Conteúdo da página inicial não encontrado." });
+        .status(200)
+        .json({});
     }
 
     // Devolvemos apenas o JSON com os textos, que é o que o React precisa
