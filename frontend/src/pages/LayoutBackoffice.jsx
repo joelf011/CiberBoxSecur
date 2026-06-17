@@ -77,7 +77,7 @@ const LayoutBackoffice = () => {
     <div className="d-flex vh-100 overflow-hidden bg-light font-sans flex-column flex-md-row">
       <style>{`
         .sidebar-box {
-          transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           background-color: #121212;
           z-index: 1050;
         }
@@ -86,17 +86,24 @@ const LayoutBackoffice = () => {
           transition: opacity 0.2s ease, transform 0.3s ease;
           opacity: ${isCollapsed ? 0 : 1};
           transform: translateX(${isCollapsed ? "-10px" : "0"});
+          overflow: hidden;
+          text-overflow: ellipsis;
+          flex: 1;
+          min-width: 0;
         }
         .side-link {
           display: flex !important;
           align-items: center !important;
           height: 48px;
+          min-height: 48px;
+          flex-shrink: 0;
           margin: 4px 8px;
           padding: 0 !important;
           color: #b3b3b3 !important;
           text-decoration: none !important;
           border-radius: 6px !important;
           transition: background 0.2s;
+          overflow: hidden;
         }
         .side-link.active { background-color: #0d6efd !important; color: white !important; }
         .side-link:hover:not(.active) { background-color: rgba(255,255,255,0.05); color: white !important; }
@@ -143,8 +150,12 @@ const LayoutBackoffice = () => {
 
       {/* --- SIDEBAR (DESKTOP) --- */}
       <aside
-        className="sidebar-box text-white d-none d-md-flex flex-column border-end border-secondary shadow"
-        style={{ width: isCollapsed ? "80px" : "260px" }}
+        className="sidebar-box text-white d-none d-md-flex flex-column border-end border-secondary shadow overflow-hidden"
+        style={{ 
+          width: isCollapsed ? "80px" : "260px",
+          minWidth: isCollapsed ? "80px" : "260px",
+          flexShrink: 0
+        }}
       >
         <div
           className="d-flex align-items-center justify-content-between px-3 overflow-hidden"
@@ -181,7 +192,7 @@ const LayoutBackoffice = () => {
           </div>
         </div>
 
-        <Nav className="flex-column flex-grow-1 mt-3 custom-scrollbar overflow-y-auto overflow-x-hidden">
+        <Nav className="flex-column flex-nowrap flex-grow-1 mt-3 custom-scrollbar overflow-y-auto overflow-x-hidden" style={{ minHeight: 0 }}>
           {navItems.map((item) => (
             <Nav.Link
               as={NavLink}
@@ -198,7 +209,7 @@ const LayoutBackoffice = () => {
         </Nav>
 
         <div
-          className="mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 py-3 overflow-hidden"
+          className="mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 py-3 overflow-hidden d-flex flex-column"
           style={{ flexShrink: 0 }}
         >
           {/* Link para o Perfil */}
@@ -239,7 +250,7 @@ const LayoutBackoffice = () => {
 
           <button
             onClick={handleLogout}
-            className="side-link text-decoration-none py-2 bg-white bg-opacity-10 border-0 side-link-danger w-100 text-start"
+            className="side-link text-decoration-none py-2 bg-white bg-opacity-10 border-0 side-link-danger text-start"
             style={{ cursor: "pointer" }}
           >
             <div className="icon-wrapper">
@@ -328,8 +339,8 @@ const LayoutBackoffice = () => {
             <FontAwesomeIcon icon={faTimes} size="lg" />
           </button>
         </Offcanvas.Header>
-        <Offcanvas.Body className="p-0 d-flex flex-column">
-          <Nav className="flex-column py-3 overflow-auto custom-scrollbar">
+        <Offcanvas.Body className="p-0 d-flex flex-column overflow-hidden">
+          <Nav className="flex-column flex-nowrap py-3 overflow-y-auto overflow-x-hidden custom-scrollbar flex-grow-1" style={{ minHeight: 0 }}>
             {navItems.map((item) => (
               <Nav.Link
                 as={NavLink}
@@ -346,7 +357,7 @@ const LayoutBackoffice = () => {
             ))}
           </Nav>
 
-          <div className="offcanvas-footer mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 p-4">
+          <div className="offcanvas-footer mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 p-4" style={{ flexShrink: 0 }}>
             {/* Link para o Perfil no Mobile --- */}
             <Link to="/portal/perfil" className="text-decoration-none d-flex align-items-center mb-4" onClick={() => setShowMobileMenu(false)}>
               {userProfile.avatar ? (
