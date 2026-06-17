@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChartLine, faComments, faEdit, faUsers,
   faHistory, faFolderOpen, faSignOutAlt, faShieldAlt,
-  faIndent, faOutdent, faBars, faTimes, faUserShield, faBuilding
+  faIndent, faOutdent, faBars, faTimes, faUserShield, faBuilding, faNewspaper
 } from "@fortawesome/free-solid-svg-icons";
 import { usersApi } from "../api/usersApi";
 
@@ -56,6 +56,7 @@ const LayoutBackoffice = () => {
     { path: '/portal/incidentes', icon: faShieldAlt, label: 'Central de Incidentes' }, // Incidentes
     { path: '/portal/forum', icon: faComments, label: 'Fórum de Clientes' }, // Visível para todos
     { path: '/portal/cms', icon: faEdit, label: 'Gestão de Conteúdo', permission: 'UPDATE_CMS' },
+    { path: '/portal/noticias', icon: faNewspaper, label: 'Notícias e Artigos', permission: 'MANAGE_ARTICLES' },
     { path: '/portal/empresas', icon: faBuilding, label: 'Gestão de Empresas', permission: 'CREATE_COMPANY' },
     { path: '/portal/users', icon: faUsers, label: 'Gestão de Utilizadores', permission: 'VIEW_USERS' },
     { path: '/portal/cargos', icon: faUserShield, label: 'Cargos e Permissões', permission: 'VIEW_ROLES' },
