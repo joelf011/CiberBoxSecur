@@ -4,7 +4,7 @@ import { Container, Nav, Offcanvas } from "react-bootstrap";
 import Logo from "../assets/logos/CiberBoxSecur-Minimal-color.svg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-faChartLine,
+  faChartLine,
   faComments,
   faEdit,
   faUsers,
@@ -18,7 +18,7 @@ faChartLine,
   faTimes,
   faUserShield,
   faBuilding,
-  faNewspaper
+  faNewspaper,
 } from "@fortawesome/free-solid-svg-icons";
 import { usersApi } from "../api/usersApi";
 
@@ -64,13 +64,19 @@ const LayoutBackoffice = () => {
   }, []);
 
   const allNavItems = [
-{ path: "/portal/dashboard", icon: faChartLine, label: "Dashboard" }, // Visível para todos
+    { path: "/portal/dashboard", icon: faChartLine, label: "Dashboard" }, // Visível para todos
     {
       path: "/portal/incidentes",
       icon: faShieldAlt,
       label: "Central de Incidentes",
+      permission: "VIEW_INCIDENTS",
     }, // Incidentes
-    { path: "/portal/forum", icon: faComments, label: "Fórum de Clientes" }, // Visível para todos
+    {
+      path: "/portal/forum",
+      icon: faComments,
+      label: "Fórum de Clientes",
+      permission: "VIEW_TICKETS",
+    }, // Visível para todos
     {
       path: "/portal/cms",
       icon: faEdit,
@@ -101,7 +107,12 @@ const LayoutBackoffice = () => {
       label: "Cargos e Permissões",
       permission: "VIEW_ROLES",
     },
-    { path: "/portal/docs", icon: faFolderOpen, label: "Repositório Global" }, // Visível para todos
+    {
+      path: "/portal/docs",
+      icon: faFolderOpen,
+      label: "Repositório Global",
+      permission: "VIEW_TICKETS",
+    }, // Visível para todos
     {
       path: "/portal/logs",
       icon: faHistory,
@@ -198,10 +209,10 @@ const LayoutBackoffice = () => {
       {/* --- SIDEBAR (DESKTOP) --- */}
       <aside
         className="sidebar-box text-white d-none d-md-flex flex-column border-end border-secondary shadow overflow-hidden"
-        style={{ 
+        style={{
           width: isCollapsed ? "80px" : "260px",
           minWidth: isCollapsed ? "80px" : "260px",
-          flexShrink: 0
+          flexShrink: 0,
         }}
       >
         <div
@@ -242,7 +253,10 @@ const LayoutBackoffice = () => {
           </div>
         </div>
 
-        <Nav className="flex-column flex-nowrap flex-grow-1 mt-3 custom-scrollbar overflow-y-auto overflow-x-hidden" style={{ minHeight: 0 }}>
+        <Nav
+          className="flex-column flex-nowrap flex-grow-1 mt-3 custom-scrollbar overflow-y-auto overflow-x-hidden"
+          style={{ minHeight: 0 }}
+        >
           {navItems.map((item) => (
             <Nav.Link
               as={NavLink}
@@ -381,7 +395,10 @@ const LayoutBackoffice = () => {
           </button>
         </Offcanvas.Header>
         <Offcanvas.Body className="p-0 d-flex flex-column overflow-hidden">
-          <Nav className="flex-column flex-nowrap py-3 overflow-y-auto overflow-x-hidden custom-scrollbar flex-grow-1" style={{ minHeight: 0 }}>
+          <Nav
+            className="flex-column flex-nowrap py-3 overflow-y-auto overflow-x-hidden custom-scrollbar flex-grow-1"
+            style={{ minHeight: 0 }}
+          >
             {navItems.map((item) => (
               <Nav.Link
                 as={NavLink}
@@ -398,7 +415,10 @@ const LayoutBackoffice = () => {
             ))}
           </Nav>
 
-          <div className="offcanvas-footer mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 p-4" style={{ flexShrink: 0 }}>
+          <div
+            className="offcanvas-footer mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 p-4"
+            style={{ flexShrink: 0 }}
+          >
             {/* Link para o Perfil no Mobile --- */}
             <Link
               to="/portal/perfil"
