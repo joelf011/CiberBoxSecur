@@ -192,7 +192,7 @@ const AdminForum = () => {
       <Row className="g-3 flex-grow-1 m-0" style={{ minHeight: 0 }}>
         {!selectedTicket ? (
           /* VIEW 1: TICKET POOL (LISTA) */
-          <Col xs={12} lg={10} xl={8} className="mx-auto h-100 px-0">
+          <Col xs={12} className="h-100 px-0">
             <TicketSidebar
               tickets={tickets}
               selectedTicketId={selectedTicketId}
