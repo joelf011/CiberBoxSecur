@@ -122,6 +122,9 @@ const NewsPage = () => {
                   <FontAwesomeIcon icon={faFilter} />
                 </InputGroup.Text>
                 <Form.Select 
+                  id="category-filter"
+                  name="category"
+                  autoComplete="off"
                   className="border-start-0 bg-white shadow-none"
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
@@ -140,6 +143,9 @@ const NewsPage = () => {
                   <FontAwesomeIcon icon={faSearch} />
                 </InputGroup.Text>
                 <Form.Control
+                  id="search-input"
+                  name="search"
+                  autoComplete="off"
                   type="text"
                   placeholder="Comece a escrever para pesquisar artigos..."
                   className="shadow-none border-start-0"

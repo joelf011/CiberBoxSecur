@@ -316,7 +316,7 @@ const GestaoConteudos = () => {
                 <input
                   type="text"
                   className="form-control p-3 bg-light"
-                  placeholder="Começar agora"
+                  placeholder="Contactos"
                   value={dadosSite.hero.botaoTexto}
                   onChange={(e) =>
                     setDadosSite({

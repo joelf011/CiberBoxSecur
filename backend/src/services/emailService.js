@@ -1,13 +1,14 @@
 const nodemailer = require('nodemailer');
+
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 // Email server config
-var transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: 2525,
+const transporter = nodemailer.createTransport({
+  host: "sandbox.smtp.mailtrap.io",
+  port: 2525,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+    user: process.env.EMAIL_USER, // Mailtrap
+    pass: process.env.EMAIL_PASS 
   }
 });
 

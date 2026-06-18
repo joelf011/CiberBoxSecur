@@ -116,9 +116,9 @@ const TicketChatWindow = ({ ticket, currentUser, onBack }) => {
         if (!user.avatar.startsWith('data:image') && !user.avatar.startsWith('http')) {
             // Se não for Base64 nem um URL absoluto, assume que é um caminho local do backend (ex: /uploads/...)
             // Previne a duplicação de barras '/'
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') : 'http://localhost:5000';
             const separator = user.avatar.startsWith('/') ? '' : '/';
-            avatarUrl = `${apiUrl}${separator}${user.avatar}`;
+            avatarUrl = `${baseUrl}${separator}${user.avatar}`;
         }
 
         return (
@@ -210,7 +210,7 @@ const TicketChatWindow = ({ ticket, currentUser, onBack }) => {
                                     {msg.attachment && (
                                         <div className={`mt-2 p-2 rounded ${isSelf ? 'bg-white bg-opacity-25' : 'bg-light'} border`}>
                                             <a 
-                                                href={msg.attachment.startsWith('http') ? msg.attachment : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${msg.attachment}`} 
+                                                href={msg.attachment.startsWith('http') ? msg.attachment : `${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') : 'http://localhost:5000'}${msg.attachment.startsWith('/') ? '' : '/'}${msg.attachment}`} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer" 
                                                 className={`text-decoration-none small d-flex align-items-center gap-2 ${isSelf ? 'text-white' : 'text-primary'}`}
