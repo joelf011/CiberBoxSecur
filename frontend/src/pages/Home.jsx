@@ -162,7 +162,7 @@ const Home = () => {
           dadosDoBackoffice?.hero?.subtitulo ||
           "Num contexto em que os ataques cibernéticos aumentam todos os dias, as organizações precisam de proteger os seus sistemas, dados e serviços críticos."
         }
-        textoBotao={dadosDoBackoffice?.hero?.botaoTexto || "Começar agora"}
+        textoBotao={dadosDoBackoffice?.hero?.botaoTexto || "Contactos"}
         linkBotao={dadosDoBackoffice?.hero?.botaoLink || "<#contact>"}
         imagemFundo={
           dadosDoBackoffice?.hero?.imagemFundo ||
