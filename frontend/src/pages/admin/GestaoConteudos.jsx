@@ -1921,26 +1921,22 @@ const GestaoConteudos = () => {
   };
 
   return (
-    <div className="container-fluid my-4">
-      <div className="card shadow-sm border-0 rounded-4 overflow-hidden">
-        <div className="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-          <div className="d-flex align-items-center gap-3">
-            <div className="text-primary d-flex align-items-center justify-content-center">
-              <FontAwesomeIcon icon={faEdit} size="2x" />
-            </div>
-            <div>
-              <h3 className="h5 fw-bold text-dark mb-1">Gestão de Conteúdos</h3>
-              <p className="text-muted small mb-0">
-                Editor de conteúdos da página inicial
-              </p>
-            </div>
-          </div>
+    <div className="animate-fade-in py-2">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 className="fs-4 fw-bold text-dark mb-1">
+            <FontAwesomeIcon icon={faEdit} className="text-primary me-2" /> Gestão de Conteúdos
+          </h2>
+          <p className="text-muted small mb-0">
+            Editor de conteúdos da página inicial
+          </p>
+        </div>
 
-          <button
-            onClick={guardarAlteracoes}
-            className="btn btn-primary px-4 py-2 rounded-3 d-flex align-items-center gap-2"
-            disabled={isSaving}
-          >
+        <button
+          onClick={guardarAlteracoes}
+          className="btn btn-primary border-0 fw-bold shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2"
+          disabled={isSaving}
+        >
             {isSaving ? (
               <>
                 <span
@@ -1956,9 +1952,10 @@ const GestaoConteudos = () => {
                 Guardar Alterações
               </>
             )}
-          </button>
-        </div>
+        </button>
+      </div>
 
+      <div className="card shadow-sm border-0 rounded-4 overflow-hidden">
         <div className="d-flex" style={{ minHeight: "600px" }}>
           <div
             className="bg-light border-end d-flex flex-column pt-4"
