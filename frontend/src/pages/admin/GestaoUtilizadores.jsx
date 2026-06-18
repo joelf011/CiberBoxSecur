@@ -218,30 +218,16 @@ const GestaoUtilizadores = () => {
                 Todos
               </Nav.Link>
             </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeTab === "Admin"}
-                onClick={() => setActiveTab("Admin")}
-              >
-                Admin
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeTab === "Gestor"}
-                onClick={() => setActiveTab("Gestor")}
-              >
-                Gestor
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeTab === "Cliente"}
-                onClick={() => setActiveTab("Cliente")}
-              >
-                Cliente
-              </Nav.Link>
-            </Nav.Item>
+            {roles.map((role) => (
+              <Nav.Item key={role.id}>
+                <Nav.Link
+                  active={activeTab === role.name}
+                  onClick={() => setActiveTab(role.name)}
+                >
+                  {role.name}
+                </Nav.Link>
+              </Nav.Item>
+            ))}
           </Nav>
           <Row className="g-3">
             <Col md={6} lg={4}>
