@@ -4,9 +4,20 @@ import { Container, Nav, Offcanvas } from "react-bootstrap";
 import Logo from "../assets/logos/CiberBoxSecur-Minimal-color.svg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faChartLine, faComments, faEdit, faUsers,
-  faHistory, faFolderOpen, faSignOutAlt, faShieldAlt,
-  faIndent, faOutdent, faBars, faTimes, faUserShield, faBuilding
+  faChartLine,
+  faComments,
+  faEdit,
+  faUsers,
+  faHistory,
+  faFolderOpen,
+  faSignOutAlt,
+  faShieldAlt,
+  faIndent,
+  faOutdent,
+  faBars,
+  faTimes,
+  faUserShield,
+  faBuilding,
 } from "@fortawesome/free-solid-svg-icons";
 import { usersApi } from "../api/usersApi";
 
@@ -52,15 +63,44 @@ const LayoutBackoffice = () => {
   }, []);
 
   const allNavItems = [
-    { path: '/portal/dashboard', icon: faChartLine, label: 'Dashboard' }, // Visível para todos
-    { path: '/portal/incidentes', icon: faShieldAlt, label: 'Central de Incidentes' }, // Incidentes
-    { path: '/portal/forum', icon: faComments, label: 'Fórum de Clientes' }, // Visível para todos
-    { path: '/portal/cms', icon: faEdit, label: 'Gestão de Conteúdo', permission: 'UPDATE_CMS' },
-    { path: '/portal/empresas', icon: faBuilding, label: 'Gestão de Empresas', permission: 'CREATE_COMPANY' },
-    { path: '/portal/users', icon: faUsers, label: 'Gestão de Utilizadores', permission: 'VIEW_USERS' },
-    { path: '/portal/cargos', icon: faUserShield, label: 'Cargos e Permissões', permission: 'VIEW_ROLES' },
-    { path: '/portal/docs', icon: faFolderOpen, label: 'Repositório Global' }, // Visível para todos
-    { path: '/portal/logs', icon: faHistory, label: 'Activity Logs', permission: 'VIEW_AUDIT_LOGS' }
+    { path: "/portal/dashboard", icon: faChartLine, label: "Dashboard" }, // Visível para todos
+    {
+      path: "/portal/incidentes",
+      icon: faShieldAlt,
+      label: "Central de Incidentes",
+    }, // Incidentes
+    { path: "/portal/forum", icon: faComments, label: "Fórum de Clientes" }, // Visível para todos
+    {
+      path: "/portal/cms",
+      icon: faEdit,
+      label: "Gestão de Conteúdo",
+      permission: "UPDATE_CMS",
+    },
+    {
+      path: "/portal/empresas",
+      icon: faBuilding,
+      label: "Gestão de Empresas",
+      permission: "CREATE_COMPANY",
+    },
+    {
+      path: "/portal/users",
+      icon: faUsers,
+      label: "Gestão de Utilizadores",
+      permission: "VIEW_USERS",
+    },
+    {
+      path: "/portal/cargos",
+      icon: faUserShield,
+      label: "Cargos e Permissões",
+      permission: "VIEW_ROLES",
+    },
+    { path: "/portal/docs", icon: faFolderOpen, label: "Repositório Global" }, // Visível para todos
+    {
+      path: "/portal/logs",
+      icon: faHistory,
+      label: "Activity Logs",
+      permission: "VIEW_AUDIT_LOGS",
+    },
   ];
 
   // Filtrar menu
@@ -152,7 +192,10 @@ const LayoutBackoffice = () => {
         >
           {!isCollapsed && (
             <div className="d-flex align-items-center ps-2 nav-label">
-              <Link to="/portal/dashboard" className="d-flex align-items-center ">
+              <Link
+                to="/portal/dashboard"
+                className="d-flex align-items-center "
+              >
                 <img
                   src={Logo}
                   alt="CiberBoxSecur Logo"
@@ -202,7 +245,10 @@ const LayoutBackoffice = () => {
           style={{ flexShrink: 0 }}
         >
           {/* Link para o Perfil */}
-          <Link to="/portal/perfil" className="text-decoration-none d-block mx-2 profile-section-hover">
+          <Link
+            to="/portal/perfil"
+            className="text-decoration-none d-block mx-2 profile-section-hover"
+          >
             <div className="d-flex align-items-center mb-3 mt-2">
               <div className="icon-wrapper">
                 {userProfile.avatar ? (
@@ -252,18 +298,6 @@ const LayoutBackoffice = () => {
 
       {/* --- CONTEÚDO PRINCIPAL --- */}
       <main className="flex-grow-1 d-flex flex-column bg-body-tertiary main-view overflow-hidden">
-        <header
-          className="py-3 px-4 bg-white border-bottom shadow-sm d-flex align-items-center justify-content-between"
-          style={{ height: "70px", flexShrink: 0 }}
-        >
-          <h1 className="fs-5 fw-bold mb-0 text-secondary">
-            Painel de Controlo
-          </h1>
-          <div className="d-md-none text-primary">
-            <FontAwesomeIcon icon={faShieldAlt} size="lg" />
-          </div>
-        </header>
-
         <div className="flex-grow-1 overflow-auto p-3 p-md-4">
           <Container fluid className="py-2">
             <Outlet />
@@ -348,7 +382,11 @@ const LayoutBackoffice = () => {
 
           <div className="offcanvas-footer mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 p-4">
             {/* Link para o Perfil no Mobile --- */}
-            <Link to="/portal/perfil" className="text-decoration-none d-flex align-items-center mb-4" onClick={() => setShowMobileMenu(false)}>
+            <Link
+              to="/portal/perfil"
+              className="text-decoration-none d-flex align-items-center mb-4"
+              onClick={() => setShowMobileMenu(false)}
+            >
               {userProfile.avatar ? (
                 <img
                   src={userProfile.avatar}
