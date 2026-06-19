@@ -48,7 +48,9 @@ Num novo terminal, navegue até à pasta do Frontend:
 1. Instale as dependências:
 npm i
 
-2. Inicie a interface:
+2. Renomeie o ficheiro `.env.example` para `.env`. (Não é necessário alterar o conteúdo)
+
+3. Inicie a interface:
 npm run dev
 
 ---
