@@ -31,14 +31,14 @@ Abra o terminal dentro da pasta do Backend e execute os comandos pela seguinte o
 1. Instalar as dependências:
 npm i
 
-2. Criar as Tabelas:
-npx sequelize-cli db:migrate
-
-3. Injetar os Dados Vitais (OBRIGATÓRIO):
-npx sequelize-cli db:seed:all
-
-4. Iniciar o Servidor Local:
+2. Criar as Tabelas Automaticamente:
 npm run dev
+
+Aguardar que o sistema inicie e só depois fazer o passo seguinte
+
+3. Injetar os Dados (OBRIGATÓRIO):
+Num novo terminal (ainda com o anterior a correr) executar o seguinte comando no backend:
+npx sequelize-cli db:seed:all
 
 ---
 
