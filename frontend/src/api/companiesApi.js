@@ -1,37 +1,41 @@
 import api from './axiosConfig';
 
+/**
+ * Wrapper dos endpoints de empresas.
+ * Usado na gestão administrativa e em formulários que precisam de relações com clientes/gestores.
+ */
 export const companiesApi = {
-  // Procurar todas as empresas
+  // Lista empresas com relações carregadas pelo backend.
   getCompanies: async () => {
     const response = await api.get('/companies');
     return response.data;
   },
 
-  // Procurar uma empresa por ID
+  // Obtém uma empresa para preencher o modal de edição.
   getCompanyById: async (id) => {
     const response = await api.get(`/companies/${id}`);
     return response.data;
   },
 
-  // Criar empresa
+  // Cria empresa e envia relações selecionadas no formulário.
   createCompany: async (companyData) => {
     const response = await api.post('/companies', companyData);
     return response.data;
   },
 
-  // Atualizar
+  // Atualiza empresa e respetivos gestores atribuídos.
   updateCompany: async (id, companyData) => {
     const response = await api.put(`/companies/${id}`, companyData);
     return response.data;
   },
 
-  // Eliminar
+  // Elimina logicamente a empresa no backend.
   deleteCompany: async (id) => {
     const response = await api.delete(`/companies/${id}`);
     return response.data;
   },
 
-  // Restaurar 
+  // Restaura empresa previamente eliminada por soft delete.
   restoreCompany: async (id) => {
     const response = await api.patch(`/companies/${id}/restore`);
     return response.data;

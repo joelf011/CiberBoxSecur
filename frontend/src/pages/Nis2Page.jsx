@@ -1,3 +1,13 @@
+/**
+ * Página informativa sobre a Diretiva NIS2 (conteúdo estático).
+ *
+ * Responsável por:
+ * - Apresentar o contexto regulamentar europeu de cibersegurança.
+ * - Informar sobre sectores abrangidos, requisitos e sanções.
+ * - Redirecionar o visitante para os contactos (CTA comercial).
+ *
+ * Nota: Não consome qualquer API — todo o conteúdo é estático.
+ */
 import React, { useEffect } from 'react';
 import { Container, Row, Col, Card, Button, ListGroup } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,7 +18,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import LayoutWebsite from '../components/LayoutWebsite';
 
-// O mesmo estilo escuro usado na tua Home.jsx
+// Estilo partilhado com a Home.jsx para manter a coerência visual das secções escuras.
 const darkSection = {
   backgroundColor: "#0f172a",
   color: "white",
@@ -17,6 +27,7 @@ const darkSection = {
 const Nis2Page = () => {
   const navigate = useNavigate();
 
+  // Garante que a página é apresentada desde o topo ao navegar para cá.
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);

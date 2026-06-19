@@ -1,8 +1,12 @@
 import axiosConfig from './axiosConfig';
 import { Alerts } from '../utils/Alerts';
 
+/**
+ * Wrapper da área de tickets e chat.
+ * Também mostra feedback ao utilizador quando o backend devolve erros.
+ */
 const forumApi = {
-    // TICKETS
+    // Tickets: listagem, detalhe, criação, atribuição e atualização.
     async getTickets(filters = {}) {
         try {
             const response = await axiosConfig.get('/tickets', { params: filters });
@@ -61,7 +65,7 @@ const forumApi = {
         }
     },
 
-    // CHATS & MESSAGES
+    // Chats e mensagens: histórico e envio ligado a tickets.
     async getChatMessagesForTicket(chatId) {
         try {
             const response = await axiosConfig.get(`/chats/${chatId}/messages`);
@@ -91,7 +95,7 @@ const forumApi = {
                 content
             };
 
-            // Only add chat_id if provided
+            // Inclui chat_id apenas quando o ticket já tem sala associada.
             if (chatId) {
                 payload.chat_id = chatId;
             }

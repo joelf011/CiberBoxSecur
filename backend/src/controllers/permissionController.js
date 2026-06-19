@@ -1,8 +1,15 @@
 const { Permission } = require('../models');
 const auditLogController = require('./auditLogController');
 
+/**
+ * Responsável por:
+ * - Disponibilizar a lista de permissões para a gestão de cargos.
+ *
+ * Fluxo:
+ * Backoffice -> PermissionController -> Permissions -> Matriz de permissões na UI.
+ */
 const permissionController = {
-    // LIST all
+    // Lista permissões ordenadas para construir a matriz de cargos no frontend.
     async getAll(req, res) {
         try {
             const permissions = await Permission.findAll({

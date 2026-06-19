@@ -1,7 +1,18 @@
+/**
+ * Controlador de empresas (companies).
+ *
+ * Responsável por:
+ * - CRUD completo de empresas com soft delete e restauro.
+ * - Validação de NIF único na criação.
+ * - Delegação de toda a lógica de negócio ao companiesService (incluindo auditoria).
+ *
+ * Fluxo:
+ * Frontend -> Rota Express (com auth middleware) -> Controller -> companiesService -> Base de Dados -> Resposta JSON.
+ */
 const companyService = require('../services/companiesService');
 
 const companyController = {
-    // CREATE
+    // Cria uma nova empresa. O serviço trata da persistência e registo de auditoria.
     async create(req, res) {
         try {
             const newCompany = await companyService.create(req.body, req.user, req.ip);
@@ -10,6 +21,7 @@ const companyController = {
                 company: newCompany 
             });
         } catch (error) {
+            // NIF duplicado — restrição de unicidade na base de dados.
             if (error.name === 'SequelizeUniqueConstraintError') {
                 return res.status(400).json({ error: 'A company with this NIF is already registered.' });
             }
@@ -18,7 +30,7 @@ const companyController = {
         }
     },
 
-    // READ ALL
+    // Lista todas as empresas registadas (acessível ao admin).
     async findAll(req, res) {
         try {
             const companies = await companyService.findAll();
@@ -29,7 +41,7 @@ const companyController = {
         }
     },
 
-    // READ ONE
+    // Devolve uma empresa específica por ID.
     async findOne(req, res) {
         try {
             const company = await companyService.findOne(req.params.id);
@@ -43,7 +55,7 @@ const companyController = {
         }
     },
 
-    // UPDATE
+    // Atualiza os dados de uma empresa existente.
     async update(req, res) {
         try {
             const company = await companyService.update(req.params.id, req.body, req.user, req.ip);
@@ -57,7 +69,7 @@ const companyController = {
         }
     },
 
-    // DELETE (Soft)
+    // Apaga logicamente uma empresa (soft delete). A auditoria é tratada no serviço.
     async delete(req, res) {
         try {
             await companyService.delete(req.params.id, req.user, req.ip);
@@ -71,7 +83,7 @@ const companyController = {
         }
     },
 
-    // RESTORE
+    // Restaura uma empresa previamente eliminada (reverte soft delete).
     async restore(req, res) {
         try {
             const company = await companyService.restore(req.params.id, req.user, req.ip);
@@ -80,6 +92,7 @@ const companyController = {
             if (error.message === 'Company not found.') {
                 return res.status(404).json({ error: error.message });
             }
+            // A empresa já se encontra ativa — o serviço lança este erro.
             if (error.message === 'This company is already active.') {
                 return res.status(400).json({ error: error.message });
             }

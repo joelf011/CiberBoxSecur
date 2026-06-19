@@ -10,6 +10,14 @@ import CreateTicketModal from "../../components/admin/forum/CreateThreadModal";
 import forumApi from "../../api/forumApi";
 import api from "../../api/axiosConfig";
 
+/**
+ * Responsável por:
+ * - Gerir a lista de tickets, filtros, paginação e detalhe selecionado.
+ * - Coordenar chat e painel de detalhes com dados vindos da API.
+ *
+ * Fluxo:
+ * Backoffice -> /tickets e /companies -> TicketSidebar/TicketChatWindow -> Atualização da UI.
+ */
 const AdminForum = () => {
   const [tickets, setTickets] = useState([]);
   const [selectedTicketId, setSelectedTicketId] = useState(null);
@@ -20,7 +28,7 @@ const AdminForum = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Estados de Filtros e Paginação
+  // Filtros e paginação são enviados como query params para o backend.
   const [filters, setFilters] = useState({
     searchTerm: "",
     filterStatus: "all",
@@ -38,7 +46,7 @@ const AdminForum = () => {
   });
   const [companies, setCompanies] = useState([]);
 
-  // Get current user from localStorage
+  // Reutiliza o utilizador guardado no login para decidir permissões de gestão.
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user) {
@@ -46,7 +54,7 @@ const AdminForum = () => {
     }
   }, []);
 
-  // Load tickets com debounce e monitorização dos filtros
+  // Debounce evita pedidos repetidos enquanto o utilizador ajusta filtros.
   useEffect(() => {
     if (!currentUser) return;
 
@@ -57,7 +65,7 @@ const AdminForum = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [currentUser, refreshKey, filters, pagination.currentPage]);
 
-  // Carrega a lista de Empresas (Apenas para Gestores/Admins) para o dropdown do filtro
+  // Gestores/admins precisam da lista de empresas para filtrar tickets por cliente.
   useEffect(() => {
     if (currentUser && isManagerOrAdmin()) {
       api
@@ -67,7 +75,7 @@ const AdminForum = () => {
     }
   }, [currentUser]);
 
-  // Load selected ticket details
+  // Mantém o detalhe sincronizado com a lista paginada devolvida pela API.
   useEffect(() => {
     if (!selectedTicketId || !tickets.length) {
       setSelectedTicket(null);
@@ -82,7 +90,7 @@ const AdminForum = () => {
     setLoading(true);
     setError(null);
     try {
-      // Realiza a pesquisa usando as query params de forma direta
+      // O backend compõe a query de tickets a partir destes filtros.
       const response = await api.get("/tickets", {
         params: {
           page: pagination.currentPage,
@@ -105,7 +113,7 @@ const AdminForum = () => {
           totalPages: response.data.total_pages || 1,
         }));
       } else {
-        // Fallback de retro-compatibilidade
+        // Suporta respostas antigas que ainda não vinham paginadas.
         setTickets(response.data);
         setPagination((prev) => ({
           ...prev,
@@ -131,10 +139,10 @@ const AdminForum = () => {
     );
   };
 
-  // Handler dinâmico para reiniciar a página se um filtro for alterado
+  // Ao alterar filtros, regressa à primeira página para evitar offsets inválidos.
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
-    setPagination((prev) => ({ ...prev, currentPage: 1 })); // Volta à página 1 sempre que pesquisa
+    setPagination((prev) => ({ ...prev, currentPage: 1 })); // Mantém a paginação alinhada com a nova pesquisa.
   };
 
   const handleSelectTicket = (ticketId) => {
@@ -188,10 +196,10 @@ const AdminForum = () => {
         </Alert>
       )}
 
-      {/* O estilo minHeight: 0 é crucial para o Flexbox não quebrar o layout e ativar o scroll interno */}
+      {/* minHeight: 0 permite scroll interno correto dentro do layout flex. */}
       <Row className="g-3 flex-grow-1 m-0" style={{ minHeight: 0 }}>
         {!selectedTicket ? (
-          /* VIEW 1: TICKET POOL (LISTA) */
+          /* Vista 1: lista de tickets com filtros e paginação. */
           <Col xs={12} className="h-100 px-0">
             <TicketSidebar
               tickets={tickets}
@@ -210,9 +218,9 @@ const AdminForum = () => {
             />
           </Col>
         ) : (
-          /* VIEW 2: TICKET ABERTO (CHAT + DETALHES) */
+          /* Vista 2: ticket aberto com chat e detalhes laterais. */
           <>
-            {/* LEFT/CENTER: CHAT WINDOW */}
+            {/* Janela de chat associada ao ticket selecionado. */}
             <Col lg={8} className="h-100 mb-3 mb-lg-0">
               {selectedTicket.assigned_to_user_id ? (
                 <TicketChatWindow
@@ -248,7 +256,7 @@ const AdminForum = () => {
               )}
             </Col>
 
-            {/* RIGHT: TICKET DETAILS PANEL */}
+            {/* Painel de metadados, estado e ações do ticket. */}
             <Col lg={4} className="h-100">
               <TicketDetailsPanel
                 ticket={selectedTicket}
@@ -262,7 +270,7 @@ const AdminForum = () => {
         )}
       </Row>
 
-      {/* CREATE TICKET MODAL */}
+      {/* Modal reutilizado para criar tickets sem abandonar a página. */}
       <CreateTicketModal
         show={showCreateModal}
         onHide={() => setShowCreateModal(false)}

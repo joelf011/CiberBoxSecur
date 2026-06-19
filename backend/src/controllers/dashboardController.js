@@ -1,9 +1,16 @@
 const dashboardService = require('../services/dashboardService');
 
+/**
+ * Responsável por:
+ * - Entregar ao frontend os KPIs e gráficos do dashboard.
+ *
+ * Fluxo:
+ * DashboardRoute -> authMiddleware -> Controller -> DashboardService -> Incidents.
+ */
 const dashboardController = {
     async getDashboardData(req, res) {
         try {
-            // Apenas o utilizador logado para o serviço
+            // O service usa req.user para aplicar filtros por cargo, permissões e empresa.
             const data = await dashboardService.getDashboardData(req.user);
             
             return res.status(200).json(data);

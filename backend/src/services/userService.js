@@ -2,8 +2,17 @@ const { User } = require('../models');
 const bcrypt = require('bcrypt');
 const auditLogService = require('./auditLogService');
 
+/**
+ * Responsável por:
+ * - Gerir perfil próprio e administração de utilizadores.
+ * - Aplicar hashing de passwords antes de persistir dados sensíveis.
+ *
+ * Fluxo:
+ * UserController -> Service -> Users -> AuditLogs -> Resposta ao frontend.
+ */
 const userService = {
     async getProfile(userId) {
+        // Nunca devolve a password ao frontend, mesmo no perfil do próprio utilizador.
         const user = await User.findByPk(userId, { attributes: { exclude: ['password'] } });
         if (!user) throw new Error('User not found');
         return user;
@@ -18,14 +27,14 @@ const userService = {
             phone: data.phone !== undefined ? data.phone : user.phone 
         };
 
-        // Update avatar
+        // Avatar é opcional e pode vir em Base64 a partir do cropper do perfil.
         if (data.avatar !== undefined) {
             updateData.avatar = data.avatar;
         }
 
-        // Change password
+        // A password só muda quando o utilizador confirma a password atual.
         if (data.newPassword) {
-            // Current password
+            // Evita alteração de password sem prova de posse da sessão.
             if (!data.currentPassword) {
                 throw new Error('To change your password, you must provide your current password.');
             }
@@ -40,6 +49,7 @@ const userService = {
 
         await user.update(updateData);
 
+        // Distingue alterações de perfil e de password para leitura nos logs.
         await auditLogService.logEvent({
             user_id: userId, 
             action: data.newPassword ? 'USER_UPDATE_PASSWORD' : 'USER_UPDATE_PROFILE', 
@@ -51,6 +61,7 @@ const userService = {
     },
 
     async getAllAdmin() {
+        // Listagem administrativa exclui campos sensíveis ou pesados.
         return await User.findAll({
             attributes: { exclude: ['password', 'avatar'] }, order: [['createdAt', 'DESC']]
         });
@@ -70,6 +81,7 @@ const userService = {
         };
         
         if (data.password) {
+            // Password definida por admin também é sempre guardada com hash.
             updateData.password = await bcrypt.hash(data.password, 10);
         }
 

@@ -1,4 +1,12 @@
-const { Article, Category } = require('../models'); // <-- Importamos a Category
+/**
+ * Responsável por:
+ * - Gerir a persistência de artigos e respetivas categorias.
+ * - Preparar listagens públicas e administrativas para os controllers.
+ *
+ * Fluxo:
+ * Controller -> Service -> Sequelize -> Articles/Categories -> Resposta ao frontend.
+ */
+const { Article, Category } = require('../models'); // Categoria necessária para devolver associações já prontas para a UI.
 const { Op } = require('sequelize');
 const fs = require('fs');
 const auditLogService = require('./auditLogService');
@@ -11,6 +19,7 @@ const includeCategory = [{
 
 const articleService = {
     async create(data, author_id, ipAddress) {
+        // Cria primeiro o artigo para obter o ID usado na relação M:N com categorias.
         const newArticle = await Article.create({
             author_id,
             title: data.title,
@@ -23,9 +32,11 @@ const articleService = {
         });
 
         if (data.category_ids && data.category_ids.length > 0) {
+            // Atualiza a tabela pivot ArticleCategories com as categorias escolhidas no backoffice.
             await newArticle.setCategories(data.category_ids);
         }
 
+        // Mantém rastreabilidade administrativa de alterações ao conteúdo público.
         await auditLogService.logEvent({
             user_id: author_id, action: 'ARTICLE_CREATE', entity_type: 'Article', entity_id: newArticle.id, ip_address: ipAddress
         });
@@ -34,10 +45,10 @@ const articleService = {
     },
 
     async getPublicArticles(limit = 6, offset = 0, categoryId = null, search = null) {
-        // Apenas artigos publicados
+        // A área pública só consome artigos publicados.
         const whereClause = { status: 'Published' };
 
-        // Filtro de Pesquisa (Texto)
+        // Pesquisa textual aplicada na query SQL antes de devolver a grelha.
         if (search) {
             whereClause.title = { [Op.substring]: search };
         }
@@ -48,7 +59,7 @@ const articleService = {
             through: { attributes: [] }
         };
 
-        // Filtro de Categoria
+        // A categoria filtra através da relação M:N entre artigos e categorias.
         if (categoryId) {
             categoryInclude.where = { id: categoryId };
         }
@@ -56,7 +67,7 @@ const articleService = {
         const isFiltering = search || categoryId;
         let featured = null;
 
-        // Só mostra destaque se não estiver a pesquisar e estiver na página 1
+        // O artigo em destaque só aparece na primeira página sem filtros ativos.
         if (!isFiltering && offset == 0) {
             featured = await Article.findOne({
                 where: { status: 'Published' },
@@ -65,10 +76,10 @@ const articleService = {
             });
         }
 
-        // Preparar a grelha de resultados
+        // A grelha exclui o destaque para evitar duplicação visual no frontend.
         const gridWhere = { ...whereClause };
         if (featured) {
-            gridWhere.id = { [Op.ne]: featured.id }; // Excluir o artigo que já está em destaque
+            gridWhere.id = { [Op.ne]: featured.id }; // Exclui o artigo já apresentado em destaque.
         }
 
         const articles = await Article.findAndCountAll({
@@ -106,6 +117,7 @@ const articleService = {
         let cover_image = article.cover_image;
         
         if (data.cover_image) {
+            // Substitui a imagem física apenas quando o upload trouxe uma nova capa.
             if (article.cover_image && fs.existsSync(article.cover_image)) {
                 fs.unlinkSync(article.cover_image);
             }
@@ -123,6 +135,7 @@ const articleService = {
         });
 
         if (data.category_ids !== undefined) {
+            // Sincroniza a relação M:N com o conjunto enviado pelo formulário do backoffice.
             await article.setCategories(data.category_ids);
         }
 
@@ -137,6 +150,7 @@ const articleService = {
         const article = await Article.findByPk(id);
         if (!article) throw new Error('Article not found.');
 
+        // Remove ligações da tabela pivot antes do soft delete do artigo.
         await article.setCategories([]);
         await article.destroy();
 

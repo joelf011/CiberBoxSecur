@@ -4,10 +4,10 @@ const incidentController = require('../controllers/incidentController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const checkPermission = require('../middlewares/permissionMiddleware');
 
-// Require authentication
+// Incidentes exigem sessão para o service aplicar o âmbito da empresa.
 router.use(authMiddleware);
 
-// Specific permissions
+// Permissões granulares protegem cada operação de incidente.
 router.post('/', checkPermission('CREATE_INCIDENT'), incidentController.create);
 router.get('/', checkPermission('VIEW_INCIDENTS'), incidentController.findAll);
 router.get('/:id', checkPermission('VIEW_INCIDENTS'), incidentController.findOne);

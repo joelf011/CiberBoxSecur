@@ -5,12 +5,20 @@ import { faDownload, faSearch, faHistory, faExclamationTriangle, faInfoCircle, f
 import { motion } from 'framer-motion';
 import { logsApi } from '../../api/logsApi';
 
+/**
+ * Responsável por:
+ * - Consultar logs de auditoria com filtros, datas e paginação.
+ * - Apresentar eventos de utilizador/empresa devolvidos pelo backend.
+ *
+ * Fluxo:
+ * Backoffice -> logsApi -> /audit-logs -> AuditLogs/User/Company -> Tabela.
+ */
 const AdminLogs = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Estados dos Filtros e Paginação
+  // Filtros enviados ao backend para compor a query de auditoria.
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -21,7 +29,7 @@ const AdminLogs = () => {
   const [totalRecords, setTotalRecords] = useState(0);
   const limit = 20;
 
-  // Efeito principal: Carregar Logs sempre que os filtros ou página mudarem
+  // Recarrega logs quando muda página ou qualquer filtro.
   useEffect(() => {
     const fetchLogs = async () => {
       try {
@@ -41,7 +49,7 @@ const AdminLogs = () => {
       }
     };
 
-    // Debounce de 500ms para não spammar o servidor enquanto o utilizador digita
+    // Debounce evita pedidos repetidos enquanto o utilizador escreve.
     const delayDebounceFn = setTimeout(() => {
       fetchLogs();
     }, 500);
@@ -49,10 +57,10 @@ const AdminLogs = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [currentPage, searchTerm, actionFilter, startDate, endDate]);
 
-  // Função genérica para resets ao alterar filtros
+  // Qualquer alteração de filtro reinicia a paginação para a primeira página.
   const handleFilterChange = (setter) => (e) => {
     setter(e.target.value);
-    setCurrentPage(1); // Volta sempre à página 1 quando filtra
+    setCurrentPage(1); // Mantém os resultados alinhados com os filtros novos.
   };
 
   const getSeverityStyle = (action = '') => {
@@ -87,7 +95,7 @@ const AdminLogs = () => {
         </Button>
       </div>
 
-      {/* BARRA DE FILTROS LIGADA AO BACKEND */}
+      {/* Filtros ligados diretamente aos query params do backend. */}
       <Card className="border-0 shadow-sm rounded-4 mb-4">
         <Card.Body className="p-3">
           <Row className="g-3 align-items-end">
@@ -169,7 +177,7 @@ const AdminLogs = () => {
             </thead>
             <tbody style={{ fontSize: '0.85rem' }}>
               {loading ? (
-                // SKELETON LOADING (Framer Motion + Bootstrap)
+                // Skeleton mantém a tabela estável durante o carregamento.
                 Array.from({ length: 5 }).map((_, index) => (
                   <motion.tr
                     key={`skeleton-${index}`}
@@ -248,7 +256,7 @@ const AdminLogs = () => {
           </Table>
         </div>
 
-        {/* PAGINAÇÃO */}
+        {/* Paginação baseada no total devolvido pela API. */}
         <Card.Footer className="bg-white border-0 p-3 d-flex justify-content-between align-items-center">
           <small className="text-muted">Total de registos: {totalRecords}</small>
 

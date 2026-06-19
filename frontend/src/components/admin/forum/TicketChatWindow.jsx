@@ -18,8 +18,16 @@ import {
 import forumApi from "../../../api/forumApi";
 import api from "../../../api/axiosConfig";
 
+/**
+ * Responsável por:
+ * - Mostrar e enviar mensagens de um ticket assumido.
+ * - Suportar anexos via multipart/form-data para o backend.
+ *
+ * Fluxo:
+ * Ticket selecionado -> /tickets/:id/messages -> /chats/messages -> Estado local.
+ */
 const TicketChatWindow = ({ ticket, currentUser, onBack }) => {
-  // 1. PREVENÇÃO DE CRASH: Garantir que o currentUser já chegou da API antes de renderizar
+  // Aguarda pelos dados do utilizador antes de calcular autoria das mensagens.
   if (!currentUser) {
     return (
       <Card className="h-100 d-flex align-items-center justify-content-center border-0 shadow-sm rounded-4">
@@ -41,7 +49,7 @@ const TicketChatWindow = ({ ticket, currentUser, onBack }) => {
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Load messages on component mount or when ticket changes
+  // Recarrega mensagens quando muda ticket, gestor atribuído ou estado.
   useEffect(() => {
     if (ticket) {
       loadMessages();
@@ -49,7 +57,7 @@ const TicketChatWindow = ({ ticket, currentUser, onBack }) => {
   }, [ticket?.id, ticket?.assigned_to_user_id, ticket?.status]);
 
   const loadMessages = async () => {
-    // Só mostra o ecrã inteiro de loading se for a primeira vez que carrega o chat
+    // Evita flicker em atualizações posteriores mantendo mensagens já visíveis.
     if (messages.length === 0) {
       setLoading(true);
     }
@@ -94,9 +102,7 @@ const TicketChatWindow = ({ ticket, currentUser, onBack }) => {
       if (fileInputRef.current) fileInputRef.current.value = "";
       scrollToBottom();
 
-      // Removido o onMessageSent() propositadamente. A mensagem já é
-      // atualizada no chat instantaneamente pelo setMessages acima.
-      // Assim evitamos que o componente pai recarregue a lista e feche o ticket.
+      // Atualização otimista local evita recarregar a lista e perder o ticket aberto.
     } catch (error) {
       console.error("Failed to send message:", error);
       setError(
@@ -121,7 +127,7 @@ const TicketChatWindow = ({ ticket, currentUser, onBack }) => {
     );
   }
 
-  // 2. FUNÇÃO AUXILIAR: Renderizar o Avatar ou o Ícone por defeito
+  // Resolve avatar vindo da BD, localStorage ou caminho relativo de upload.
   const renderAvatar = (user) => {
     if (!user || !user.avatar) {
       return (
@@ -134,13 +140,12 @@ const TicketChatWindow = ({ ticket, currentUser, onBack }) => {
     }
 
     let avatarUrl = user.avatar;
-    // Verifica se é uma string Base64 (que é como a página de Perfil guarda na Base de Dados)
+    // Base64 vem do cropper de perfil; caminhos relativos vêm do backend.
     if (
       !user.avatar.startsWith("data:image") &&
       !user.avatar.startsWith("http")
     ) {
-      // Se não for Base64 nem um URL absoluto, assume que é um caminho local do backend (ex: /uploads/...)
-      // Previne a duplicação de barras '/'
+      // Constrói URL absoluto sem duplicar barras entre host e caminho.
       const baseUrl = import.meta.env.VITE_API_URL
         ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, "")
         : "http://localhost:5000";
@@ -174,7 +179,7 @@ const TicketChatWindow = ({ ticket, currentUser, onBack }) => {
 
   return (
     <Card className="d-flex flex-column h-100 animate-fade-in border-0 shadow-sm rounded-4 overflow-hidden">
-      {/* Header */}
+      {/* Cabeçalho do ticket aberto. */}
       <Card.Header className="bg-white p-3 border-bottom d-flex align-items-center gap-3 shrink-0 shadow-sm">
         <Button
           variant="light"
@@ -193,7 +198,7 @@ const TicketChatWindow = ({ ticket, currentUser, onBack }) => {
         </div>
       </Card.Header>
 
-      {/* Messages Area */}
+      {/* Histórico de mensagens devolvido pelo backend. */}
       <Card.Body className="bg-light bg-opacity-50 overflow-auto p-4 custom-scrollbar flex-grow-1">
         {error && (
           <Alert variant="danger" onClose={() => setError(null)} dismissible>
@@ -210,8 +215,7 @@ const TicketChatWindow = ({ ticket, currentUser, onBack }) => {
             {messages.map((msg) => {
               const isSelf = msg.sender_id === currentUserId;
 
-              // Dá prioridade a msg.User (Dados da BD) pois é lá que vem a string/imagem do avatar completa.
-              // O currentUser do localStorage atua apenas como fallback seguro e não guarda a foto em Base64.
+              // msg.User traz a versão persistida; currentUser serve apenas de fallback local.
               const messageUser = isSelf ? msg.User || currentUser : msg.User;
 
               return (
@@ -219,7 +223,7 @@ const TicketChatWindow = ({ ticket, currentUser, onBack }) => {
                   key={msg.id}
                   className={`d-flex flex-column ${isSelf ? "align-items-end" : "align-items-start"}`}
                 >
-                  {/* Adicionado 'flex-row-reverse' para manter o nome/avatar no lado certo dependendo de quem fala */}
+                  {/* Inverte avatar e nome nas mensagens enviadas pelo próprio utilizador. */}
                   <div
                     className={`d-flex align-items-center gap-2 mb-1 px-1 ${isSelf ? "flex-row-reverse" : ""}`}
                   >
@@ -282,7 +286,7 @@ const TicketChatWindow = ({ ticket, currentUser, onBack }) => {
         )}
       </Card.Body>
 
-      {/* Message Input */}
+      {/* Entrada bloqueada quando o ticket não foi assumido ou já está fechado. */}
       <Card.Footer className="bg-white p-3 border-top shrink-0">
         {!ticket.assigned_to_user_id ? (
           <div className="text-center text-muted p-2 bg-light rounded-3 border">

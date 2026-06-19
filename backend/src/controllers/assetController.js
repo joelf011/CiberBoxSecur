@@ -1,10 +1,23 @@
+/**
+ * Controlador de ativos (assets) da empresa.
+ *
+ * Responsável por:
+ * - CRUD completo de ativos com controlo de acesso por empresa.
+ * - Classificação CIA (confidencialidade, integridade, disponibilidade).
+ * - Soft delete e restauro de ativos.
+ * - Registo de auditoria em cada operação.
+ *
+ * Fluxo:
+ * Frontend -> Rota Express (com auth middleware) -> Controller -> Modelo Asset (Sequelize) -> Base de Dados -> Resposta JSON.
+ */
 const { Asset } = require('../models');
 const auditLogService = require('../services/auditLogService');
 
 const assetController = {
-    // CREATE
+    // Cria um novo ativo associado à empresa e ao utilizador autenticado.
     async create(req, res) {
         try {
+            // Identifica o utilizador que está a criar o ativo (vem do middleware de autenticação).
             const created_by_user_id = req.user.id; 
 
             const { 
@@ -12,6 +25,7 @@ const assetController = {
                 owner, location, confidentiality, integrity, availability, status 
             } = req.body;
 
+            // Valores por defeito para a classificação CIA e estado, caso não sejam fornecidos.
             const newAsset = await Asset.create({
                 company_id,
                 created_by_user_id,
@@ -27,7 +41,7 @@ const assetController = {
                 status: status || 'Active'
             });
 
-            // LOG
+            // Regista a criação do ativo no log de auditoria.
             await auditLogService.logEvent({
                 user_id: created_by_user_id,
                 action: 'ASSET_CREATE',
@@ -38,6 +52,7 @@ const assetController = {
 
             return res.status(201).json({ message: 'Asset created successfully!', asset: newAsset });
         } catch (error) {
+            // company_id inválido — a empresa referenciada não existe na BD.
             if (error.name === 'SequelizeForeignKeyConstraintError') {
                 return res.status(400).json({ error: 'The specified company does not exist.' });
             }
@@ -46,6 +61,7 @@ const assetController = {
                 return res.status(400).json({ error: error.errors[0].message }); 
             }
 
+            // Valor de enum inválido para categoria, estado ou níveis de risco.
             if (error.name === 'SequelizeDatabaseError' && error.message.includes('enum')) {
                 return res.status(400).json({ error: 'Invalid value provided for category, status or risk levels.' });
             }
@@ -55,9 +71,10 @@ const assetController = {
         }
     },
 
-    // READ ALL
+    // Lista todos os ativos, filtrados pela empresa do utilizador (admin vê todos).
     async findAll(req, res) {
         try {
+            // Se o utilizador pertence a uma empresa, filtra por essa empresa (proteção IDOR).
             let whereClause = {};
             if (req.user.company_id) {
                 whereClause.company_id = req.user.company_id;
@@ -74,7 +91,7 @@ const assetController = {
         }
     },
 
-    // READ ONE
+    // Devolve um único ativo por ID, com validação de pertença à empresa do utilizador.
     async findOne(req, res) {
         try {
             const { id } = req.params;
@@ -84,6 +101,7 @@ const assetController = {
                 return res.status(404).json({ error: 'Asset not found.' });
             }
 
+            // Impede acesso a ativos de outra empresa (proteção IDOR).
             if (req.user.company_id && asset.company_id !== req.user.company_id) {
                 return res.status(403).json({ error: 'Forbidden: Access denied to this asset.' });
             }
@@ -95,7 +113,7 @@ const assetController = {
         }
     },
 
-    // UPDATE
+    // Atualiza um ativo existente, com verificação de acesso por empresa.
     async update(req, res) {
         try {
             const { id } = req.params;
@@ -107,13 +125,14 @@ const assetController = {
                 return res.status(404).json({ error: 'Asset not found.' });
             }
 
+            // Proteção IDOR — apenas utilizadores da mesma empresa podem editar.
             if (req.user.company_id && asset.company_id !== req.user.company_id) {
                 return res.status(403).json({ error: 'Forbidden.' });
             }
 
             await asset.update(updates);
 
-            // LOG: updated
+            // Regista a atualização no log de auditoria.
             await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'ASSET_UPDATE',
@@ -129,7 +148,7 @@ const assetController = {
         }
     },
 
-    // DELETE (Soft)
+    // Apaga logicamente um ativo (soft delete via Sequelize paranoid).
     async delete(req, res) {
         try {
             const { id } = req.params;
@@ -139,13 +158,15 @@ const assetController = {
                 return res.status(404).json({ error: 'Asset not found.' });
             }
 
+            // Proteção IDOR — impede eliminação de ativos de outra empresa.
             if (req.user.company_id && asset.company_id !== req.user.company_id) {
                 return res.status(403).json({ error: 'Forbidden.' });
             }
 
+            // Soft delete — marca o registo com deletedAt em vez de o remover fisicamente.
             await asset.destroy();
 
-            // LOG: deleted
+            // Regista a eliminação no log de auditoria.
             await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'ASSET_DELETE',
@@ -161,27 +182,31 @@ const assetController = {
         }
     },
 
-    // RESTORE
+    // Restaura um ativo previamente eliminado (reverte soft delete).
     async restore(req, res) {
         try {
             const { id } = req.params;
+            // paranoid: false permite encontrar registos com soft delete ativo.
             const asset = await Asset.findByPk(id, { paranoid: false });
             
             if (!asset) {
                 return res.status(404).json({ error: 'Asset not found.' });
             }
 
+            // Proteção IDOR — restringe restauro a ativos da mesma empresa.
             if (req.user.company_id && asset.company_id !== req.user.company_id) {
                 return res.status(403).json({ error: 'Forbidden.' });
             }
 
+            // Verifica se o ativo já está ativo para evitar restauro desnecessário.
             if (asset.deletedAt === null) {
                 return res.status(400).json({ error: 'This asset is already active.' });
             }
 
+            // Limpa o campo deletedAt, reativando o registo.
             await asset.restore();
 
-            // LOG: restored
+            // Regista o restauro no log de auditoria.
             await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'ASSET_RESTORE',

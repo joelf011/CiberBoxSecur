@@ -1,8 +1,29 @@
+/**
+ * Controlador de Tickets de Suporte.
+ *
+ * Responsável por:
+ * - Criação, listagem, atualização e eliminação (soft) de tickets.
+ * - Reclamação (claim) de tickets por gestores, com criação automática de sala de chat.
+ * - Controlo de acesso baseado em papéis (RBAC): Admin, Gestor e Cliente.
+ * - Listagem com paginação, filtragem e pesquisa.
+ * - Carregamento de mensagens associadas a um ticket.
+ *
+ * Modelo RBAC:
+ * - Admin (role_id=1): acesso total a todos os tickets.
+ * - Gestor (role_id=2 ou com permissão UPDATE_TICKET): vê tickets não reclamados ou reclamados por si.
+ * - Cliente (role_id=3 ou sem permissões de gestão): vê apenas os tickets que abriu.
+ *
+ * Fluxo principal:
+ * Frontend -> API (este controlador) -> Base de Dados (Ticket, Chat, Message) -> Resposta JSON -> Atualização da interface.
+ */
 const { Ticket, Chat, ChatUser, Message, User, Company } = require('../models');
 const { Op } = require('sequelize');
 const auditLogService = require('../services/auditLogService');
 
-// Helper to determine roles reliably without relying on nullable fields
+/**
+ * Determina os papéis do utilizador de forma robusta.
+ * Suporta permissões em formato Array, Array de Objetos e String (compatibilidade com diferentes payloads JWT).
+ */
 const getUserRoles = (user) => {
     const roleId = Number(user.role_id);
     const isAdmin = roleId === 1;
@@ -23,27 +44,32 @@ const getUserRoles = (user) => {
     return { isAdmin, isManager, isClient };
 };
 
-// Centralized authorization helper
+/**
+ * Verifica se um utilizador tem acesso a um ticket específico.
+ * Regra universal: o criador do ticket tem sempre acesso. As restantes regras dependem do papel.
+ */
 const checkTicketAccess = (user, ticket) => {
     const { isAdmin, isManager, isClient } = getUserRoles(user);
 
-    // REGRA UNIVERSAL: Qualquer utilizador tem sempre acesso aos tickets que abriu
+    // Regra universal: o criador do ticket tem sempre acesso ao mesmo.
     if (ticket.opened_by_user_id === user.id) {
         return true;
     }
 
+    // Clientes apenas veem os seus próprios tickets (já verificado acima).
     if (isClient) {
-        return false; // Se chegou aqui, não é o dono, e sendo cliente não pode ver mais nada
+        return false;
     }
     
+    // Gestores acedem a tickets não reclamados ou reclamados por si próprios.
     if (isManager) {
-        // Managers can only access unclaimed tickets or tickets claimed by themselves
         if (ticket.assigned_to_user_id !== null && ticket.assigned_to_user_id !== user.id) {
             return false;
         }
         return true;
     }
 
+    // Admins têm acesso irrestrito.
     if (isAdmin) {
         return true;
     }
@@ -52,7 +78,7 @@ const checkTicketAccess = (user, ticket) => {
 };
 
 const ticketController = {
-    // NEW TICKET
+    // Cria um novo ticket de suporte. Impede duplicados se o utilizador já tiver um ticket ativo.
     async create(req, res) {
         try {
             const opened_by_user_id = req.user.id; 
@@ -61,7 +87,7 @@ const ticketController = {
             const { isClient } = getUserRoles(req.user);
             const isStaff = !isClient;
 
-            // Fetch fresh DB user to bypass stale JWT payload
+            // Consulta a BD para obter dados atualizados, evitando informação obsoleta do JWT.
             const dbUser = await User.findByPk(opened_by_user_id);
             
             if (!dbUser) {
@@ -70,10 +96,10 @@ const ticketController = {
 
             let company_id;
             if (!isStaff) {
-                // Cliente: força a usar a empresa associada ao perfil real
+                // Cliente: usa obrigatoriamente a empresa associada ao seu perfil.
                 company_id = dbUser.company_id;
 
-                // Fallback: verifica se é dono (client_owner_id) de alguma empresa
+                // Fallback: verifica se é proprietário (client_owner_id) de alguma empresa.
                 if (!company_id) {
                     const ownedCompany = await Company.findOne({ where: { client_owner_id: dbUser.id } });
                     if (ownedCompany) {
@@ -81,7 +107,7 @@ const ticketController = {
                     }
                 }
             } else {
-                // Admin/Gestor: pode definir a empresa no corpo do pedido
+                // Admin/Gestor: pode especificar a empresa no corpo do pedido.
                 company_id = req.body.company_id || dbUser.company_id;
             }
 
@@ -89,6 +115,7 @@ const ticketController = {
                 return res.status(400).json({ error: 'A tua conta ainda não está associada a nenhuma Empresa. Por favor, contacta a administração.' });
             }
 
+            // Impede a criação de tickets duplicados enquanto existir um ticket ativo (Open, In Progress ou Resolved).
             const activeTicket = await Ticket.findOne({
                 where: {
                     opened_by_user_id,
@@ -112,7 +139,7 @@ const ticketController = {
                 description,
             });
 
-            // LOG: ticket created
+            // Regista a criação do ticket no log de auditoria.
             await auditLogService.logEvent({
                 user_id: opened_by_user_id,
                 action: 'TICKET_CREATE',
@@ -137,7 +164,7 @@ const ticketController = {
         }
     },
 
-    // LIST ALL
+    // Lista tickets com controlo de acesso RBAC. Suporta paginação, filtragem e pesquisa.
     async findAll(req, res) {
         try {
             const { isAdmin, isManager, isClient } = getUserRoles(req.user);
@@ -145,17 +172,19 @@ const ticketController = {
 
             let whereClause = {};
             
+            // Clientes veem apenas os seus tickets.
             if (isClient) {
                 whereClause.opened_by_user_id = req.user.id;
             } else if (isManager) {
+                // Gestores veem os seus próprios tickets, os não reclamados e os que reclamaram.
                 whereClause[Op.or] = [
-                    { opened_by_user_id: req.user.id }, // Garante que Gestores vêm os seus próprios tickets
+                    { opened_by_user_id: req.user.id },
                     { assigned_to_user_id: null },
                     { assigned_to_user_id: req.user.id }
                 ];
             }
 
-            // Compatibilidade com código legado: Se não pedir página, devolve todos como antigamente
+            // Compatibilidade com código legado: sem página, devolve todos os tickets sem paginação.
             if (!page) {
                 const tickets = await Ticket.findAll({ 
                     where: whereClause,
@@ -168,12 +197,13 @@ const ticketController = {
                 return res.status(200).json(tickets);
             }
 
-            // --- LÓGICA DE PAGINAÇÃO E FILTRAGEM ---
+            // --- Filtros opcionais enviados via query string ---
             if (status && status !== 'all') whereClause.status = status;
             if (priority) whereClause.priority = priority;
             if (category) whereClause.category = category;
             if (company_id) whereClause.company_id = company_id;
 
+            // Filtro por intervalo de datas (inclui o dia final completo até 23:59:59).
             if (startDate || endDate) {
                 whereClause.createdAt = {};
                 if (startDate) whereClause.createdAt[Op.gte] = new Date(startDate);
@@ -184,13 +214,14 @@ const ticketController = {
                 }
             }
 
+            // Pesquisa por assunto, ID numérico ou nome da empresa.
             if (search) {
                 const searchConditions = [{ subject: { [Op.iLike]: `%${search}%` } }];
-                if (!isNaN(search)) searchConditions.push({ id: parseInt(search) }); // Permite procurar por ID #
-                searchConditions.push({ '$Company.name$': { [Op.iLike]: `%${search}%` } }); // Permite procurar por nome da Empresa
+                if (!isNaN(search)) searchConditions.push({ id: parseInt(search) });
+                searchConditions.push({ '$Company.name$': { [Op.iLike]: `%${search}%` } });
 
                 if (whereClause[Op.or]) {
-                    // Junta a regra RBAC (Gestor vê X) com a pesquisa atual
+                    // Combina as condições RBAC do gestor (Op.or) com os filtros de pesquisa usando Op.and.
                     const rbacOr = whereClause[Op.or];
                     delete whereClause[Op.or];
                     whereClause[Op.and] = [{ [Op.or]: rbacOr }, { [Op.or]: searchConditions }];
@@ -207,7 +238,7 @@ const ticketController = {
                 order: [['createdAt', 'DESC']],
                 limit: parseInt(limit),
                 offset: parseInt(offset),
-                subQuery: false // Necessário quando usamos filtros num campo "include" ($Company.name$) com paginação (limit/offset)
+                subQuery: false // Necessário quando se usam filtros em campos de "include" ($Company.name$) com paginação.
             });
 
             const totalPages = Math.ceil(count / parseInt(limit));
@@ -219,7 +250,7 @@ const ticketController = {
         }
     },
 
-    // LIST ONE
+    // Devolve os detalhes de um ticket individual com verificação de acesso.
     async findOne(req, res) {
         try {
             const { id } = req.params;
@@ -238,7 +269,7 @@ const ticketController = {
         }
     },
 
-    // UPDATE / CLAIM
+    // Atualiza os campos de um ticket (categoria, prioridade, estado). Apenas acessível a staff.
     async update(req, res) {
         try {
             const { id } = req.params;
@@ -251,20 +282,19 @@ const ticketController = {
                 return res.status(403).json({ error: 'Forbidden.' });
             }
             
-            // Bloqueio extra: Clientes nunca podem editar detalhes do ticket (fechar, mudar prioridades)
+            // Clientes nunca podem alterar o estado, prioridade ou categoria dos tickets.
             const { isClient } = getUserRoles(req.user);
             if (isClient) {
                 return res.status(403).json({ error: 'Clientes não têm permissão para editar os estados dos tickets.' });
             }
 
-            // Um cliente só pode atualizar o seu próprio ticket se o estado for 'Open'
+            // Reservado para futura lógica: permitir edição limitada pelo cliente enquanto o ticket estiver "Open".
             if (req.user.id === ticket.opened_by_user_id && ticket.status !== 'Open') {
-                // Adicionar aqui lógica se o cliente puder editar algo depois de criado
             }
 
             await ticket.update({ category, priority, status });
 
-            // LOG: ticket updated
+            // Regista a atualização do ticket no log de auditoria.
             await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'TICKET_UPDATE',
@@ -288,7 +318,11 @@ const ticketController = {
         }
     },
 
-    // CLAIM TICKET (Apenas para Gestores/Admins)
+    /**
+     * Reclama (claim) um ticket para o gestor autenticado.
+     * Usa transação com SELECT FOR UPDATE para evitar condições de corrida (dois gestores a reclamar em simultâneo).
+     * Cria automaticamente uma sala de chat entre o gestor e o cliente do ticket.
+     */
     async claim(req, res) {
         const t = await Ticket.sequelize.transaction();
         try {
@@ -303,6 +337,7 @@ const ticketController = {
                 return res.status(403).json({ error: 'Forbidden: Only authorized personnel can claim tickets.' });
             }
 
+            // Lock pessimista: impede que outro gestor reclame o mesmo ticket em simultâneo.
             const ticket = await Ticket.findByPk(id, { transaction: t, lock: t.LOCK.UPDATE });
 
             if (!ticket) {
@@ -310,12 +345,13 @@ const ticketController = {
                 return res.status(404).json({ error: 'Ticket not found.' });
             }
 
+            // Rejeita se o ticket já foi reclamado por outro gestor.
             if (ticket.assigned_to_user_id) {
                 await t.rollback();
                 return res.status(409).json({ error: 'This ticket has already been claimed.' });
             }
             
-            // Auto-create chat when ticket is first claimed
+            // Cria automaticamente uma sala de chat entre o cliente e o gestor ao reclamar o ticket.
             let createdChat = null;
             try {
                 const clientId = ticket.opened_by_user_id;
@@ -326,13 +362,14 @@ const ticketController = {
                 return res.status(500).json({ error: 'Could not create chat room for this ticket.' });
             }
 
+            // Atribui o ticket ao gestor e avança o estado para "In Progress".
             ticket.assigned_to_user_id = managerId;
             ticket.status = 'In Progress';
             await ticket.save({ transaction: t });
 
             await t.commit();
 
-            // LOG: ticket updated
+            // Regista a reclamação do ticket no log de auditoria (fora da transação — dados já persistidos).
             await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'TICKET_CLAIM',
@@ -346,7 +383,7 @@ const ticketController = {
                 ticket
             };
 
-            // Include chat info if one was created
+            // Inclui os dados do chat na resposta para o frontend iniciar a conversa de imediato.
             if (createdChat) {
                 response.chat = createdChat;
             }
@@ -358,7 +395,7 @@ const ticketController = {
         }
     },
 
-    // DELETE (Soft)
+    // Eliminação suave (soft delete) de um ticket. O registo é mantido na BD com deletedAt preenchido.
     async delete(req, res) {
         try {
             const { id } = req.params;
@@ -372,7 +409,7 @@ const ticketController = {
 
             await ticket.destroy();
 
-            // LOG: ticket deleted
+            // Regista a eliminação do ticket no log de auditoria.
             await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'TICKET_DELETE',
@@ -388,7 +425,7 @@ const ticketController = {
         }
     },
 
-    // RESTORE
+    // Restaura um ticket previamente eliminado (soft delete). Usa paranoid: false para encontrar registos eliminados.
     async restore(req, res) {
         try {
             const { id } = req.params;
@@ -404,7 +441,7 @@ const ticketController = {
 
             await ticket.restore();
 
-            // LOG: ticket restored
+            // Regista o restauro do ticket no log de auditoria.
             await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'TICKET_RESTORE',
@@ -420,7 +457,7 @@ const ticketController = {
         }
     },
 
-    // GET TICKET MESSAGES (linked via ticket_id and chat_id)
+    // Carrega todas as mensagens associadas a um ticket com dados do remetente (nome, avatar, e-mail).
     async getMessages(req, res) {
         try {
             const { id } = req.params;
@@ -432,7 +469,7 @@ const ticketController = {
                 return res.status(403).json({ error: 'Forbidden.' });
             }
 
-            // Get all messages for this ticket
+            // Obtém as mensagens ligadas ao ticket via ticket_id, ordenadas cronologicamente.
             const messages = await Message.findAll({
                 where: { ticket_id: id },
                 include: [{
@@ -444,16 +481,24 @@ const ticketController = {
 
             return res.status(200).json(messages);
         } catch (error) {
-            // Log detalhado para o terminal do backend
             console.error('Get Ticket Messages error:', error.message);
             return res.status(500).json({ error: `Erro na Base de Dados: ${error.message}` });
         }
     }
 };
 
-// Helper function: Auto-create chat when ticket is claimed
+/**
+ * Procura um chat existente entre o cliente e o gestor na mesma empresa,
+ * ou cria um novo se não existir. Executada dentro da transação do claim.
+ *
+ * Estratégia de pesquisa:
+ * 1. Obtém os chat_ids do cliente.
+ * 2. Cruza com os chat_ids do gestor para encontrar salas partilhadas.
+ * 3. Filtra pela empresa (company_id) para evitar colisões.
+ * 4. Se não encontrar, cria uma nova sala com ambos os participantes.
+ */
 async function findOrCreateChatForTicket(clientId, managerId, companyId, transaction) {
-    // Search for existing chat with both users
+    // Passo 1: Obtém todos os chats onde o cliente participa.
     const clientChats = await ChatUser.findAll({
         where: { user_id: clientId },
         attributes: ['chat_id'],
@@ -462,6 +507,7 @@ async function findOrCreateChatForTicket(clientId, managerId, companyId, transac
     const clientChatIds = clientChats.map(c => c.chat_id);
 
     if (clientChatIds.length > 0) {
+        // Passo 2: Cruza com os chats do gestor para encontrar salas em comum.
         const managerChats = await ChatUser.findAll({
             where: {
                 user_id: managerId,
@@ -473,6 +519,7 @@ async function findOrCreateChatForTicket(clientId, managerId, companyId, transac
         const sharedChatIds = managerChats.map(c => c.chat_id);
 
         if (sharedChatIds.length > 0) {
+            // Passo 3: Filtra pela empresa para garantir que o chat pertence ao contexto correto.
             const existingChat = await Chat.findOne({
                 where: { company_id: companyId, id: { [Op.in]: sharedChatIds } },
                 transaction
@@ -481,7 +528,7 @@ async function findOrCreateChatForTicket(clientId, managerId, companyId, transac
         }
     }
 
-    // Create new chat with both users
+    // Passo 4: Nenhum chat partilhado encontrado — cria um novo com ambos os participantes.
     const newChat = await Chat.create({ company_id: companyId }, { transaction });
     await ChatUser.create({ chat_id: newChat.id, user_id: clientId }, { transaction });
     if (clientId !== managerId) {

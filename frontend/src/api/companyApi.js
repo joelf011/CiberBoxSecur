@@ -1,13 +1,17 @@
 import api from './axiosConfig';
 
+/**
+ * Wrapper simples de leitura de empresas.
+ * Mantido para componentes que só precisam de consultar empresas, sem operações administrativas.
+ */
 export const companyApi = {
-  // Procura todas as empresas (Chama o findAll do teu controller)
+  // Consulta todas as empresas através do controller de empresas.
   getAllCompanies: async () => {
     const response = await api.get('/companies');
     return response.data;
   },
 
-  // Procura uma empresa específica por ID se for necessário
+  // Consulta uma empresa específica para preencher vistas de detalhe.
   getCompanyById: async (id) => {
     const response = await api.get(`/companies/${id}`);
     return response.data;

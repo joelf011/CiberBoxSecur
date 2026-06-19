@@ -1,7 +1,19 @@
+/**
+ * Controlador de categorias de artigos.
+ *
+ * Responsável por:
+ * - CRUD completo de categorias utilizadas nos artigos do blog/CMS.
+ * - Geração automática de slug a partir do nome.
+ * - Registo de auditoria em cada operação.
+ *
+ * Fluxo:
+ * Frontend (gestão de categorias) -> Rota Express -> Controller -> Modelo Category (Sequelize) -> Base de Dados -> Resposta JSON.
+ */
 const { Category } = require('../models');
 const auditLogService = require('../services/auditLogService');
 
-// Automatic slug ("NIS 2 alerts -> nis2-alerts")
+// Gera slug automático a partir do nome (ex: "NIS 2 alerts" -> "nis2-alerts").
+// Remove acentos, caracteres especiais e normaliza espaços em hífens.
 const generateSlug = (text) => {
     return text.toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, "")
@@ -11,7 +23,7 @@ const generateSlug = (text) => {
 };
 
 const categoryController = {
-    // LIST all
+    // Lista todas as categorias por ordem alfabética.
     async getAll(req, res) {
         try {
             const categories = await Category.findAll({
@@ -24,7 +36,7 @@ const categoryController = {
         }
     },
 
-    // CREATE
+    // Cria uma nova categoria; gera slug automaticamente se não for fornecido.
     async create(req, res) {
         try {
             const { name } = req.body;
@@ -34,11 +46,12 @@ const categoryController = {
                 return res.status(400).json({ error: 'Category name is required.' });
             }
 
+            // Gera slug a partir do nome caso o frontend não envie um slug personalizado.
             if (!slug) slug = generateSlug(name);
 
             const newCategory = await Category.create({ name, slug });
 
-            // LOG: category created
+            // Regista a criação no log de auditoria (req.user pode ser null em contextos sem auth).
             await auditLogService.logEvent({
                 user_id: req.user ? req.user.id : null,
                 action: 'CATEGORY_CREATE',
@@ -49,6 +62,7 @@ const categoryController = {
 
             return res.status(201).json({ message: 'Category created successfully!', data: newCategory });
         } catch (error) {
+            // Slug duplicado — restrição de unicidade na base de dados.
             if (error.name === 'SequelizeUniqueConstraintError') {
                 return res.status(400).json({ error: 'A category with this slug already exists.' });
             }
@@ -57,7 +71,7 @@ const categoryController = {
         }
     },
 
-    // UPDATE CATEGORY
+    // Atualiza uma categoria existente; regenera slug se o nome mudar sem slug explícito.
     async update(req, res) {
         try {
             const { id } = req.params;
@@ -67,11 +81,12 @@ const categoryController = {
             const category = await Category.findByPk(id);
             if (!category) return res.status(404).json({ error: 'Category not found.' });
 
+            // Se o nome foi alterado mas não foi fornecido slug, gera um novo automaticamente.
             if (name && !slug) slug = generateSlug(name);
 
             await category.update({ name, slug: slug || category.slug });
 
-            // LOG: Category updated
+            // Regista a atualização no log de auditoria.
             await auditLogService.logEvent({
                 user_id: req.user ? req.user.id : null,
                 action: 'CATEGORY_UPDATE',
@@ -90,7 +105,7 @@ const categoryController = {
         }
     },
 
-    // DELETE
+    // Remove uma categoria da base de dados.
     async delete(req, res) {
         try {
             const { id } = req.params;
@@ -100,7 +115,7 @@ const categoryController = {
 
             await category.destroy();
 
-            // LOG: Category deleted
+            // Regista a eliminação no log de auditoria.
             await auditLogService.logEvent({
                 user_id: req.user ? req.user.id : null,
                 action: 'CATEGORY_DELETE',

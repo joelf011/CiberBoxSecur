@@ -1,16 +1,30 @@
+/**
+ * Middleware de verificação de permissões (autorização).
+ *
+ * Responsável por:
+ * - Receber o nome da permissão exigida e devolver um middleware reutilizável.
+ * - Consultar a BD para verificar se o role do utilizador possui a permissão.
+ * - Registar tentativas de acesso não autorizado no audit log.
+ *
+ * Depende de: authMiddleware (req.user já deve estar preenchido).
+ *
+ * Fluxo:
+ * req.user.role_id → Role.findByPk (com Permissions) → Permite ou bloqueia → Audit Log se negado.
+ */
+
 const { Role, Permission } = require('../models');
 const auditLogController = require('../controllers/auditLogController');
 
-// Receives the required permission name and returns the middleware
+// Função de ordem superior: recebe o nome da permissão e devolve o middleware.
 const checkPermission = (requiredPermissionName) => {
     return async (req, res, next) => {
         try {
-            // If the user is not logged in (or if the authMiddleware failed) block access
+            // Garante que o authMiddleware já injetou o utilizador e o seu role.
             if (!req.user || !req.user.role_id) {
                 return res.status(401).json({ error: 'Access denied: User or Role not found.' });
             }
 
-            // Query the database for the users role
+            // Consulta o role e filtra pela permissão exigida na tabela pivot role_permissions.
             const role = await Role.findByPk(req.user.role_id, {
                 include: {
                     model: Permission,
@@ -19,10 +33,10 @@ const checkPermission = (requiredPermissionName) => {
                 }
             });
 
-            // If the role doesnt exist or if the permissions array is empty
+            // Se o role não existir ou não tiver a permissão associada, nega o acesso.
             if (!role || !role.Permissions || role.Permissions.length === 0) {
                 
-                // LOG: Unauthorized access attempt
+                // Regista a tentativa de acesso não autorizado para auditoria.
                 await auditLogController.logEvent({
                     user_id: req.user.id,
                     action: 'UNAUTHORIZED_ACCESS_ATTEMPT',
@@ -36,7 +50,7 @@ const checkPermission = (requiredPermissionName) => {
                 });
             }
 
-            // The user holds the required permission -> proceed to the controller
+            // Permissão válida — avança para o controller.
             next();
 
         } catch (error) {

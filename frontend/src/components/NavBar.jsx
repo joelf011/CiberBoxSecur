@@ -3,12 +3,21 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import Logo from "../assets/logos/CiberBoxSecur-Minimal-NegativeVersion.svg";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
+/**
+ * Barra de navegação principal do website público.
+ *
+ * Responsável por:
+ * - Navegação entre páginas via React Router (Home, Notícias, NIS2, Login).
+ * - Scroll suave para secções específicas (Serviços, Contactos) quando o utilizador está na homepage.
+ * - Redireccionamento para a homepage antes do scroll, caso esteja noutra página.
+ */
 const NavBar = () => {
   const bgColor = "#0a192f";
 
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Faz scroll suave até à secção indicada; se não estiver na homepage, redireciona primeiro.
   const handleScrollToSection = (e, sectionId) => {
     e.preventDefault();
 
@@ -18,6 +27,7 @@ const NavBar = () => {
         section.scrollIntoView({ behavior: "smooth" });
       }
     } else {
+      // Navega para a homepage e aguarda a renderização antes de fazer scroll.
       navigate("/");
 
       setTimeout(() => {

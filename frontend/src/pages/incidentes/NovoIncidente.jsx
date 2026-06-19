@@ -6,11 +6,19 @@ import { faExclamationTriangle, faPaperPlane, faArrowLeft } from '@fortawesome/f
 import { incidentsApi } from '../../api/incidentsApi';
 import { Alerts } from '../../utils/Alerts';
 
+/**
+ * Responsável por:
+ * - Recolher dados iniciais de um incidente reportado pelo cliente.
+ * - Enviar ao backend o payload com dados CNCS em JSONB.
+ *
+ * Fluxo:
+ * Formulário -> incidentsApi.createIncident -> Incidents.cncs_form_data -> Histórico.
+ */
 const NovoIncidente = () => {
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
 
-  // Estado do Formulário
+  // Estado do formulário que alimenta o payload enviado ao backend.
   const [formData, setFormData] = useState({
     title: '',
     severity: 'Medium',
@@ -28,7 +36,7 @@ const NovoIncidente = () => {
     { value: 'Critical', label: 'Crítica' }
   ];
   
-  // Como estes vão para o JSONB
+  // Estes valores são guardados no JSONB cncs_form_data do incidente.
   const typeOptions = ['Phishing', 'Malware', 'Ransomware', 'DDoS', 'Violação de Dados', 'Exploração de Vulnerabilidades', 'DDoS', 'Man-in-the-Middle', 'Zero-Day'];
   const assetOptions = ['Servidor', 'Postos', 'Storage', 'UPS', 'Switch', 'Firewall', 'Disco Externo', 'NAS'];
 
@@ -42,7 +50,7 @@ const NovoIncidente = () => {
     setIsSaving(true);
 
     try {
-      // Empacotar os dados para o Backend
+      // O backend recebe campos diretos do incidente e dados estruturados CNCS.
       const payload = {
         title: formData.title,
         severity: formData.severity,
@@ -59,7 +67,7 @@ const NovoIncidente = () => {
       await incidentsApi.createIncident(payload);
       Alerts.success('Incidente reportado com sucesso! A nossa equipa técnica foi notificada.');
       
-      // Redireciona para o histórico
+      // Após criação, regressa ao histórico onde o novo incidente fica listado.
       navigate('/portal/incidentes'); 
     } catch (error) {
       Alerts.error(error.response?.data?.error || 'Erro ao reportar o incidente. Tente novamente.');
@@ -70,7 +78,7 @@ const NovoIncidente = () => {
 
   return (
     <div className="animate-fade-in py-2 max-w-4xl mx-auto">
-      {/* Cabeçalho */}
+      {/* Cabeçalho da criação de incidente. */}
       <div className="d-flex align-items-center justify-content-between mb-4">
         <div>
           <h2 className="fs-4 fw-bold text-dark mb-1">
@@ -88,7 +96,7 @@ const NovoIncidente = () => {
         <Card.Body className="p-4 p-md-5">
           <Form onSubmit={handleSubmit}>
             <Row className="g-4">
-              {/* Resumo do Incidente */}
+              {/* Identificação curta usada em listagens e notificações. */}
               <Col md={12}>
                 <Form.Group>
                   <Form.Label className="small fw-bold text-secondary">Título (Resumo)</Form.Label>
@@ -104,7 +112,7 @@ const NovoIncidente = () => {
                 </Form.Group>
               </Col>
 
-              {/* Criticidade e Tipo */}
+              {/* Classificação inicial para priorização técnica. */}
               <Col md={6}>
                 <Form.Group>
                   <Form.Label className="small fw-bold text-secondary">Criticidade Inicial</Form.Label>
@@ -137,7 +145,7 @@ const NovoIncidente = () => {
                 </Form.Group>
               </Col>
 
-              {/* Ativos e Utilizadores */}
+              {/* Impacto operacional reportado pelo cliente. */}
               <Col md={6}>
                 <Form.Group>
                   <Form.Label className="small fw-bold text-secondary">Ativo Principal Afetado</Form.Label>
@@ -168,7 +176,7 @@ const NovoIncidente = () => {
                 </Form.Group>
               </Col>
 
-              {/* Descrição Detalhada */}
+              {/* Contexto livre que fica guardado no JSONB do incidente. */}
               <Col md={12}>
                 <Form.Group>
                   <Form.Label className="small fw-bold text-secondary">Descrição Detalhada</Form.Label>
@@ -185,7 +193,7 @@ const NovoIncidente = () => {
                 </Form.Group>
               </Col>
 
-              {/* Botão de Submissão */}
+              {/* Submissão bloqueada enquanto o pedido está em curso. */}
               <Col md={12} className="d-flex justify-content-end mt-4">
                 <Button 
                   variant="primary" 

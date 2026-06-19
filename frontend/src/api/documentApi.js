@@ -1,24 +1,27 @@
 import api from './axiosConfig';
 
+/**
+ * Wrapper dos documentos e pastas globais.
+ * Liga a UI do repositório aos endpoints de documentos e pastas virtuais.
+ */
 export const documentApi = {
-  // Procura todos os documentos/pastas do servidor
+  // Carrega documentos e pastas já filtrados pelo backend quando aplicável.
   getAllDocuments: async () => {
     const response = await api.get('/documents');
-    return response.data; // Devolve a lista real da tua BD
+    return response.data; // Devolve a lista persistida na base de dados.
   },
 
-  // Cria um registo no servidor. 
-  // Como é uma pasta vazia (sem ficheiro físico), enviamos como JSON normal
+  // Cria uma pasta virtual, sem ficheiro físico, através de JSON simples.
   createFolder: async (folderName) => {
     const response = await api.post('/global-folders', {
-      name: folderName // Envia o nome que digitaste no modal (ex: 'gdg')
+      name: folderName // Nome recolhido no modal de criação de pasta.
     });
     return response.data;
   },
 
-  // Adiciona isto dentro do objeto exportado do documentApi:
+  // Remove uma pasta virtual através do endpoint global de pastas.
   deleteFolder: async (id) => {
-      const response = await api.delete(`/global-folders/${id}`); // Ajusta o prefixo 'API' se usares outro nome para o axios instance
+      const response = await api.delete(`/global-folders/${id}`);
       return response.data;
   },
 };

@@ -1,5 +1,13 @@
 const sequelize = require('../config/database');
 
+/**
+ * Responsável por:
+ * - Importar todos os modelos Sequelize.
+ * - Declarar relações entre tabelas antes de exportar a camada de dados.
+ *
+ * Fluxo:
+ * Models -> Associações Sequelize -> Services/Controllers -> Queries com include.
+ */
 const Role = require('./Role');
 const Permission = require('./Permission');
 const RolePermission = require('./RolePermission');
@@ -27,25 +35,26 @@ const AuditLog = require('./AuditLog');
 Role.hasMany(User, { foreignKey: 'role_id' });
 User.belongsTo(Role, { foreignKey: 'role_id' });
 
-// M:N Relation Roles <-> Permissions Pivot table
+// Relação M:N entre cargos e permissões através da tabela pivot Role_Permissions.
 Role.belongsToMany(Permission, { through: RolePermission, foreignKey: 'role_id', timestamps: false });
 Permission.belongsToMany(Role, { through: RolePermission, foreignKey: 'permission_id', timestamps: false });
 
+// Cada utilizador pode estar associado a uma empresa cliente.
 Company.hasMany(User, { foreignKey: 'company_id' });
 User.belongsTo(Company, { foreignKey: 'company_id' });
 
-// --- Companies and Admins ---
+// --- Empresas e gestores ---
 User.hasMany(Company, { foreignKey: 'client_owner_id', as: 'OwnedCompanies' });
 Company.belongsTo(User, { foreignKey: 'client_owner_id', as: 'ClientOwner' });
 
 User.hasMany(Company, { foreignKey: 'emergency_admin_id', as: 'EmergencyContactCompanies' });
 Company.belongsTo(User, { foreignKey: 'emergency_admin_id', as: 'EmergencyAdmin' });
 
-// M:N Relation
+// Relação M:N que permite vários gestores atribuídos à mesma empresa.
 Company.belongsToMany(User, { through: 'CompanyAdmins', as: 'AssignedAdmins', foreignKey: 'company_id' });
 User.belongsToMany(Company, { through: 'CompanyAdmins', as: 'AssignedCompanies', foreignKey: 'user_id' });
 
-// --- CMS ---
+// --- CMS e notícias ---
 User.hasMany(Page, { foreignKey: 'author_id' });
 Page.belongsTo(User, { foreignKey: 'author_id' });
 
@@ -55,7 +64,7 @@ Article.belongsTo(User, { foreignKey: 'author_id' });
 Article.belongsToMany(Category, { through: ArticleCategory, foreignKey: 'article_id' });
 Category.belongsToMany(Article, { through: ArticleCategory, foreignKey: 'category_id' });
 
-// --- NIS2 Compliance ---
+// --- Conformidade NIS2 ---
 Company.hasMany(Asset, { foreignKey: 'company_id' });
 Asset.belongsTo(Company, { foreignKey: 'company_id' });
 
@@ -69,7 +78,7 @@ Report.belongsTo(Company, { foreignKey: 'company_id' });
 User.hasMany(Report, { foreignKey: 'created_by_user_id' });
 Report.belongsTo(User, { foreignKey: 'created_by_user_id' });
 
-// --- Comunication ---
+// --- Comunicação e suporte ---
 Company.hasMany(Incident, { foreignKey: 'company_id' });
 Incident.belongsTo(Company, { foreignKey: 'company_id' });
 User.hasMany(Incident, { foreignKey: 'reported_by_user_id' });
@@ -95,7 +104,7 @@ Message.belongsTo(Chat, { foreignKey: 'chat_id' });
 User.hasMany(Message, { foreignKey: 'sender_id' });
 Message.belongsTo(User, { foreignKey: 'sender_id' });
 
-// --- Security ---
+// --- Segurança e auditoria ---
 User.hasMany(AuditLog, { foreignKey: 'user_id' });
 AuditLog.belongsTo(User, { foreignKey: 'user_id' });
 

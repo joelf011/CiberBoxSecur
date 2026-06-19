@@ -4,6 +4,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faPlus } from '@fortawesome/free-solid-svg-icons';
 import TicketList from './TicketList';
 
+/**
+ * Responsável por:
+ * - Apresentar filtros e paginação da fila de tickets.
+ * - Propagar alterações para a página pai, que consulta o backend.
+ */
 const TicketSidebar = ({
     tickets,
     selectedTicketId,
@@ -35,7 +40,7 @@ const TicketSidebar = ({
 
     return (
         <Card className=" border-0 shadow-sm rounded-4 d-flex flex-column overflow-hidden">
-            {/* Header */}
+            {/* Cabeçalho da fila e ação de criação. */}
             <Card.Header className="bg-gradient p-3 border-0 shrink-0">
                 <div className="d-flex align-items-center justify-content-between mb-3">
                     <h5 className="mb-0 fw-bold text-dark">
@@ -52,7 +57,7 @@ const TicketSidebar = ({
                     </Button>
                 </div>
 
-                {/* Search */}
+                {/* Pesquisa enviada ao backend através da página pai. */}
                 <InputGroup size="sm" className="mb-2">
                     <InputGroup.Text className="bg-light border-0">
                         <FontAwesomeIcon icon={faSearch} className="text-muted" />
@@ -65,7 +70,7 @@ const TicketSidebar = ({
                     />
                 </InputGroup>
 
-                {/* Advanced Dropdown Filters */}
+                {/* Filtros avançados convertidos em query params. */}
                 <Row className="g-2">
                     <Col xs={6} md={viewMode === 'admin' ? 3 : 4}>
                         <Form.Select size="sm" className="bg-light border-0 text-muted" value={filterStatus} onChange={handleChange('filterStatus')}>
@@ -111,7 +116,7 @@ const TicketSidebar = ({
                 </Row>
             </Card.Header>
 
-            {/* Ticket List */}
+            {/* Lista renderizada a partir da resposta paginada da API. */}
             <Card.Body className="flex-grow-1 p-0 overflow-hidden">
                 <TicketList
                     tickets={tickets}
@@ -121,7 +126,7 @@ const TicketSidebar = ({
                 />
             </Card.Body>
 
-            {/* Footer - Pagination */}
+            {/* Paginação controlada pelo total devolvido pelo backend. */}
             <Card.Footer className="bg-white p-3 border-top d-flex justify-content-between align-items-center shrink-0 flex-wrap gap-2">
                 <small className="text-muted">Total: {totalRecords} ticket(s)</small>
                 <Pagination size="sm" className="mb-0">

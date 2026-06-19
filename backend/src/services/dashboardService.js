@@ -1,9 +1,17 @@
 const { Incident } = require('../models');
 const { Op } = require('sequelize');
 
+/**
+ * Responsável por:
+ * - Agregar métricas de incidentes para o dashboard do backoffice.
+ * - Respeitar o âmbito da empresa quando o utilizador não pode ver tudo.
+ *
+ * Fluxo:
+ * DashboardController -> Service -> Incidents -> KPIs/Gráficos -> Frontend.
+ */
 const dashboardService = {
     async getDashboardData(user) {
-        // RBAC Logic
+        // Define o âmbito da query com base no cargo/permissões do utilizador autenticado.
         const isAdmin = user.role_id === 1 || (user.permissions && user.permissions.includes('VIEW_ALL_INCIDENTS'));
         
         let whereClause = {};
@@ -11,7 +19,7 @@ const dashboardService = {
             whereClause.company_id = user.company_id; 
         }
 
-        // KPIs
+        // KPIs calculados em paralelo para reduzir latência do dashboard.
         const [openCount, investigatingCount, resolvedCount, criticalCount] = await Promise.all([
             Incident.count({ where: { ...whereClause, status: 'Open' } }),
             Incident.count({ where: { ...whereClause, status: 'Investigating' } }),
@@ -26,7 +34,7 @@ const dashboardService = {
             critical: criticalCount
         };
 
-        // Last 5 incidents
+        // Últimos incidentes para a tabela de ação rápida do dashboard.
         const recentIncidentsRaw = await Incident.findAll({
             where: whereClause,
             order: [['createdAt', 'DESC']],
@@ -42,13 +50,13 @@ const dashboardService = {
             date: new Date(i.createdAt).toLocaleDateString('pt-PT')
         }));
 
-        // Chart data
+        // Base comum para gráficos, mantendo apenas os campos necessários.
         const chartDataRaw = await Incident.findAll({
             where: whereClause,
             attributes: ['createdAt', 'cncs_form_data']
         });
 
-        // Circular chart
+        // Tipologia vem do JSONB do formulário CNCS preenchido na criação do incidente.
         const typologyCount = {};
         chartDataRaw.forEach(i => {
             const type = i.cncs_form_data?.incident_type || 'Não Especificado';
@@ -60,7 +68,7 @@ const dashboardService = {
             value: typologyCount[key]
         })).sort((a, b) => b.value - a.value).slice(0, 4);
 
-        // Bar chart
+        // Agrega incidentes dos últimos cinco meses para o gráfico de evolução.
         const barChartData = [];
         for (let i = 4; i >= 0; i--) {
             const d = new Date();

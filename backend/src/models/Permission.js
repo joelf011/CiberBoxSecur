@@ -1,6 +1,10 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
+/**
+ * Permissões granulares usadas pelo middleware de autorização.
+ * São associadas aos cargos através da tabela pivot Role_Permissions.
+ */
 const Permission = sequelize.define('Permission', {
     id: {
         type: DataTypes.INTEGER,

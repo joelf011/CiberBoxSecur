@@ -5,11 +5,20 @@ const { User, Role, Permission  } = require('../models');
 const emailService = require('./emailService');
 const auditLogService = require('./auditLogService');
 
+/**
+ * Responsável por:
+ * - Gerir registo, ativação, login e recuperação de palavra-passe.
+ * - Emitir tokens JWT com permissões para autorização no backend e no frontend.
+ *
+ * Fluxo:
+ * AuthController -> Service -> Users/Roles/Permissions -> E-mail/JWT -> Resposta à UI.
+ */
 const authService = {
     async registerUser(data, adminId, ipAddress) {
         const { name, email, phone, role_id } = data; 
         const activationToken = crypto.randomBytes(32).toString('hex');
 
+        // O token temporário permite que o utilizador defina a password no frontend.
         const tokenExpiresAt = new Date();
         tokenExpiresAt.setHours(tokenExpiresAt.getHours() + 24);
 
@@ -27,12 +36,14 @@ const authService = {
             user_id: adminId, action: 'USER_REGISTER', entity_type: 'User', entity_id: newUser.id, ip_address: ipAddress
         });
 
+        // O envio segue em background para não prender a resposta HTTP ao SMTP.
         emailService.sendActivationEmail(newUser.email, newUser.name, activationToken)
             .catch(err => console.error("Erro ao enviar email em background:", err));
         return newUser;
     },
 
     async activateAccount(token, newPassword, ipAddress) {
+        // O mesmo campo de token suporta ativação inicial e recuperação de password.
         const user = await User.findOne({ where: { activation_token: token } });
 
         if (!user) throw new Error('Invalid token or user not found.');
@@ -55,6 +66,7 @@ const authService = {
         if (!user) throw new Error('User not found.');
         if (user.password) throw new Error('This account is already activated.');
 
+        // Gera novo convite e invalida o token anterior antes de reenviar o e-mail.
         const newActivationToken = crypto.randomBytes(32).toString('hex');
         const newTokenExpiresAt = new Date();
         newTokenExpiresAt.setHours(newTokenExpiresAt.getHours() + 24);
@@ -74,6 +86,7 @@ const authService = {
     },
 
     async login(email, password, ipAddress) {
+        // Carrega cargo e permissões numa só query para montar o JWT autorizado.
         const user = await User.findOne({
             where: { email },
             include: [{model: Role,
@@ -103,7 +116,7 @@ const authService = {
             throw new Error('Wrong password.');
         }
 
-        // Permissions array
+        // As permissões seguem no token para acelerar decisões de UI e middlewares.
         const userPermissions = user.Role && user.Role.Permissions 
             ? user.Role.Permissions.map(p => p.name) 
             : [];
@@ -113,7 +126,7 @@ const authService = {
                 id: user.id, 
                 role_id: user.role_id, 
                 company_id: user.company_id,
-                permissions: userPermissions // Adicionado ao token
+                permissions: userPermissions // Usado pelo permissionMiddleware e pela navegação do backoffice.
             },
             process.env.JWT_SECRET, { expiresIn: '8h' }
         );
@@ -135,8 +148,10 @@ const authService = {
     async forgotPassword(email, ipAddress) {
         const user = await User.findOne({ where: { email } });
         
+        // Resposta neutra evita enumeração de contas através do endpoint público.
         if (!user) return true; 
 
+        // Token curto para limitar a janela de risco do fluxo de recuperação.
         const resetToken = crypto.randomBytes(32).toString('hex');
         const tokenExpiresAt = new Date();
         tokenExpiresAt.setHours(tokenExpiresAt.getHours() + 1);
@@ -154,6 +169,7 @@ const authService = {
     },
 
     async resetPassword(token, newPassword, ipAddress) {
+        // Valida o token recebido pelo frontend antes de alterar a password persistida.
         const user = await User.findOne({ where: { activation_token: token } });
         
         if (!user) throw new Error('Token inválido ou utilizador não encontrado.');

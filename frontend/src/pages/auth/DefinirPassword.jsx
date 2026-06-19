@@ -5,6 +5,14 @@ import { usersApi } from '../../api/usersApi';
 import { Alerts } from '../../utils/Alerts';
 import LogoCiberBox from '../../assets/logos/CiberBoxSecur-Minimal-color.svg';
 
+/**
+ * Responsável por:
+ * - Ativar contas convidadas através do token enviado por e-mail.
+ * - Definir a primeira password antes de permitir login.
+ *
+ * Fluxo:
+ * Link de ativação -> usersApi.activateAccount -> Backend -> Login.
+ */
 const DefinirPassword = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token'); 
@@ -17,7 +25,7 @@ const DefinirPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validações básicas de segurança no frontend
+    // Validações rápidas antes de enviar o token e a password ao backend.
     if (password !== confirmPassword) {
       return Alerts.error('As passwords não coincidem. Tente novamente.');
     }
@@ -31,7 +39,7 @@ const DefinirPassword = () => {
     try {
       const message = await usersApi.activateAccount(token, password);
       
-      // Mostra o sucesso e redireciona
+      // Após ativação, a sessão ainda deve ser iniciada no login.
       await Alerts.success(message);
       navigate('/login');
 
@@ -42,7 +50,7 @@ const DefinirPassword = () => {
     }
   };
 
-  // Barreira de segurança visual
+  // Sem token, a página não consegue completar a ativação no backend.
   if (!token) {
     return (
       <Container className="d-flex justify-content-center align-items-center vh-100 bg-light">

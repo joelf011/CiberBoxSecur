@@ -1,10 +1,13 @@
 import api from './axiosConfig';
 
+/**
+ * Wrapper dos endpoints de artigos.
+ * Centraliza chamadas públicas e de backoffice para manter as páginas sem URLs hardcoded.
+ */
 export const articlesApi = {
 
-  // ÁREA PÚBLICA
+  // Área pública: devolve artigos publicados com filtros de categoria e pesquisa.
 
-  // Obter artigos para a grelha
   getPublicArticles: async (limit = 6, offset = 0, categoryId = '', search = '') => {
     let url = `/articles/public?limit=${limit}&offset=${offset}`;
     
@@ -15,21 +18,20 @@ export const articlesApi = {
     return response.data;
   },
 
-  // Obter detalhes de um artigo
+  // Detalhe público identificado por slug, usado pela rota de notícia.
   getArticleBySlug: async (slug) => {
     const response = await api.get(`/articles/public/${slug}`);
     return response.data;
   },
 
-  // Backoffice
+  // Backoffice: endpoints autenticados para gestão editorial.
 
-  // Obter todos os artigos
   getAllAdminArticles: async () => {
     const response = await api.get('/articles');
     return response.data;
   },
 
-  // Criar artigo
+  // Envia FormData porque o artigo pode incluir imagem de capa.
   createArticle: async (formData) => {
     const response = await api.post('/articles', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
@@ -37,7 +39,7 @@ export const articlesApi = {
     return response.data;
   },
 
-  // Atualizar artigo
+  // Mantém multipart para permitir substituir a imagem de capa.
   updateArticle: async (id, formData) => {
     const response = await api.put(`/articles/${id}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
@@ -45,7 +47,7 @@ export const articlesApi = {
     return response.data;
   },
 
-  // Eliminar artigo
+  // Elimina logicamente o artigo no backend.
   deleteArticle: async (id) => {
     const response = await api.delete(`/articles/${id}`);
     return response.data;

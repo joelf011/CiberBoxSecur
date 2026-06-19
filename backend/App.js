@@ -1,9 +1,24 @@
+/**
+ * Ponto de entrada principal do backend (Express).
+ *
+ * Responsável por:
+ * - Configurar middlewares globais (CORS, body-parser).
+ * - Registar todas as rotas da API.
+ * - Sincronizar os modelos Sequelize com a base de dados.
+ * - Iniciar o servidor HTTP.
+ *
+ * Fluxo:
+ * Pedido HTTP → Middlewares (CORS, JSON) → Router correspondente → Controller → BD → Resposta.
+ */
+
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
 const db = require("./src/models");
 const path = require("path");
+
+// --- Importação de rotas ---
 const authRoutes = require("./src/routes/authRoutes");
 const userRoutes = require("./src/routes/userRoutes");
 const companyRoutes = require("./src/routes/companiesRoutes");
@@ -23,31 +38,37 @@ const cmsRoutes = require("./src/routes/cmsRoutes");
 
 const app = express();
 
-// TRUST PROXY (para obter IP real do cliente, especialmente atrás de proxies ou em produção)
+// Necessário para obter o IP real do cliente quando atrás de reverse proxy (ex: Vercel, Nginx).
 app.set("trust proxy", 1);
 
-// --- MIDDLEWARES ---
+// --- Middlewares globais ---
 
+// Origens permitidas para pedidos CORS (frontend em produção e em desenvolvimento local).
 const allowedOrigins = [
-  process.env.FRONTEND_URL, // O link do Vercel
-  'http://localhost:5173'   // PC para testes
+  process.env.FRONTEND_URL,
+  'http://localhost:5173'
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Permite pedidos sem origem ou os que estão na lista
+    // Permite pedidos sem origem (ex: ferramentas como Postman) ou origens na lista.
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Bloqueado pelo CORS'));
     }
   },
-  credentials: true // Importante se no futuro usares cookies
+  // Permite envio de cookies e cabeçalhos de autenticação entre origens.
+  credentials: true
 }));
+
+// Limite de 50 MB para suportar uploads de ficheiros via JSON (ex: base64).
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-// --- API ROUTES ---
+// --- Registo de rotas da API ---
+
+// Serve ficheiros estáticos carregados (documentos, imagens, etc.).
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -58,7 +79,7 @@ app.use('/api/assets', assetRoutes);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/documents', documentRoutes);
 
-// Rota de Pastas Globais (A nossa rota funcional!)
+// Rotas de pastas globais — registadas diretamente aqui por não pertencerem ao router de documentos.
 const documentController = require('./src/controllers/documentController');
 const authMiddleware = require('./src/middlewares/authMiddleware');
 const checkPermission = require('./src/middlewares/permissionMiddleware');
@@ -76,14 +97,15 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/cms', cmsRoutes);
 
-// --- Test ---
+// --- Rota de teste ---
 app.get("/", (req, res) => {
   res.json({ message: "Bem-vindo à API da ProjectBox!" });
 });
 
-// --- DB conexion ---
+// --- Inicialização da base de dados e do servidor ---
 const PORT = process.env.PORT || 5000;
 
+// Sincroniza os modelos com a BD (alter: true aplica alterações de esquema sem apagar dados).
 db.sequelize
   .sync({ alter: true })
   .then(() => {

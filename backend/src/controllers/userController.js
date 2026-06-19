@@ -1,5 +1,13 @@
 const userService = require('../services/userService');
 
+/**
+ * Responsável por:
+ * - Expor operações de perfil próprio e gestão administrativa de utilizadores.
+ * - Delegar hashing, validações e auditoria no userService.
+ *
+ * Fluxo:
+ * Frontend -> UserController -> UserService -> Users/AuditLogs -> Resposta.
+ */
 const userController = {
     async getProfile(req, res) {
         try {
@@ -11,7 +19,7 @@ const userController = {
         }
     },
 
-    // UPDATE
+    // Atualiza o perfil do próprio utilizador autenticado.
     async updateProfile(req, res) {
         try {
             await userService.updateProfile(req.user.id, req.body, req.ip);
@@ -22,7 +30,7 @@ const userController = {
         }
     },
 
-    // LIST all users (Admin)
+    // Lista utilizadores para o painel administrativo.
     async getAllAdmin(req, res) {
         try {
             const users = await userService.getAllAdmin();
@@ -33,7 +41,7 @@ const userController = {
         }
     },
 
-    // Update
+    // Atualiza utilizador a partir da área administrativa.
     async updateAdmin(req, res) {
         try {
             await userService.updateAdmin(req.params.id, req.body, req.user.id, req.ip);
@@ -44,7 +52,7 @@ const userController = {
         }
     },
 
-    // DELETE (Soft)
+    // Apaga logicamente utilizador a partir da área administrativa.
     async delete(req, res) {
         try {
             await userService.deleteUser(req.params.id, req.user.id, req.ip);

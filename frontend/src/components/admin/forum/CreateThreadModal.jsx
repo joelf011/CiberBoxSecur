@@ -13,6 +13,14 @@ import forumApi from "../../../api/forumApi";
 import { Alerts } from "../../../utils/Alerts";
 import api from "../../../api/axiosConfig";
 
+/**
+ * Responsável por:
+ * - Criar tickets a partir do cliente ou da equipa interna.
+ * - Carregar empresas apenas quando o utilizador pode abrir ticket por uma empresa.
+ *
+ * Fluxo:
+ * Modal -> /companies opcional -> forumApi.createTicket -> Atualização da lista.
+ */
 const CreateTicketModal = ({ show, onHide, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -26,7 +34,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
   });
 
   const user = JSON.parse(localStorage.getItem("user"));
-  // Impede que um Cliente (Role 3) veja o dropdown da empresa mesmo com permissões em cache
+  // Fail-safe: clientes nunca escolhem empresa, mesmo que tenham permissões antigas em cache.
   const isStaff =
     user &&
     Number(user.role_id) !== 3 &&
@@ -34,12 +42,12 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
       Number(user.role_id) === 2 ||
       (user.permissions && user.permissions.includes("UPDATE_TICKET")));
 
-  // Carrega as empresas do backend se for Administrador
+  // Staff precisa de escolher a empresa associada ao ticket.
   useEffect(() => {
     if (show && isStaff) {
       const fetchCompanies = async () => {
         try {
-          // A chamada via 'api' já utiliza o URL do .env e injeta o Token de Autorização!
+          // axiosConfig injeta o token e usa o URL de API configurado no ambiente.
           const response = await api.get("/companies");
           setCompanies(response.data);
         } catch (err) {
@@ -89,7 +97,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
 
       await forumApi.createTicket(payload);
 
-      // Reset form
+      // Limpa o formulário para a próxima abertura do modal.
       setFormData({
         subject: "",
         description: "",
@@ -129,7 +137,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
             </Alert>
           )}
 
-          {/* Subject Field */}
+          {/* Campo principal usado na listagem de tickets. */}
           <Form.Group className="mb-4">
             <Form.Label className="small fw-bold text-secondary text-uppercase">
               <FontAwesomeIcon icon={faPen} className="me-2" /> Assunto
@@ -146,7 +154,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
             />
           </Form.Group>
 
-          {/* Description Field */}
+          {/* Descrição enviada ao backend como corpo do ticket. */}
           <Form.Group className="mb-4">
             <Form.Label className="small fw-bold text-secondary text-uppercase">
               <FontAwesomeIcon icon={faAlignLeft} className="me-2" /> Descrição
@@ -165,7 +173,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
             />
           </Form.Group>
 
-          {/* Company Field (Admins Only) */}
+          {/* Empresa obrigatória apenas para staff que cria tickets por clientes. */}
           {isStaff && (
             <Form.Group className="mb-4">
               <Form.Label className="small fw-bold text-secondary text-uppercase">
@@ -189,7 +197,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
             </Form.Group>
           )}
 
-          {/* Category Field */}
+          {/* Categoria operacional usada para triagem. */}
           <Form.Group className="mb-4">
             <Form.Label className="small fw-bold text-secondary text-uppercase">
               <FontAwesomeIcon icon={faTag} className="me-2" /> Categoria
@@ -208,7 +216,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
             </Form.Select>
           </Form.Group>
 
-          {/* Priority Field */}
+          {/* Prioridade inicial ajustável depois por gestores. */}
           <Form.Group className="mb-2">
             <Form.Label className="small fw-bold text-secondary text-uppercase">
               <FontAwesomeIcon icon={faFlag} className="me-2" /> Prioridade

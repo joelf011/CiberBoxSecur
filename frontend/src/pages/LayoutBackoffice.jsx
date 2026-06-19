@@ -22,30 +22,38 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { usersApi } from "../api/usersApi";
 
+/**
+ * Responsável por:
+ * - Definir a shell autenticada do portal e filtrar navegação por permissões.
+ * - Carregar o perfil do utilizador para sidebar, mobile menu e logout.
+ *
+ * Fluxo:
+ * Login -> localStorage/JWT -> LayoutBackoffice -> usersApi/profile -> Outlet.
+ */
 const LayoutBackoffice = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const navigate = useNavigate();
 
-  // Estado para guardar os dados do utilizador
+  // Perfil visível na navegação, recarregado quando a página de perfil emite evento.
   const [userProfile, setUserProfile] = useState({
     name: "A carregar...",
     email: "",
     avatar: null,
   });
 
-  // Obter as permissões do utilizador
+  // Permissões guardadas no login controlam apenas a visibilidade do menu.
   const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
   const userPermissions = loggedInUser.permissions || [];
 
   const handleLogout = () => {
-    // Apagar o token
+    // Remove sessão local antes de regressar ao website público.
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/");
   };
 
-  // Carregar dados
+  // Carrega perfil real do backend para refletir alterações de nome/avatar.
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -64,19 +72,19 @@ const LayoutBackoffice = () => {
   }, []);
 
   const allNavItems = [
-    { path: "/portal/dashboard", icon: faChartLine, label: "Dashboard" }, // Visível para todos
+    { path: "/portal/dashboard", icon: faChartLine, label: "Dashboard" }, // Disponível para qualquer utilizador autenticado.
     {
       path: "/portal/incidentes",
       icon: faShieldAlt,
       label: "Central de Incidentes",
       permission: "VIEW_INCIDENTS",
-    }, // Incidentes
+    },
     {
       path: "/portal/forum",
       icon: faComments,
       label: "Fórum de Clientes",
       permission: "VIEW_TICKETS",
-    }, // Visível para todos
+    },
     {
       path: "/portal/cms",
       icon: faEdit,
@@ -112,7 +120,7 @@ const LayoutBackoffice = () => {
       icon: faFolderOpen,
       label: "Repositório Global",
       permission: "VIEW_TICKETS",
-    }, // Visível para todos
+    },
     {
       path: "/portal/logs",
       icon: faHistory,
@@ -121,11 +129,11 @@ const LayoutBackoffice = () => {
     },
   ];
 
-  // Filtrar menu
+  // Remove entradas sem permissão para evitar navegação para áreas sem acesso.
   const navItems = allNavItems.filter((item) => {
     if (!item.permission) return true;
 
-    // Verifica se o utilizador tem permissão
+    // A validação real continua no backend; aqui apenas se esconde a opção.
     return userPermissions.includes(item.permission);
   });
 
@@ -206,7 +214,7 @@ const LayoutBackoffice = () => {
       }
       `}</style>
 
-      {/* --- SIDEBAR (DESKTOP) --- */}
+      {/* Navegação principal em desktop, filtrada por permissões locais. */}
       <aside
         className="sidebar-box text-white d-none d-md-flex flex-column border-end border-secondary shadow overflow-hidden"
         style={{
@@ -276,7 +284,7 @@ const LayoutBackoffice = () => {
           className="mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 py-3 overflow-hidden d-flex flex-column"
           style={{ flexShrink: 0 }}
         >
-          {/* Link para o Perfil */}
+          {/* Perfil do utilizador sincronizado com a API. */}
           <Link
             to="/portal/perfil"
             className="text-decoration-none d-block mx-2 profile-section-hover"
@@ -328,7 +336,7 @@ const LayoutBackoffice = () => {
         </div>
       </aside>
 
-      {/* --- CONTEÚDO PRINCIPAL --- */}
+      {/* Outlet onde as páginas protegidas são renderizadas. */}
       <main className="flex-grow-1 d-flex flex-column bg-body-tertiary main-view overflow-hidden">
         <div className="flex-grow-1 overflow-auto p-3 p-md-4">
           <Container fluid className="py-2">
@@ -337,7 +345,7 @@ const LayoutBackoffice = () => {
         </div>
       </main>
 
-      {/* --- BOTTOM NAV (MOBILE) --- */}
+      {/* Navegação compacta para as primeiras rotas em mobile. */}
       <nav className="mobile-bottom-nav d-flex d-md-none fixed-bottom shadow-lg">
         {navItems.slice(0, 4).map((item) => (
           <NavLink
@@ -367,7 +375,7 @@ const LayoutBackoffice = () => {
         </button>
       </nav>
 
-      {/* --- MENU OVERLAY MOBILE --- */}
+      {/* Menu completo em mobile para manter acesso às restantes áreas. */}
       <Offcanvas
         show={showMobileMenu}
         onHide={() => setShowMobileMenu(false)}
@@ -419,7 +427,7 @@ const LayoutBackoffice = () => {
             className="offcanvas-footer mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 p-4"
             style={{ flexShrink: 0 }}
           >
-            {/* Link para o Perfil no Mobile --- */}
+            {/* Acesso ao perfil também disponível dentro do menu mobile. */}
             <Link
               to="/portal/perfil"
               className="text-decoration-none d-flex align-items-center mb-4"
