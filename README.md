@@ -29,16 +29,16 @@ CREATE DATABASE neondb
 Abra o terminal dentro da pasta do Backend e execute os comandos pela seguinte ordem:
 
 1. Instalar as dependências:
-npm i
+`npm i`
 
 2. Criar as Tabelas Automaticamente:
-npm run dev
+`npm run dev`
 
 Aguardar que o sistema inicie e só depois fazer o passo seguinte
 
 3. Injetar os Dados (OBRIGATÓRIO):
 Num novo terminal (ainda com o anterior a correr) executar o seguinte comando no backend:
-npx sequelize-cli db:seed:all
+`npx sequelize-cli db:seed:all`
 
 ---
 
@@ -46,12 +46,12 @@ npx sequelize-cli db:seed:all
 Num novo terminal, navegue até à pasta do Frontend:
 
 1. Instale as dependências:
-npm i
+`npm i`
 
 2. Renomeie o ficheiro `.env.example` para `.env`. (Não é necessário alterar o conteúdo)
 
 3. Inicie a interface:
-npm run dev
+`npm run dev`
 
 ---
 
