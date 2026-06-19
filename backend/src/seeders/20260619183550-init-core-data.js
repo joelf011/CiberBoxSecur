@@ -62,19 +62,19 @@ module.exports = {
     await queryInterface.bulkInsert('Permissions', permissions, {});
 
     // ==========================================
-    // INSERIR CARGOS GENÉRICOS
+    // INSERIR CARGOS GENÉRICOS (com created_at e updated_at)
     // ==========================================
     const roles = [
-      { id: 1, name: 'Administrador', createdAt: new Date(), updatedAt: new Date() },
-      { id: 2, name: 'Gestor', createdAt: new Date(), updatedAt: new Date() },
-      { id: 3, name: 'Cliente', createdAt: new Date(), updatedAt: new Date() },
-      { id: 4, name: 'Editor de Conteúdo', createdAt: new Date(), updatedAt: new Date() },
-      { id: 5, name: 'Visualizador', createdAt: new Date(), updatedAt: new Date() }
+      { id: 1, name: 'Administrador', created_at: new Date(), updated_at: new Date() },
+      { id: 2, name: 'Gestor', created_at: new Date(), updated_at: new Date() },
+      { id: 3, name: 'Cliente', created_at: new Date(), updated_at: new Date() },
+      { id: 4, name: 'Editor de Conteúdo', created_at: new Date(), updated_at: new Date() },
+      { id: 5, name: 'Visualizador', created_at: new Date(), updated_at: new Date() }
     ];
     await queryInterface.bulkInsert('Roles', roles, {});
 
     // ==========================================
-    // LIGAR CARGOS ÀS PERMISSÕES
+    // LIGAR CARGOS ÀS PERMISSÕES (SEM datas forçadas)
     // ==========================================
     const rawRolePermissions = [
       { "role_id": 1, "permission_id": 1 }, { "role_id": 1, "permission_id": 2 }, { "role_id": 1, "permission_id": 3 }, { "role_id": 1, "permission_id": 4 }, { "role_id": 1, "permission_id": 5 }, { "role_id": 1, "permission_id": 6 }, { "role_id": 1, "permission_id": 7 }, { "role_id": 1, "permission_id": 8 }, { "role_id": 1, "permission_id": 9 }, { "role_id": 1, "permission_id": 10 }, { "role_id": 1, "permission_id": 11 }, { "role_id": 1, "permission_id": 12 }, { "role_id": 1, "permission_id": 13 }, { "role_id": 1, "permission_id": 14 }, { "role_id": 1, "permission_id": 15 }, { "role_id": 1, "permission_id": 16 }, { "role_id": 1, "permission_id": 17 }, { "role_id": 1, "permission_id": 18 }, { "role_id": 1, "permission_id": 19 }, { "role_id": 1, "permission_id": 20 }, { "role_id": 1, "permission_id": 21 }, { "role_id": 1, "permission_id": 22 }, { "role_id": 1, "permission_id": 23 }, { "role_id": 1, "permission_id": 24 }, { "role_id": 1, "permission_id": 25 }, { "role_id": 1, "permission_id": 26 }, { "role_id": 1, "permission_id": 27 }, { "role_id": 1, "permission_id": 28 }, { "role_id": 1, "permission_id": 29 }, { "role_id": 1, "permission_id": 30 }, { "role_id": 1, "permission_id": 34 }, { "role_id": 1, "permission_id": 35 }, { "role_id": 1, "permission_id": 36 }, { "role_id": 1, "permission_id": 37 }, { "role_id": 1, "permission_id": 38 }, { "role_id": 1, "permission_id": 39 }, { "role_id": 1, "permission_id": 40 }, { "role_id": 1, "permission_id": 41 }, { "role_id": 1, "permission_id": 42 }, { "role_id": 1, "permission_id": 43 }, { "role_id": 1, "permission_id": 44 }, { "role_id": 1, "permission_id": 45 }, { "role_id": 1, "permission_id": 46 }, { "role_id": 1, "permission_id": 47 }, { "role_id": 1, "permission_id": 48 }, { "role_id": 1, "permission_id": 49 }, { "role_id": 1, "permission_id": 50 }, { "role_id": 1, "permission_id": 51 }, { "role_id": 1, "permission_id": 52 }, { "role_id": 1, "permission_id": 106 },
@@ -83,18 +83,12 @@ module.exports = {
       { "role_id": 4, "permission_id": 1 }, { "role_id": 4, "permission_id": 2 }, { "role_id": 4, "permission_id": 3 }, { "role_id": 4, "permission_id": 4 }, { "role_id": 4, "permission_id": 11 }, { "role_id": 4, "permission_id": 12 }, { "role_id": 4, "permission_id": 13 }, { "role_id": 4, "permission_id": 106 },
       { "role_id": 5, "permission_id": 39 }
     ];
-
-    const rolePermissionsData = rawRolePermissions.map(rp => ({
-      ...rp,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }));
-    await queryInterface.bulkInsert('Role_Permissions', rolePermissionsData, {});
+    await queryInterface.bulkInsert('Role_Permissions', rawRolePermissions, {});
 
     // ==========================================
-    // CRIAR OS 3 UTILIZADORES
+    // CRIAR OS 3 UTILIZADORES (com created_at e updated_at)
     // ==========================================
-    const hashedPassword = await bcrypt.hash('Senha123!', 10); // Mesma password para todos para facilitar o teste
+    const hashedPassword = await bcrypt.hash('Senha123!', 10); 
 
     const users = [
       {
@@ -105,8 +99,8 @@ module.exports = {
         phone: '912345678',
         role_id: 1, 
         is_active: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        created_at: new Date(),
+        updated_at: new Date()
       },
       {
         id: 2,
@@ -116,8 +110,8 @@ module.exports = {
         phone: '923456789',
         role_id: 2, 
         is_active: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        created_at: new Date(),
+        updated_at: new Date()
       },
       {
         id: 3,
@@ -125,17 +119,16 @@ module.exports = {
         email: 'cliente@cyberboxsecur.com',
         password: hashedPassword,
         phone: '934567890',
-        role_id: 3, 
+        role_id: 3,
         is_active: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        created_at: new Date(),
+        updated_at: new Date()
       }
     ];
     await queryInterface.bulkInsert('Users', users, {});
   },
 
   async down(queryInterface, Sequelize) {
-    // Apaga os dados pela ordem inversa (Foreign Keys)
     const testEmails = ['admin@cyberboxsecur.com', 'gestor@cyberboxsecur.com', 'cliente@cyberboxsecur.com'];
     await queryInterface.bulkDelete('Users', { email: testEmails }, {});
     await queryInterface.bulkDelete('Role_Permissions', null, {});
