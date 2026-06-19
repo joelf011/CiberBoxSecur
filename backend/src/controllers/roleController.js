@@ -1,33 +1,40 @@
 const { Role, Permission, sequelize } = require('../models');
 const auditLogService = require('../services/auditLogService');
 
+/**
+ * Responsável por:
+ * - Gerir cargos e permissões associadas.
+ * - Usar transações para manter Roles e Role_Permissions consistentes.
+ *
+ * Fluxo:
+ * Backoffice -> Controller -> Transação Sequelize -> Roles/Permissions -> JSON.
+ */
 const roleController = {
-    // CREATE
+    // Cria um cargo e as permissões associadas numa única transação.
     async create(req, res) {
-        // Change 2 tables (Roles and Role_Permissions)
-        // Rollback
+        // A transação permite reverter cargo e pivot se uma das escritas falhar.
         const t = await sequelize.transaction();
 
         try {
             const { name, permissions } = req.body;
 
-            // Base Role
+            // Registo base do cargo, necessário antes de preencher a tabela pivot.
             const newRole = await Role.create({ name }, { transaction: t });
 
-            // Permissions
+            // Permissões recebidas como IDs vindos da matriz do frontend.
             if (permissions && Array.isArray(permissions) && permissions.length > 0) {
-                // Sequelize: setPermissions -> rows in the join table
+                // setPermissions escreve as linhas da tabela Role_Permissions.
                 await newRole.setPermissions(permissions, { transaction: t });
             }
 
             await t.commit();
 
-            // Find the newly created role, but with the permissions to return it to the Frontend
+            // Recarrega o cargo com permissões para atualizar a UI sem novo pedido.
             const roleWithPermissions = await Role.findByPk(newRole.id, {
                 include: { model: Permission, attributes: ['id', 'name'] }
             });
 
-            // LOG
+            // Auditoria separada da transação principal para não bloquear a resposta.
             await auditLogService.logEvent({
                 user_id: req.user ? req.user.id : null,
                 action: 'ROLE_CREATE',
@@ -49,14 +56,14 @@ const roleController = {
         }
     },
 
-    // READ ALL
+    // Lista cargos com permissões, escondendo dados técnicos da tabela pivot.
     async findAll(req, res) {
         try {
             const roles = await Role.findAll({
                 include: {
                     model: Permission,
                     attributes: ['id', 'name'],
-                    through: { attributes: [] } // Hide join table from json
+                    through: { attributes: [] } // Evita devolver metadados da tabela pivot no JSON.
                 },
                 order: [['name', 'ASC']]
             });
@@ -67,7 +74,7 @@ const roleController = {
         }
     },
 
-    // READ ONE
+    // Carrega um cargo com descrições das permissões para edição no modal.
     async findOne(req, res) {
         try {
             const { id } = req.params;
@@ -88,7 +95,7 @@ const roleController = {
         }
     },
 
-    // UPDATE
+    // Atualiza nome e matriz de permissões mantendo consistência transacional.
     async update(req, res) {
         const t = await sequelize.transaction();
         try {
@@ -102,12 +109,12 @@ const roleController = {
                 return res.status(404).json({ error: 'Role not found.' });
             }
 
-            // Update name
+            // O nome é opcional para permitir alterações apenas de permissões.
             if (name) {
                 await role.update({ name }, { transaction: t });
             }
 
-            // Update permissions
+            // Substitui o conjunto completo de permissões pelo que veio do frontend.
             if (permissions && Array.isArray(permissions)) {
                 await role.setPermissions(permissions, { transaction: t });
             }
@@ -118,7 +125,7 @@ const roleController = {
                 include: { model: Permission, attributes: ['id', 'name'] }
             });
 
-            // LOG: role updated
+            // Log protegido para não falhar a atualização caso a auditoria tenha erro.
             try {
                 await auditLogService.logEvent({
                     user_id: req.user ? req.user.id : null,
@@ -144,7 +151,7 @@ const roleController = {
         }
     },
 
-    // DELETE (Soft)
+    // Apaga logicamente o cargo, preservando histórico e relações.
     async delete(req, res) {
         try {
             const { id } = req.params;
@@ -156,7 +163,7 @@ const roleController = {
 
             await role.destroy();
 
-            // LOG: role deleted
+            // Regista a eliminação lógica do cargo.
             await auditLogService.logEvent({
                 user_id: req.user ? req.user.id : null,
                 action: 'ROLE_DELETE',
@@ -172,7 +179,7 @@ const roleController = {
         }
     },
 
-    // RESTORE
+    // Restaura cargo previamente eliminado por soft delete.
     async restore(req, res) {
         try {
             const { id } = req.params;
@@ -188,7 +195,7 @@ const roleController = {
 
             await role.restore();
 
-            // LOG: role restored
+            // Regista o restauro para fechar o ciclo de auditoria.
             await auditLogService.logEvent({
                 user_id: req.user ? req.user.id : null,
                 action: 'ROLE_RESTORE',

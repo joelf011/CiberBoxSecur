@@ -5,10 +5,18 @@ import { faLock, faSave } from '@fortawesome/free-solid-svg-icons';
 import { incidentsApi } from '../../api/incidentsApi';
 import { Alerts } from '../../utils/Alerts';
 
+/**
+ * Responsável por:
+ * - Permitir à equipa técnica atualizar estado, criticidade e medidas.
+ * - Preservar o JSONB existente e acrescentar campos técnicos.
+ *
+ * Fluxo:
+ * Detalhe -> PainelGestao -> incidentsApi.updateIncident -> Recarregar detalhe.
+ */
 const PainelGestao = ({ incident, onUpdateSuccess }) => {
   const [isSaving, setIsSaving] = useState(false);
   
-  // O estado inicial puxa o que já está na DB
+  // Inicializa com valores persistidos para evitar sobrescrever campos técnicos.
   const [formData, setFormData] = useState({
     status: incident.status || 'Open',
     severity: incident.severity || 'Medium',
@@ -44,7 +52,7 @@ const PainelGestao = ({ incident, onUpdateSuccess }) => {
       await incidentsApi.updateIncident(incident.id, updatedPayload);
       Alerts.success('Incidente atualizado com sucesso!');
       
-      // Avisa a página pai que gravou com sucesso para ela recarregar os dados
+      // A página pai recarrega o incidente para refletir a versão persistida.
       if (onUpdateSuccess) onUpdateSuccess();
     } catch (err) {
       Alerts.error('Erro ao atualizar o incidente.');

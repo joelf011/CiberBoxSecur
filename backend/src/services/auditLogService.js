@@ -1,9 +1,17 @@
 const { AuditLog, User, Role, Company } = require('../models');
 const { Op } = require('sequelize');
 
+/**
+ * Responsável por:
+ * - Centralizar o registo de auditoria usado por controllers e services.
+ * - Filtrar logs administrativos com dados de utilizador, cargo e empresa.
+ *
+ * Fluxo:
+ * Ação da aplicação -> auditLogService -> AuditLogs -> Consulta no backoffice.
+ */
 const auditLogService = {
 
-    // This function is called by other controllers/services to log events
+    // Usado por várias camadas; falhas de auditoria não devem bloquear a operação principal.
     async logEvent({ user_id, action, entity_type, entity_id, ip_address }) {
         try {
             await AuditLog.create({
@@ -18,7 +26,7 @@ const auditLogService = {
         }
     },
 
-    // Fetches the filtered and paginated logs for the Admin
+    // Constrói a query de auditoria consumida pela página de logs do backoffice.
     async getLogs({ page, limit, action, startDate, endDate, search, company_id }) {
         const offset = (page - 1) * limit;
         let whereClause = {};
@@ -38,10 +46,12 @@ const auditLogService = {
         }
 
         if (company_id) {
+            // Filtra pela empresa associada ao utilizador que originou o evento.
             whereClause['$User.company_id$'] = company_id; 
         }
 
         if (search) {
+            // Pesquisa transversal nas colunas próprias e nas associações carregadas via include.
             whereClause[Op.or] = [
                 { action: { [Op.iLike]: `%${search}%` } },
                 { entity_type: { [Op.iLike]: `%${search}%` } },

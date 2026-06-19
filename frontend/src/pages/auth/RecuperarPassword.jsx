@@ -6,20 +6,28 @@ import { faEnvelope, faArrowLeft, faPaperPlane, faSpinner, faCheckCircle, faLock
 import { usersApi } from '../../api/usersApi';
 import { Alerts } from '../../utils/Alerts';
 
+/**
+ * Responsável por:
+ * - Pedir link de recuperação quando não existe token no URL.
+ * - Definir nova password quando o token vem do e-mail.
+ *
+ * Fluxo:
+ * E-mail/token -> usersApi -> AuthService -> E-mail ou atualização de password.
+ */
 const RecuperarPassword = () => {
-  // Lê o '?token=123xyz' do URL
+  // A presença de token altera o modo da página entre pedido e redefinição.
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token'); 
   const navigate = useNavigate();
 
-  // Estados
+  // Estados dos dois fluxos: pedido por e-mail e gravação da nova password.
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [sucesso, setSucesso] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Pedir o Link
+  // Pede link de recuperação; a resposta do backend é neutra por segurança.
   const handleRequestLink = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -34,7 +42,7 @@ const RecuperarPassword = () => {
     }
   };
 
-  // Gravar a Nova Password
+  // Grava a nova password depois de validar campos básicos no frontend.
   const handleResetPassword = async (e) => {
     e.preventDefault();
     
@@ -50,7 +58,7 @@ const RecuperarPassword = () => {
     try {
       const message = await usersApi.resetPassword(token, password);
       await Alerts.success(message);
-      navigate('/login'); // Volta ao Login automaticamente
+      navigate('/login'); // Regressa ao login após reset bem sucedido.
     } catch (err) {
       Alerts.error(err.message);
     } finally {
@@ -92,7 +100,7 @@ const RecuperarPassword = () => {
             <form onSubmit={token ? handleResetPassword : handleRequestLink}>
               
               {!token ? (
-                /* MOSTRA O E-MAIL */
+                /* Modo sem token: pede o e-mail para enviar recuperação. */
                 <div className="mb-4">
                   <label className="form-label small fw-bold text-secondary">E-mail</label>
                   <div className="input-group input-group-lg">
@@ -112,7 +120,7 @@ const RecuperarPassword = () => {
                   </div>
                 </div>
               ) : (
-                /* MOSTRA AS PASSWORDS */
+                /* Modo com token: recolhe e confirma a nova password. */
                 <>
                   <div className="mb-3">
                     <label className="form-label small fw-bold text-secondary">Nova Password</label>
@@ -153,7 +161,7 @@ const RecuperarPassword = () => {
                 </>
               )}
 
-              {/* BOTÃO SUBMIT */}
+              {/* A ação do botão depende do modo ativo da página. */}
               <button 
                 type="submit" 
                 className="btn btn-primary btn-lg w-100 fw-bold shadow-sm rounded-3 mt-2 mb-4 fs-6"

@@ -4,6 +4,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTag, faFlag, faClock, faUser, faCheck, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import forumApi from '../../../api/forumApi';
 
+/**
+ * Responsável por:
+ * - Mostrar metadados do ticket e ações disponíveis ao gestor/cliente.
+ * - Permitir assumir tickets e atualizar estado através da API.
+ */
 const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh }) => {
     const [claiming, setClaiming] = useState(false);
     const [updating, setUpdating] = useState(false);
@@ -56,7 +61,7 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
         switch (priority) {
             case 'Low': return 'info';
             case 'Medium': return 'warning';
-            case 'High': return 'orange'; // Bootstrap doesn't have orange natively, we can use warning or custom
+            case 'High': return 'orange'; // Usa variante customizada quando existir no tema.
             case 'Critical': return 'danger';
             default: return 'light';
         }
@@ -77,7 +82,7 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
 
     return (
         <Card className="h-100 border-0 shadow-sm rounded-4 animate-fade-in d-flex flex-column overflow-hidden">
-            {/* Header */}
+            {/* Resumo visual do estado, prioridade e categoria do ticket. */}
             <Card.Header className="bg-white border-bottom p-3 shrink-0">
                 <h5 className="mb-2 fw-bold text-dark">{ticket.subject}</h5>
                 <div className="d-flex gap-2 flex-wrap">
@@ -95,7 +100,7 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
                 </div>
             </Card.Header>
 
-            {/* Body - Description and Details */}
+            {/* Descrição e metadados carregados da resposta do backend. */}
             <Card.Body className="overflow-auto flex-grow-1 p-4 custom-scrollbar">
                 <div className="mb-4">
                     <h6 className="text-muted fw-bold mb-2">Descrição</h6>
@@ -106,7 +111,7 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
 
                 <hr className="my-4" />
 
-                {/* Ticket Metadata */}
+                {/* Dados operacionais usados para contexto e auditoria. */}
                 <Row className="mb-4">
                     <Col xs={6} className="mb-3">
                         <small className="text-muted fw-bold">ID do Ticket</small>
@@ -148,7 +153,7 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
 
                 <hr className="my-4" />
 
-                {/* Status Change Buttons */}
+                {/* Só o gestor atribuído pode alterar o estado do ticket. */}
                 {isAssignedToMe && (
                     <div className="mb-4">
                         <small className="text-muted fw-bold d-block mb-2">Alterar Estado</small>
@@ -172,7 +177,7 @@ const TicketDetailsPanel = ({ ticket, currentUserId, isAdmin, onClaim, onRefresh
                 )}
             </Card.Body>
 
-            {/* Footer - Action Buttons */}
+            {/* Ações dependentes de ownership, atribuição e cargo. */}
             <Card.Footer className="bg-light border-top p-3 shrink-0">
                 {!isClaimed && isAdmin && (
                     <Button

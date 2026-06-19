@@ -1,12 +1,17 @@
 import React from 'react';
 import { Card, Row, Col, Badge } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faShieldAlt, faClipboardCheck } from '@fortawesome/free-solid-svg-icons'; // Adicionei um ícone novo aqui
+import { faShieldAlt, faClipboardCheck } from '@fortawesome/free-solid-svg-icons'; // Ícone usado para destacar medidas de mitigação.
 
+/**
+ * Responsável por:
+ * - Apresentar ao cliente o resumo e o estado técnico do incidente.
+ * - Ler dados estruturados guardados em cncs_form_data.
+ */
 const ResumoCliente = ({ incident }) => {
   if (!incident) return null;
 
-  // Variável para facilitar a leitura se existem notas técnicas
+  // Medidas técnicas podem ainda não existir enquanto o incidente está em análise.
   const medidas = incident.cncs_form_data?.corrective_measures;
 
   return (
@@ -55,7 +60,7 @@ const ResumoCliente = ({ incident }) => {
         </div>
       </div>
 
-      {/* Feedback */}
+      {/* Feedback técnico publicado pela equipa de gestão do incidente. */}
       <div className="mt-4 pt-4 border-top border-light">
         <label className="text-primary small fw-bold text-uppercase d-flex align-items-center mb-2">
           <FontAwesomeIcon icon={faClipboardCheck} className="me-2 fs-6" />

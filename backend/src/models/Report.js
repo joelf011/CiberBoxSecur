@@ -1,6 +1,10 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
+/**
+ * Relatórios NIS2 e técnicos associados a empresas.
+ * Guarda metadados na BD e o caminho do ficheiro servido pela API.
+ */
 const Report = sequelize.define('Report', {
     id: {
         type: DataTypes.INTEGER,
@@ -8,10 +12,12 @@ const Report = sequelize.define('Report', {
         autoIncrement: true
     },
     company_id: {
+        // FK -> Companies.id — empresa proprietária do relatório.
         type: DataTypes.INTEGER,
         allowNull: false
     },
     created_by_user_id: {
+        // FK -> Users.id — utilizador que carregou o relatório.
         type: DataTypes.INTEGER,
         allowNull: false
     },
@@ -24,6 +30,7 @@ const Report = sequelize.define('Report', {
         allowNull: false
     },
     risk_score: {
+        // Escala normalizada usada em relatórios de risco.
         type: DataTypes.INTEGER,
         allowNull: true,
         validate: {
@@ -32,6 +39,7 @@ const Report = sequelize.define('Report', {
         }
     },
     file_path: {
+        // Caminho relativo do ficheiro físico guardado em uploads.
         type: DataTypes.STRING,
         allowNull: false
     },
@@ -42,6 +50,7 @@ const Report = sequelize.define('Report', {
 }, {
     tableName: 'Reports',
     timestamps: true,
+    // Soft delete preserva relatórios para histórico e auditoria.
     paranoid: true
 });
 

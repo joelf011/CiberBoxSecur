@@ -11,23 +11,31 @@ import {
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 
-// Registar os componentes do Chart
+/**
+ * Responsável por:
+ * - Mostrar KPIs, gráficos e incidentes recentes do utilizador autenticado.
+ * - Consumir dados agregados já filtrados pelo backend.
+ *
+ * Fluxo:
+ * Dashboard -> dashboardApi -> /dashboard -> Incidents -> Gráficos e tabela.
+ */
+// Regista os componentes necessários do Chart.js antes de renderizar gráficos.
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, ChartTooltip, Legend, ArcElement);
 
 const Dashboard = () => {
-  // Inicializar o hook de navegação (Isto faltava!)
+  // Navegação usada para abrir o detalhe de um incidente a partir da tabela.
   const navigate = useNavigate();
 
-  // LÓGICA DE PERMISSÕES
+  // Permissões locais apenas ajustam textos; o backend decide o âmbito dos dados.
   const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
   const isAdmin = loggedInUser.permissions?.includes('VIEW_ALL_INCIDENTS') || loggedInUser.role_id === 1;
 
-  // Estados
+  // Estado de carregamento da chamada agregada ao backend.
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Função para carregar os dados da BD
+  // Carrega métricas já agregadas pelo service do dashboard.
   const loadData = async () => {
     setIsLoading(true);
     setError(null);
@@ -45,7 +53,7 @@ const Dashboard = () => {
     loadData();
   }, []);
 
-  // Mostrar loading enquanto não há dados
+  // Mostra feedback enquanto a API ainda não devolveu dados.
   if (isLoading) {
     return (
       <div className="d-flex flex-column justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
@@ -55,7 +63,7 @@ const Dashboard = () => {
     );
   }
 
-  // Mostrar erro se a API falhar
+  // Falhas da API são apresentadas sem desmontar o layout do backoffice.
   if (error) {
     return (
       <Alert variant="danger" className="rounded-4 border-0 shadow-sm mt-4">
@@ -65,10 +73,10 @@ const Dashboard = () => {
     );
   }
 
-  // Desestruturar os dados vindos do Backend
+  // Dados vindos do backend: KPIs, gráficos e tabela de incidentes.
   const { kpis, barChartData, pieChartData, recentIncidents } = dashboardData;
 
-  // --- PREPARAÇÃO DOS DADOS PARA O CHART ---
+  // Adapta o formato da API ao formato esperado pelo Chart.js.
   const barData = {
     labels: barChartData.map(item => item.name),
     datasets: [
@@ -98,7 +106,7 @@ const Dashboard = () => {
         data: pieChartData.length > 0 ? pieChartData.map(item => item.value) : [1],
         backgroundColor: pieChartData.length > 0 
           ? ['#0d6efd', '#dc3545', '#ffc107', '#6c757d', '#198754'] 
-          : ['#e9ecef'], // Cor cinzenta caso não existam dados ainda
+          : ['#e9ecef'], // Estado neutro quando não existem dados para o gráfico.
         borderWidth: 0,
       }
     ]
@@ -113,7 +121,7 @@ const Dashboard = () => {
   return (
     <div className="animate-fade-in py-2">
       
-      {/* CABEÇALHO */}
+      {/* Resumo contextual para o utilizador autenticado. */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="fs-4 fw-bold text-dark mb-1">
@@ -126,7 +134,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* CARTÕES KPI */}
+      {/* Cartões KPI calculados no backend. */}
       <Row className="g-3 mb-4">
         <Col md={3} sm={6}>
           <Card className="border-0 shadow-sm rounded-4 h-100 overflow-hidden">
@@ -185,7 +193,7 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* GRÁFICOS */}
+      {/* Gráficos alimentados pelos agregados de incidentes. */}
       <Row className="g-4 mb-4">
         <Col lg={8}>
           <Card className="border-0 shadow-sm rounded-4 h-100 overflow-hidden">
@@ -210,7 +218,7 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* TABELA DE AÇÃO */}
+      {/* Incidentes recentes com navegação para o detalhe. */}
       <Card className="border-0 shadow-sm rounded-4 overflow-hidden mb-4">
         <Card.Header className="bg-white border-0 pt-4 pb-0 px-4">
           <h5 className="fs-6 fw-bold text-dark mb-2">Incidentes Recentes</h5>
@@ -238,7 +246,7 @@ const Dashboard = () => {
                   <tr 
                     key={inc.id} 
                     style={{ cursor: 'pointer' }} 
-                    onClick={() => navigate(`/portal/incidentes/${inc.id}`)} // Aplicação do clique e da navegação!
+                    onClick={() => navigate(`/portal/incidentes/${inc.id}`)} // Abre o detalhe do incidente selecionado.
                   >
                     <td className="px-4 py-3 fw-bold text-secondary">#{inc.id}</td>
                     <td className="py-3 fw-medium text-dark">{inc.title}</td>

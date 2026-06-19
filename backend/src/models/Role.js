@@ -1,6 +1,10 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
+/**
+ * Cargo funcional atribuído a utilizadores.
+ * As permissões efetivas vêm da relação M:N com Permission.
+ */
 const Role = sequelize.define('Role', {
     id: { 
         type: DataTypes.INTEGER,
@@ -15,7 +19,7 @@ const Role = sequelize.define('Role', {
 }, {
     tableName: 'Roles',
     timestamps: true,
-    paranoid: true // deleted_at
+    paranoid: true // Usa deleted_at para permitir restauro de cargos.
 });
 
 module.exports = Role;

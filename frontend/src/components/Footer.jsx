@@ -2,14 +2,21 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Logo from '../assets/logos/CiberBoxSecur-Minimal-NegativeVersion.svg';
 
-
+/**
+ * Rodapé institucional do website público.
+ *
+ * Responsável por:
+ * - Exibir a marca e descrição da empresa.
+ * - Listar ligações rápidas para serviços, plataforma e contactos.
+ * - Mostrar o aviso de direitos de autor com o ano dinâmico.
+ */
 const Footer = () => {
   const bgColor = '#0a192f';
   return (
     <footer className="text-secondary py-5 border-top border-secondary" style={{ backgroundColor: bgColor }}>
       <div className="container px-4">
         <div className="row gy-4">
-          {/* Brand & Description */}
+          {/* Marca e descrição da empresa */}
           <div className="col-12 col-md-3">
             <div className="d-flex align-items-center gap-2 fs-5 fw-bold text-white mb-3">
               <img 

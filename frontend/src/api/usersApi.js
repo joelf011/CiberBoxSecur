@@ -1,7 +1,11 @@
 import api from './axiosConfig';
 
+/**
+ * Wrapper de utilizadores, perfil e fluxos de conta.
+ * Centraliza chamadas de administração, ativação e recuperação de password.
+ */
 export const usersApi = {
-  // Ir buscar utilizadores
+  // Carrega utilizadores para a tabela administrativa.
   getUsers: async () => {
     try {
       const response = await api.get('/users');
@@ -11,7 +15,7 @@ export const usersApi = {
     }
   },
 
-  // Ir buscar os cargos
+  // Carrega cargos para seleção no formulário de utilizador.
   getRoles: async () => {
     try {
       const response = await api.get('/roles');
@@ -21,10 +25,10 @@ export const usersApi = {
     }
   },
 
-  // Criar Utilizador
+  // Cria utilizador através do fluxo de convite/ativação.
   createUser: async (userData) => {
     try {
-      // O Axios faz o JSON.stringify por ti
+      // O axios serializa JSON e o backend envia o e-mail de ativação.
       const response = await api.post('/auth/register', userData); 
       return response.data;
     } catch (error) {
@@ -32,7 +36,7 @@ export const usersApi = {
     }
   },
 
-  // Atualizar Utilizador
+  // Atualiza utilizador a partir da gestão administrativa.
   updateUser: async (userId, userData) => {
     try {
       const response = await api.put(`/users/${userId}`, userData);
@@ -42,17 +46,19 @@ export const usersApi = {
     }
   },
 
+  // Carrega perfil próprio sem expor a password.
   getMyProfile: async () => {
     const response = await api.get('/users/profile'); 
     return response.data;
   },
 
+  // Atualiza perfil próprio, incluindo avatar ou password quando enviados.
   updateMyProfile: async (profileData) => {
     const response = await api.put('/users/profile', profileData);
     return response.data;
   },
 
-  // Eliminar Utilizador
+  // Elimina logicamente utilizador no backend.
   deleteUser: async (userId) => {
     try {
       const response = await api.delete(`/users/${userId}`);
@@ -62,7 +68,7 @@ export const usersApi = {
     }
   },
 
-  // Ativar Conta
+  // Ativa conta a partir do token recebido por e-mail.
   activateAccount: async (token, newPassword) => {
     try {
       const response = await api.post('/auth/activate', { token, newPassword });
@@ -72,7 +78,7 @@ export const usersApi = {
     }
   },
 
-  // Reenviar Ativação
+  // Reenvia convite de ativação para contas ainda não concluídas.
   resendActivation: async (userId) => {
     try {
       const response = await api.post('/auth/resend-activation', { id: userId });
@@ -82,7 +88,7 @@ export const usersApi = {
     }
   },
 
-  // Pede o link de recuperação
+  // Pede link de recuperação sem revelar se o e-mail existe.
   forgotPassword: async (email) => {
     try {
       const response = await api.post('/auth/forgot-password', { email });
@@ -92,7 +98,7 @@ export const usersApi = {
     }
   },
 
-  // Grava a nova password com o token
+  // Grava nova password depois de o backend validar o token.
   resetPassword: async (token, newPassword) => {
     try {
       const response = await api.post('/auth/reset-password', { token, newPassword });

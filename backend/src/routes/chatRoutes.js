@@ -1,3 +1,17 @@
+/**
+ * Rotas do módulo de Chat.
+ *
+ * Responsável por:
+ * - Criar ou encontrar conversas 1-para-1 entre utilizadores.
+ * - Enviar mensagens com suporte a anexos (ficheiros até 50MB).
+ * - Listar conversas e carregar o histórico de mensagens.
+ *
+ * Todas as rotas exigem autenticação e a permissão global USE_CHAT.
+ * O upload de anexos é gerido por Multer com validação de tipo e tamanho de ficheiro.
+ *
+ * Fluxo de mensagem com anexo:
+ * Frontend -> Multer (validação/upload) -> Controller -> Service -> BD + WebSocket.
+ */
 const express = require('express');
 const router = express.Router();
 const chatController = require('../controllers/chatController');
@@ -13,6 +27,7 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// Configuração do armazenamento Multer com nome único por ficheiro.
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => {
@@ -21,6 +36,7 @@ const storage = multer.diskStorage({
     }
 });
 
+// Filtro de extensões permitidas para proteger contra ficheiros maliciosos.
 const fileFilter = (req, file, cb) => {
     const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg', '.webp', '.txt', '.csv'];
     const ext = path.extname(file.originalname).toLowerCase();
@@ -37,20 +53,20 @@ const upload = multer({
     fileFilter
 });
 
-// Auth middleware for all routes
+// Aplica autenticação obrigatória a todas as rotas do chat.
 router.use(authMiddleware);
 
-// Global permission for the entire Chat module
-// If a user doesnt have the 'USE_CHAT' permission they cant access any of the routes below
+// Permissão global do módulo de Chat. Sem USE_CHAT, nenhuma rota abaixo é acessível.
 router.use(checkPermission('USE_CHAT'));
 
-// Find or start 1-to-1 chat
+// Encontra ou cria uma conversa 1-para-1 com outro utilizador.
 router.post('/', chatController.findOrCreateChat);
 
-// List all chats
+// Lista todas as conversas do utilizador autenticado.
 router.get('/', chatController.getMyChats);
 
-// Send a message (Now using Multer to support attachments)
+// Envia uma mensagem. O Multer trata o upload do anexo antes de passar ao controlador.
+// Os erros do Multer são interceptados para devolver mensagens claras ao frontend.
 router.post('/messages', (req, res, next) => {
     upload.single('attachment')(req, res, (err) => {
         if (err instanceof multer.MulterError) {
@@ -64,7 +80,7 @@ router.post('/messages', (req, res, next) => {
     });
 }, chatController.sendMessage);
 
-// Load chat history
+// Carrega o histórico de mensagens de uma conversa específica.
 router.get('/:chat_id/messages', chatController.getChatMessages);
 
 module.exports = router;

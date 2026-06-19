@@ -1,36 +1,48 @@
+/**
+ * Middleware de upload de ficheiros (Multer).
+ *
+ * Responsável por:
+ * - Guardar ficheiros em disco na pasta /uploads.
+ * - Gerar nomes únicos para evitar colisões.
+ * - Filtrar tipos MIME permitidos (PDF, Word, Excel, CSV, TXT, imagens).
+ * - Limitar o tamanho máximo por ficheiro a 50 MB.
+ *
+ * Utilizado nos controllers de documentos, artigos e outros que aceitem anexos.
+ */
+
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// FOLDER -> Uploads
+// Garante que a pasta de uploads existe ao arrancar o servidor.
 const uploadDir = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// SAVE file
+// Configuração de armazenamento em disco com nome único por ficheiro.
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, uploadDir);
     },
-    // RANDOM NAME
+    // Prefixo com timestamp + número aleatório para evitar nomes duplicados.
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, uniqueSuffix + '-' + file.originalname);
     }
 });
 
-// ONLY PDF, xls & IMAGES
+// Filtro de tipos MIME — rejeita ficheiros que não sejam documentos ou imagens suportadas.
 const fileFilter = (req, file, cb) => {
     const allowedTypes = [
-        'application/pdf', // PDF
-        'image/jpeg', 'image/png', 'image/jpg', // Images
-        'application/msword', // Word (.doc)
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // Word (.docx)
-        'application/vnd.ms-excel', // Excel (.xls)
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // Excel (.xlsx)
-        'text/csv', // CSV
-        'text/plain' // .txt
+        'application/pdf',
+        'image/jpeg', 'image/png', 'image/jpg',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'text/csv',
+        'text/plain'
     ];
     
     if (allowedTypes.includes(file.mimetype)) {
@@ -40,10 +52,10 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// 50MB each file
+// Instância final do Multer com limite de 50 MB por ficheiro.
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+    limits: { fileSize: 50 * 1024 * 1024 },
     fileFilter: fileFilter
 });
 

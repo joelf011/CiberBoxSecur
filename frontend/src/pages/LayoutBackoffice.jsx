@@ -4,36 +4,56 @@ import { Container, Nav, Offcanvas } from "react-bootstrap";
 import Logo from "../assets/logos/CiberBoxSecur-Minimal-color.svg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faChartLine, faComments, faEdit, faUsers,
-  faHistory, faFolderOpen, faSignOutAlt, faShieldAlt,
-  faIndent, faOutdent, faBars, faTimes, faUserShield, faBuilding, faNewspaper
+  faChartLine,
+  faComments,
+  faEdit,
+  faUsers,
+  faHistory,
+  faFolderOpen,
+  faSignOutAlt,
+  faShieldAlt,
+  faIndent,
+  faOutdent,
+  faBars,
+  faTimes,
+  faUserShield,
+  faBuilding,
+  faNewspaper,
 } from "@fortawesome/free-solid-svg-icons";
 import { usersApi } from "../api/usersApi";
 
+/**
+ * Responsável por:
+ * - Definir a shell autenticada do portal e filtrar navegação por permissões.
+ * - Carregar o perfil do utilizador para sidebar, mobile menu e logout.
+ *
+ * Fluxo:
+ * Login -> localStorage/JWT -> LayoutBackoffice -> usersApi/profile -> Outlet.
+ */
 const LayoutBackoffice = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const navigate = useNavigate();
 
-  // Estado para guardar os dados do utilizador
+  // Perfil visível na navegação, recarregado quando a página de perfil emite evento.
   const [userProfile, setUserProfile] = useState({
     name: "A carregar...",
     email: "",
     avatar: null,
   });
 
-  // Obter as permissões do utilizador
+  // Permissões guardadas no login controlam apenas a visibilidade do menu.
   const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
   const userPermissions = loggedInUser.permissions || [];
 
   const handleLogout = () => {
-    // Apagar o token
+    // Remove sessão local antes de regressar ao website público.
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/");
   };
 
-  // Carregar dados
+  // Carrega perfil real do backend para refletir alterações de nome/avatar.
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -52,23 +72,68 @@ const LayoutBackoffice = () => {
   }, []);
 
   const allNavItems = [
-    { path: '/portal/dashboard', icon: faChartLine, label: 'Dashboard' }, // Visível para todos
-    { path: '/portal/incidentes', icon: faShieldAlt, label: 'Central de Incidentes' }, // Incidentes
-    { path: '/portal/forum', icon: faComments, label: 'Fórum de Clientes' }, // Visível para todos
-    { path: '/portal/cms', icon: faEdit, label: 'Gestão de Conteúdo', permission: 'UPDATE_CMS' },
-    { path: '/portal/noticias', icon: faNewspaper, label: 'Notícias e Artigos', permission: 'MANAGE_ARTICLES' },
-    { path: '/portal/empresas', icon: faBuilding, label: 'Gestão de Empresas', permission: 'CREATE_COMPANY' },
-    { path: '/portal/users', icon: faUsers, label: 'Gestão de Utilizadores', permission: 'VIEW_USERS' },
-    { path: '/portal/cargos', icon: faUserShield, label: 'Cargos e Permissões', permission: 'VIEW_ROLES' },
-    { path: '/portal/docs', icon: faFolderOpen, label: 'Repositório Global' }, // Visível para todos
-    { path: '/portal/logs', icon: faHistory, label: 'Activity Logs', permission: 'VIEW_AUDIT_LOGS' }
+    { path: "/portal/dashboard", icon: faChartLine, label: "Dashboard" }, // Disponível para qualquer utilizador autenticado.
+    {
+      path: "/portal/incidentes",
+      icon: faShieldAlt,
+      label: "Central de Incidentes",
+      permission: "VIEW_INCIDENTS",
+    },
+    {
+      path: "/portal/forum",
+      icon: faComments,
+      label: "Fórum de Clientes",
+      permission: "VIEW_TICKETS",
+    },
+    {
+      path: "/portal/cms",
+      icon: faEdit,
+      label: "Gestão de Conteúdo",
+      permission: "UPDATE_CMS",
+    },
+    {
+      path: "/portal/noticias",
+      icon: faNewspaper,
+      label: "Notícias e Artigos",
+      permission: "MANAGE_ARTICLES",
+    },
+    {
+      path: "/portal/empresas",
+      icon: faBuilding,
+      label: "Gestão de Empresas",
+      permission: "CREATE_COMPANY",
+    },
+    {
+      path: "/portal/users",
+      icon: faUsers,
+      label: "Gestão de Utilizadores",
+      permission: "VIEW_USERS",
+    },
+    {
+      path: "/portal/cargos",
+      icon: faUserShield,
+      label: "Cargos e Permissões",
+      permission: "VIEW_ROLES",
+    },
+    {
+      path: "/portal/docs",
+      icon: faFolderOpen,
+      label: "Repositório Global",
+      permission: "VIEW_TICKETS",
+    },
+    {
+      path: "/portal/logs",
+      icon: faHistory,
+      label: "Activity Logs",
+      permission: "VIEW_AUDIT_LOGS",
+    },
   ];
 
-  // Filtrar menu
+  // Remove entradas sem permissão para evitar navegação para áreas sem acesso.
   const navItems = allNavItems.filter((item) => {
     if (!item.permission) return true;
 
-    // Verifica se o utilizador tem permissão
+    // A validação real continua no backend; aqui apenas se esconde a opção.
     return userPermissions.includes(item.permission);
   });
 
@@ -78,7 +143,7 @@ const LayoutBackoffice = () => {
     <div className="d-flex vh-100 overflow-hidden bg-light font-sans flex-column flex-md-row">
       <style>{`
         .sidebar-box {
-          transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           background-color: #121212;
           z-index: 1050;
         }
@@ -87,17 +152,24 @@ const LayoutBackoffice = () => {
           transition: opacity 0.2s ease, transform 0.3s ease;
           opacity: ${isCollapsed ? 0 : 1};
           transform: translateX(${isCollapsed ? "-10px" : "0"});
+          overflow: hidden;
+          text-overflow: ellipsis;
+          flex: 1;
+          min-width: 0;
         }
         .side-link {
           display: flex !important;
           align-items: center !important;
           height: 48px;
+          min-height: 48px;
+          flex-shrink: 0;
           margin: 4px 8px;
           padding: 0 !important;
           color: #b3b3b3 !important;
           text-decoration: none !important;
           border-radius: 6px !important;
           transition: background 0.2s;
+          overflow: hidden;
         }
         .side-link.active { background-color: #0d6efd !important; color: white !important; }
         .side-link:hover:not(.active) { background-color: rgba(255,255,255,0.05); color: white !important; }
@@ -142,10 +214,14 @@ const LayoutBackoffice = () => {
       }
       `}</style>
 
-      {/* --- SIDEBAR (DESKTOP) --- */}
+      {/* Navegação principal em desktop, filtrada por permissões locais. */}
       <aside
-        className="sidebar-box text-white d-none d-md-flex flex-column border-end border-secondary shadow"
-        style={{ width: isCollapsed ? "80px" : "260px" }}
+        className="sidebar-box text-white d-none d-md-flex flex-column border-end border-secondary shadow overflow-hidden"
+        style={{
+          width: isCollapsed ? "80px" : "260px",
+          minWidth: isCollapsed ? "80px" : "260px",
+          flexShrink: 0,
+        }}
       >
         <div
           className="d-flex align-items-center justify-content-between px-3 overflow-hidden"
@@ -153,7 +229,10 @@ const LayoutBackoffice = () => {
         >
           {!isCollapsed && (
             <div className="d-flex align-items-center ps-2 nav-label">
-              <Link to="/portal/dashboard" className="d-flex align-items-center ">
+              <Link
+                to="/portal/dashboard"
+                className="d-flex align-items-center "
+              >
                 <img
                   src={Logo}
                   alt="CiberBoxSecur Logo"
@@ -182,7 +261,10 @@ const LayoutBackoffice = () => {
           </div>
         </div>
 
-        <Nav className="flex-column flex-grow-1 mt-3 custom-scrollbar overflow-y-auto overflow-x-hidden">
+        <Nav
+          className="flex-column flex-nowrap flex-grow-1 mt-3 custom-scrollbar overflow-y-auto overflow-x-hidden"
+          style={{ minHeight: 0 }}
+        >
           {navItems.map((item) => (
             <Nav.Link
               as={NavLink}
@@ -199,11 +281,14 @@ const LayoutBackoffice = () => {
         </Nav>
 
         <div
-          className="mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 py-3 overflow-hidden"
+          className="mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 py-3 overflow-hidden d-flex flex-column"
           style={{ flexShrink: 0 }}
         >
-          {/* Link para o Perfil */}
-          <Link to="/portal/perfil" className="text-decoration-none d-block mx-2 profile-section-hover">
+          {/* Perfil do utilizador sincronizado com a API. */}
+          <Link
+            to="/portal/perfil"
+            className="text-decoration-none d-block mx-2 profile-section-hover"
+          >
             <div className="d-flex align-items-center mb-3 mt-2">
               <div className="icon-wrapper">
                 {userProfile.avatar ? (
@@ -240,7 +325,7 @@ const LayoutBackoffice = () => {
 
           <button
             onClick={handleLogout}
-            className="side-link text-decoration-none py-2 bg-white bg-opacity-10 border-0 side-link-danger w-100 text-start"
+            className="side-link text-decoration-none py-2 bg-white bg-opacity-10 border-0 side-link-danger text-start"
             style={{ cursor: "pointer" }}
           >
             <div className="icon-wrapper">
@@ -251,20 +336,8 @@ const LayoutBackoffice = () => {
         </div>
       </aside>
 
-      {/* --- CONTEÚDO PRINCIPAL --- */}
+      {/* Outlet onde as páginas protegidas são renderizadas. */}
       <main className="flex-grow-1 d-flex flex-column bg-body-tertiary main-view overflow-hidden">
-        <header
-          className="py-3 px-4 bg-white border-bottom shadow-sm d-flex align-items-center justify-content-between"
-          style={{ height: "70px", flexShrink: 0 }}
-        >
-          <h1 className="fs-5 fw-bold mb-0 text-secondary">
-            Painel de Controlo
-          </h1>
-          <div className="d-md-none text-primary">
-            <FontAwesomeIcon icon={faShieldAlt} size="lg" />
-          </div>
-        </header>
-
         <div className="flex-grow-1 overflow-auto p-3 p-md-4">
           <Container fluid className="py-2">
             <Outlet />
@@ -272,7 +345,7 @@ const LayoutBackoffice = () => {
         </div>
       </main>
 
-      {/* --- BOTTOM NAV (MOBILE) --- */}
+      {/* Navegação compacta para as primeiras rotas em mobile. */}
       <nav className="mobile-bottom-nav d-flex d-md-none fixed-bottom shadow-lg">
         {navItems.slice(0, 4).map((item) => (
           <NavLink
@@ -302,7 +375,7 @@ const LayoutBackoffice = () => {
         </button>
       </nav>
 
-      {/* --- MENU OVERLAY MOBILE --- */}
+      {/* Menu completo em mobile para manter acesso às restantes áreas. */}
       <Offcanvas
         show={showMobileMenu}
         onHide={() => setShowMobileMenu(false)}
@@ -329,8 +402,11 @@ const LayoutBackoffice = () => {
             <FontAwesomeIcon icon={faTimes} size="lg" />
           </button>
         </Offcanvas.Header>
-        <Offcanvas.Body className="p-0 d-flex flex-column">
-          <Nav className="flex-column py-3 overflow-auto custom-scrollbar">
+        <Offcanvas.Body className="p-0 d-flex flex-column overflow-hidden">
+          <Nav
+            className="flex-column flex-nowrap py-3 overflow-y-auto overflow-x-hidden custom-scrollbar flex-grow-1"
+            style={{ minHeight: 0 }}
+          >
             {navItems.map((item) => (
               <Nav.Link
                 as={NavLink}
@@ -347,9 +423,16 @@ const LayoutBackoffice = () => {
             ))}
           </Nav>
 
-          <div className="offcanvas-footer mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 p-4">
-            {/* Link para o Perfil no Mobile --- */}
-            <Link to="/portal/perfil" className="text-decoration-none d-flex align-items-center mb-4" onClick={() => setShowMobileMenu(false)}>
+          <div
+            className="offcanvas-footer mt-auto border-top border-secondary border-opacity-25 bg-black bg-opacity-25 p-4"
+            style={{ flexShrink: 0 }}
+          >
+            {/* Acesso ao perfil também disponível dentro do menu mobile. */}
+            <Link
+              to="/portal/perfil"
+              className="text-decoration-none d-flex align-items-center mb-4"
+              onClick={() => setShowMobileMenu(false)}
+            >
               {userProfile.avatar ? (
                 <img
                   src={userProfile.avatar}

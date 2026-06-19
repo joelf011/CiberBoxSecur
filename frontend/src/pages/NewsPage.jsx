@@ -8,28 +8,37 @@ import LayoutWebsite from "../components/LayoutWebsite";
 import { articlesApi } from "../api/articlesApi";
 import { categoriesApi } from "../api/categoriesApi"; 
 
+/**
+ * Responsável por:
+ * - Listar notícias públicas com filtros por categoria e pesquisa.
+ * - Consumir artigos publicados e destaque devolvidos pela API.
+ *
+ * Fluxo:
+ * Website -> articlesApi/categoriesApi -> Backend -> Cards de notícia.
+ */
 const NewsPage = () => {
-  // --- Estados de Artigos ---
+  // Estado da listagem pública de artigos e paginação por offset.
   const [featuredData, setFeaturedData] = useState(null);
   const [articles, setArticles] = useState([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
   
-  // --- Estados de Filtros ---
+  // Filtros enviados à API pública de artigos.
   const [categoriesList, setCategoriesList] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   
-  // Estados para a Pesquisa em Tempo Real
+  // Pesquisa em tempo real com debounce para limitar pedidos ao backend.
   const [searchInput, setSearchInput] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState(''); // Guarda o valor após o utilizador parar de escrever
+  const [debouncedSearch, setDebouncedSearch] = useState(''); // Valor estabilizado após o utilizador parar de escrever.
   
-  // --- Estados de Feedback ---
+  // Feedback visual da chamada à API.
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const limit = 6;
 
   const getImageUrl = (path) => {
+    // Converte caminhos relativos de uploads em URLs servíveis pelo backend.
     if (!path) return 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=1200';
     if (path.startsWith('http')) return path;
     const baseUrl = import.meta.env.VITE_API_URL 
@@ -51,25 +60,25 @@ const NewsPage = () => {
     image: getImageUrl(dbArticle.cover_image)
   });
 
-  // Carregar as categorias para o Dropdown
+  // Categorias alimentam o filtro público de artigos.
   useEffect(() => {
     categoriesApi.getAllCategories()
       .then(setCategoriesList)
       .catch(() => console.error("Erro ao carregar categorias"));
   }, []);
 
-  // Pesquisa em Tempo Real
+  // Só propaga a pesquisa para a API depois de o utilizador parar de escrever.
   useEffect(() => {
-    // Define um temporizador: só atualiza a pesquisa real se o utilizador parar de escrever durante 500ms
+    // Define um temporizador para reduzir chamadas sucessivas à API.
     const handler = setTimeout(() => {
       setDebouncedSearch(searchInput);
     }, 500);
 
-    // Se o utilizador escrever outra letra antes dos 500ms, limpa o temporizador anterior
+    // Limpa o temporizador anterior quando o texto muda antes do limite.
     return () => clearTimeout(handler);
   }, [searchInput]);
 
-  // 3. Carregar os artigos
+  // Carrega artigos publicados e mantém o destaque apenas na primeira página sem filtros.
   const loadData = async (currentOffset, category = selectedCategory, search = debouncedSearch) => {
     if (currentOffset === 0) {
       setIsLoading(true);
@@ -94,7 +103,7 @@ const NewsPage = () => {
     }
   };
 
-  // Atualizar sempre que a Categoria ou a Pesquisa mudam
+  // Reinicia a listagem quando mudam categoria ou pesquisa estabilizada.
   useEffect(() => {
     setOffset(0);
     loadData(0, selectedCategory, debouncedSearch);
@@ -113,7 +122,7 @@ const NewsPage = () => {
     <LayoutWebsite>
       <div className="container py-5 animate-fade-in">
         
-        {/* --- BARRA DE PESQUISA E FILTROS --- */}
+        {/* Filtros públicos enviados à API de artigos. */}
         <div className=" mb-5">
           <Row className="g-3">
             <Col md={4}>
@@ -122,6 +131,9 @@ const NewsPage = () => {
                   <FontAwesomeIcon icon={faFilter} />
                 </InputGroup.Text>
                 <Form.Select 
+                  id="category-filter"
+                  name="category"
+                  autoComplete="off"
                   className="border-start-0 bg-white shadow-none"
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
@@ -140,6 +152,9 @@ const NewsPage = () => {
                   <FontAwesomeIcon icon={faSearch} />
                 </InputGroup.Text>
                 <Form.Control
+                  id="search-input"
+                  name="search"
+                  autoComplete="off"
                   type="text"
                   placeholder="Comece a escrever para pesquisar artigos..."
                   className="shadow-none border-start-0"
@@ -150,7 +165,7 @@ const NewsPage = () => {
             </Col>
           </Row>
 
-          {/* Mostrar indicação visual se houver filtros ativos para o utilizador poder limpar */}
+          {/* Indica filtros ativos para permitir limpar a pesquisa atual. */}
           {isFiltering && (
             <div className="mt-3 pt-3 border-top small text-muted d-flex align-items-center">
               <span className="me-2 fw-semibold">A filtrar por:</span>
@@ -171,7 +186,7 @@ const NewsPage = () => {
           )}
         </div>
 
-        {/* ESTADOS */}
+        {/* Estados de carregamento, erro e lista vazia. */}
         {isLoading && offset === 0 ? (
           <div className="d-flex flex-column justify-content-center align-items-center" style={{ minHeight: '40vh' }}>
             <Spinner animation="border" variant="primary" className="mb-3" />
@@ -185,10 +200,10 @@ const NewsPage = () => {
           </Alert>
         ) : (
           <>
-            {/* Notícia em Destaque (Só aparece se NÃO estiver a filtrar) */}
+            {/* Destaque devolvido pela API apenas quando não há filtros ativos. */}
             {featuredData && !isFiltering && <FeaturedNewsCard article={featuredData} />}
 
-            {/* Grelha de Notícias */}
+            {/* Grelha de artigos paginada por offset. */}
             <div className="row g-4 mt-2">
               {articles.map((article) => (
                 <div className="col-12 col-md-6 col-lg-4" key={article.id}>
@@ -211,7 +226,7 @@ const NewsPage = () => {
               )}
             </div>
 
-            {/* Botão Carregar Mais */}
+            {/* Paginação incremental sem abandonar os filtros atuais. */}
             {articles.length < total && (
               <div className="d-flex justify-content-center mt-5">
                 <button

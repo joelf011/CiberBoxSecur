@@ -4,10 +4,10 @@ const permissionController = require('../controllers/permissionController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const checkPermission = require('../middlewares/permissionMiddleware');
 
-// Require authentication
+// A lista de permissões só é usada no backoffice autenticado.
 router.use(authMiddleware);
 
-// Specific permissions
+// Apenas utilizadores autorizados podem consultar a matriz de permissões.
 router.get('/', checkPermission('VIEW_PERMISSIONS'), permissionController.getAll);
 
 module.exports = router;

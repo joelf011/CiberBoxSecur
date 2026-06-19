@@ -6,8 +6,12 @@ import {
   faDownload, faFileAlt, faUserCircle 
 } from "@fortawesome/free-solid-svg-icons";
 
+/**
+ * Janela de chat estática usada como protótipo visual.
+ * O fluxo real de tickets usa TicketChatWindow com mensagens vindas da API.
+ */
 const ChatWindow = ({ thread, onBack }) => {
-  // Mock de mensagens (futuramente virão da API filtradas por threadId)
+  // Dados simulados para manter o layout disponível sem backend ligado a este componente.
   const messages = [
     { id: 1, text: "Bom dia. Já submetemos a matriz de ativos. Podem validar?", time: "10:30", isSelf: false, author: "Carlos Costa" },
     { id: 2, text: "Recebemos o ficheiro. Vamos analisar e damos feedback até ao final do dia.", time: "10:45", isSelf: true, author: "João Silva (Tu)" },
@@ -15,7 +19,7 @@ const ChatWindow = ({ thread, onBack }) => {
 
   return (
     <div className="d-flex flex-column h-100 animate-fade-in">
-      {/* Header do Chat */}
+      {/* Cabeçalho do chat prototipado. */}
       <Card.Header className="bg-white p-3 border-bottom d-flex align-items-center gap-3 shrink-0 shadow-sm">
         <Button variant="light" className="rounded-circle border-0" onClick={onBack}>
           <FontAwesomeIcon icon={faChevronLeft} />
@@ -26,7 +30,7 @@ const ChatWindow = ({ thread, onBack }) => {
         </div>
       </Card.Header>
 
-      {/* Área de Mensagens (Scrollable) */}
+      {/* Área rolável com mensagens simuladas. */}
       <Card.Body className="bg-light bg-opacity-50 overflow-auto p-4 custom-scrollbar flex-grow-1">
         <div className="d-flex flex-column gap-4">
           {messages.map((msg) => (
@@ -46,7 +50,7 @@ const ChatWindow = ({ thread, onBack }) => {
             </div>
           ))}
 
-          {/* Exemplo de Ficheiro Anexo */}
+          {/* Exemplo visual de anexo para validar o layout. */}
           <div className="d-flex align-items-start gap-2">
             <div className="bg-white border p-3 rounded-4 shadow-sm d-flex align-items-center gap-3">
               <div className="bg-primary bg-opacity-10 p-2 rounded text-primary">
@@ -64,7 +68,7 @@ const ChatWindow = ({ thread, onBack }) => {
         </div>
       </Card.Body>
 
-      {/* Input de Mensagem (Sticky ao Fundo) */}
+      {/* Entrada fixa no fundo para espelhar a experiência real de chat. */}
       <Card.Footer className="bg-white p-3 border-top shrink-0">
         <InputGroup className="bg-light rounded-4 border-0 p-1">
           <Button variant="link" className="text-secondary border-0 px-3 hover-text-primary">

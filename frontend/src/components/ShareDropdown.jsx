@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaShareAlt, FaLinkedin, FaFacebook, FaWhatsapp, FaEnvelope } from 'react-icons/fa';
 
+/**
+ * Dropdown reutilizável de partilha social.
+ * Permite partilhar um conteúdo (título + URL) via LinkedIn, Facebook, WhatsApp ou Email.
+ * Utilizado, por exemplo, na página de detalhe de artigos de notícias.
+ */
 const ShareDropdown = ({ title, url }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Close dropdown when click outside
+  // Fecha o dropdown ao clicar fora do componente.
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -19,7 +24,7 @@ const ShareDropdown = ({ title, url }) => {
     };
   }, []);
 
-  // Share functionalities
+  // Constrói o URL de partilha para cada plataforma e abre numa nova janela.
   const handleShare = (platform) => {
     const encodedUrl = encodeURIComponent(url);
     const encodedTitle = encodeURIComponent(title);
@@ -43,6 +48,7 @@ const ShareDropdown = ({ title, url }) => {
     }
 
     if (shareUrl) {
+      // O email abre na mesma janela; as redes sociais abrem numa nova.
       const target = platform === 'email' ? '_self' : '_blank';
       window.open(shareUrl, target, 'noopener,noreferrer');
     }
@@ -60,7 +66,7 @@ const ShareDropdown = ({ title, url }) => {
         Partilhar
       </button>
 
-      {/* Dropdown Menu */}
+      {/* Menu de opções de partilha */}
       {isOpen && (
         <div 
           className="position-absolute top-100 start-0 mt-2 bg-white rounded-3 shadow-lg border border-light p-2"

@@ -1,5 +1,16 @@
+/**
+ * Configuração da ligação à base de dados PostgreSQL via Sequelize.
+ *
+ * Responsável por:
+ * - Criar a instância Sequelize com as credenciais do .env.
+ * - Ativar SSL apenas em ambientes remotos (Neon).
+ * - Definir convenções globais dos modelos (timestamps, snake_case, soft-delete).
+ */
+
 var Sequelize = require('sequelize');
 require('dotenv').config();
+
+// Em localhost não se usa SSL; em produção (Neon) é obrigatório.
 const isLocalhost = process.env.DB_HOST === 'localhost';
 
 const sequelize = new Sequelize(
@@ -10,9 +21,10 @@ const sequelize = new Sequelize(
         host: process.env.DB_HOST,
         dialect: 'postgres',
         port: process.env.DB_PORT,
-        logging: false, // change to console.log to show SQL on terminal
+        // Alterar para console.log para depurar queries SQL no terminal.
+        logging: false,
 
-        // NEON -> SSl
+        // SSL obrigatório para o Neon (BD remota); dispensado em localhost.
         dialectOptions: isLocalhost ? {} : {
             ssl: {
                 require: true,
@@ -21,8 +33,10 @@ const sequelize = new Sequelize(
         },
         
         define: {
-            timestamps: true, // createdAt & updatedAt
-            underscored: true, // camelCase to snake_case (createdAt -> created_at)
+            timestamps: true,
+            // Converte camelCase para snake_case nas colunas (ex: createdAt → created_at).
+            underscored: true,
+            // Ativa soft-delete: regista deleted_at em vez de apagar fisicamente.
             paranoid: true
         }
     }

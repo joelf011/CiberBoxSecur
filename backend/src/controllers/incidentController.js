@@ -1,7 +1,15 @@
 const incidentService = require('../services/incidentService');
 
+/**
+ * Responsável por:
+ * - Expor endpoints de incidentes ao frontend autenticado.
+ * - Traduzir erros do service para respostas HTTP consistentes.
+ *
+ * Fluxo:
+ * Frontend -> rota protegida -> Controller -> IncidentService -> Base de dados -> JSON.
+ */
 const incidentController = {
-    // CREATE
+    // Cria um incidente usando a empresa e permissões já validadas pelos middlewares.
     async create(req, res) {
         try {
             const newIncident = await incidentService.create(req.user, req.body, req.ip);
@@ -17,7 +25,7 @@ const incidentController = {
         }
     },
 
-    // READ ALL
+    // Lista incidentes dentro do âmbito permitido para o utilizador autenticado.
     async findAll(req, res) {
         try {
             const incidents = await incidentService.findAll(req.user.company_id);
@@ -28,7 +36,7 @@ const incidentController = {
         }
     },
 
-    // READ ONE
+    // Devolve o detalhe do incidente após validação de pertença à empresa.
     async findOne(req, res) {
         try {
             const incident = await incidentService.findOne(req.params.id, req.user.company_id);
@@ -42,7 +50,7 @@ const incidentController = {
         }
     },
 
-    // UPDATE
+    // Atualiza campos do incidente e delega auditoria no service.
     async update(req, res) {
         try {
             const incident = await incidentService.update(req.params.id, req.body, req.user, req.ip);
@@ -57,7 +65,7 @@ const incidentController = {
         }
     },
 
-    // DELETE
+    // Apaga logicamente o incidente mantendo histórico na base de dados.
     async delete(req, res) {
         try {
             await incidentService.delete(req.params.id, req.user, req.ip);
@@ -71,7 +79,7 @@ const incidentController = {
         }
     },
 
-    // RESTORE
+    // Restaura incidentes com soft delete, respeitando a fronteira entre empresas.
     async restore(req, res) {
         try {
             const incident = await incidentService.restore(req.params.id, req.user, req.ip);

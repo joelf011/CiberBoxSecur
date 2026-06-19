@@ -1,5 +1,6 @@
 import React from 'react';
 
+// Página 404 — apresentada quando a rota não corresponde a nenhum caminho definido no React Router.
 const NotFound = () => {
   return (
     <div className="container d-flex align-items-center justify-content-center text-center" style={{ minHeight: '80vh', fontFamily: 'sans-serif' }}>

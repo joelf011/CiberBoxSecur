@@ -5,10 +5,10 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const checkPermission = require('../middlewares/permissionMiddleware');
 const upload = require('../middlewares/uploadMiddleware');
 
-// Require authentication
+// Documentos exigem autenticação antes de qualquer permissão ou upload.
 router.use(authMiddleware);
 
-// File Upload (Auth -> Permission -> Upload -> Controller)
+// Upload de ficheiro: sessão -> permissão -> Multer -> controller.
 router.post('/', checkPermission('CREATE_DOCUMENT'), upload.single('file'), documentController.create);
 
 router.get('/', checkPermission('VIEW_DOCUMENTS'), documentController.findAll);

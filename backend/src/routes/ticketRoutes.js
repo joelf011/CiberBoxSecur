@@ -4,10 +4,10 @@ const ticketController = require('../controllers/ticketController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const checkPermission = require('../middlewares/permissionMiddleware');
 
-// Require authentication
+// Tickets dependem de req.user para filtrar empresa, cliente e gestor.
 router.use(authMiddleware);
 
-// pecific permissions
+// Permissões específicas controlam abertura, consulta, atualização e restauro.
 router.post('/', checkPermission('CREATE_TICKET'), ticketController.create);
 router.get('/', checkPermission('VIEW_TICKETS'), ticketController.findAll);
 router.get('/:id', checkPermission('VIEW_TICKETS'), ticketController.findOne);

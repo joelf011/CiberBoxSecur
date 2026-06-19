@@ -2,18 +2,27 @@ const nodemailer = require('nodemailer');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-// Email server config
+/**
+ * Responsável por:
+ * - Enviar e-mails transacionais de ativação e recuperação de palavra-passe.
+ * - Criar links que regressam ao frontend com tokens temporários.
+ *
+ * Fluxo:
+ * AuthService -> Nodemailer/Mailtrap -> Utilizador -> Frontend com token.
+ */
+// Configuração SMTP usada pelos fluxos de conta; credenciais vêm do ambiente.
 const transporter = nodemailer.createTransport({
   host: "sandbox.smtp.mailtrap.io",
   port: 2525,
   auth: {
-    user: process.env.EMAIL_USER, // Mailtrap
+    user: process.env.EMAIL_USER, // Utilizador SMTP configurado no Mailtrap.
     pass: process.env.EMAIL_PASS 
   }
 });
 
 const emailService = {
     async sendActivationEmail(userEmail, userName, activationToken) {
+        // O link abre a rota pública onde o utilizador define a primeira password.
         const activationLink = `${FRONTEND_URL}/ativar-conta?token=${activationToken}`;
 
         const mailOptions = {
@@ -35,6 +44,7 @@ const emailService = {
     },
 
     async sendPasswordResetEmail(userEmail, userName, resetToken) {
+        // O token é validado no backend antes de aceitar a nova password.
         const resetLink = `${FRONTEND_URL}/recuperar-password?token=${resetToken}`;
 
         const mailOptions = {

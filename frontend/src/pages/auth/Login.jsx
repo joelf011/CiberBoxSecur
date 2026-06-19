@@ -10,32 +10,40 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import api from '../../api/axiosConfig';
 
+/**
+ * Responsável por:
+ * - Autenticar o utilizador e guardar token/dados mínimos de sessão.
+ * - Encaminhar para o portal após resposta válida do backend.
+ *
+ * Fluxo:
+ * Formulário -> /auth/login -> JWT/localStorage -> LayoutBackoffice.
+ */
 const Login = () => {
   const navigate = useNavigate();
   
-  // Estados para capturar os dados do formulário
+  // Dados enviados diretamente ao endpoint de login.
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
-  // Estados para gerir a interface (erros e carregamento)
+  // Feedback visual enquanto o backend valida credenciais.
   const [erro, setErro] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErro(''); // Limpa erros antigos
-    setLoading(true); // Ativa o estado de carregamento
+    setErro(''); // Limpa erros de tentativas anteriores.
+    setLoading(true); // Bloqueia submissões repetidas durante o pedido.
 
     try {
       const response = await api.post('/auth/login', { email, password });
 
       const data = await response.data;
 
-      // SUCESSO! Guardar o token e os dados do utilizador no localStorage
+      // Guarda token e permissões para os interceptores e navegação protegida.
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      // Redireciona para o painel
+      // O LayoutBackoffice passa a ler a sessão a partir do localStorage.
       navigate('/portal/dashboard'); 
 
     } catch (err) {
@@ -51,14 +59,14 @@ const Login = () => {
     <div className="vh-100 d-flex align-items-center justify-content-center bg-light">
       <div className="card shadow-sm rounded-4 border-0" style={{ maxWidth: '420px', width: '100%' }}>
         
-        {/* Cabeçalho Limpo */}
+        {/* Identificação visual da área reservada. */}
         <div className="text-center p-5 pb-3">
           <img src={LogoCiberBox} alt="Logo CiberBox Security" className="mb-4" style={{ height: '60px' }} />
           <h2 className="fs-4 fw-bold text-dark mb-1">Bem-vindo</h2>
           <p className="small text-muted">Acesso reservado à plataforma</p>
         </div>
         
-        {/* Formulário */}
+        {/* Formulário de credenciais enviado ao backend. */}
         <div className="card-body px-5 pb-5 pt-2">
           
           {erro && (

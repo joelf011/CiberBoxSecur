@@ -2,8 +2,16 @@ const { Report, User, Company } = require('../models');
 const fs = require('fs');
 const auditLogService = require('../services/auditLogService');
 
+/**
+ * Responsável por:
+ * - Gerir relatórios associados a empresas e ficheiros carregados.
+ * - Garantir limpeza de uploads quando a operação falha.
+ *
+ * Fluxo:
+ * Frontend -> Upload(Multer) -> Controller -> Reports -> AuditLogs -> Resposta.
+ */
 const reportController = {
-    // CREATE
+    // Cria relatório com ficheiro físico obrigatório e metadados na base de dados.
     async create(req, res) {
         try {
             const { company_id, report_type, title, risk_score, status } = req.body;
@@ -22,7 +30,7 @@ const reportController = {
                 status: status || 'Draft'
             });
 
-            // LOG: report created
+            // Regista a criação para auditoria administrativa.
             await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'REPORT_CREATE',
@@ -33,7 +41,7 @@ const reportController = {
 
             return res.status(201).json({ message: 'Report created successfully!', data: newReport });
         } catch (error) {
-            // delete in case of an error
+            // Se a persistência falhar, remove o ficheiro recebido para evitar órfãos.
             if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
             
             console.error('Create Report error:', error);
@@ -41,11 +49,10 @@ const reportController = {
         }
     },
 
-    // READ ALL
+    // Lista relatórios filtrados pela empresa quando o utilizador é cliente.
     async getAll(req, res) {
         try {
-            // Filter by company of the user logged
-            // Ignore if admin
+            // Admins sem company_id veem todos; clientes ficam limitados à própria empresa.
             let whereClause = {};
             if (req.user.company_id) {
                 whereClause.company_id = req.user.company_id;
@@ -67,7 +74,7 @@ const reportController = {
         }
     },
 
-    // READ ONE
+    // Devolve um relatório específico com validação de acesso por empresa.
     async getOne(req, res) {
         try {
             const { id } = req.params;
@@ -91,7 +98,7 @@ const reportController = {
         }
     },
 
-    // UPDATE
+    // Atualiza metadados e substitui o ficheiro quando existe novo upload.
     async update(req, res) {
         try {
             const { id } = req.params;
@@ -103,7 +110,7 @@ const reportController = {
                 return res.status(404).json({ error: 'Report not found.' });
             }
 
-            // IDOR Protection
+            // Proteção IDOR antes de aceitar alterações ou guardar novo ficheiro.
             if (req.user.company_id && report.company_id !== req.user.company_id) {
                 if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
                 return res.status(403).json({ error: 'Forbidden.' });
@@ -111,19 +118,19 @@ const reportController = {
 
             let file_path = report.file_path;
             
-            // If new file uploaded
+            // Substitui o ficheiro físico apenas quando o frontend enviou um novo.
             if (req.file) {
-                // DELETE the old file
+                // Remove o ficheiro anterior para não deixar versões soltas no disco.
                 if (fs.existsSync(report.file_path)) {
                     fs.unlinkSync(report.file_path);
                 }
-                // New path
+                // Guarda o caminho relativo que será servido pela API.
                 file_path = `uploads/${req.file.filename}`;
             }
 
             await report.update({ title, report_type, risk_score, status, file_path });
 
-            // LOG: report updated
+            // Regista a alteração do relatório no histórico de auditoria.
             await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'REPORT_UPDATE',
@@ -140,7 +147,7 @@ const reportController = {
         }
     },
 
-    // DELETE (Soft)
+    // Apaga logicamente o relatório para manter histórico e permitir auditoria.
     async delete(req, res) {
         try {
             const { id } = req.params;
@@ -148,14 +155,14 @@ const reportController = {
 
             if (!report) return res.status(404).json({ error: 'Report not found.' });
 
-            // Protection
+            // Proteção IDOR: cliente não pode apagar relatório de outra empresa.
             if (req.user.company_id && report.company_id !== req.user.company_id) {
                 return res.status(403).json({ error: 'Forbidden.' });
             }
 
             await report.destroy();
 
-            // LOG: report deleted
+            // Regista a eliminação lógica no log de auditoria.
             await auditLogService.logEvent({
                 user_id: req.user.id,
                 action: 'REPORT_DELETE',

@@ -1,37 +1,57 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Button, Form, Spinner, Alert } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faPen, faAlignLeft, faTag, faFlag, faBuilding } from "@fortawesome/free-solid-svg-icons";
-import forumApi from '../../../api/forumApi';
-import { Alerts } from '../../../utils/Alerts';
-import api from '../../../api/axiosConfig';
+import React, { useState, useEffect } from "react";
+import { Modal, Button, Form, Spinner, Alert } from "react-bootstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPlus,
+  faPen,
+  faAlignLeft,
+  faTag,
+  faFlag,
+  faBuilding,
+} from "@fortawesome/free-solid-svg-icons";
+import forumApi from "../../../api/forumApi";
+import { Alerts } from "../../../utils/Alerts";
+import api from "../../../api/axiosConfig";
 
+/**
+ * Responsável por:
+ * - Criar tickets a partir do cliente ou da equipa interna.
+ * - Carregar empresas apenas quando o utilizador pode abrir ticket por uma empresa.
+ *
+ * Fluxo:
+ * Modal -> /companies opcional -> forumApi.createTicket -> Atualização da lista.
+ */
 const CreateTicketModal = ({ show, onHide, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [companies, setCompanies] = useState([]);
   const [formData, setFormData] = useState({
-    subject: '',
-    description: '',
-    category: 'Support',
-    priority: 'Medium',
-    company_id: ''
+    subject: "",
+    description: "",
+    category: "Support",
+    priority: "Medium",
+    company_id: "",
   });
 
-  const user = JSON.parse(localStorage.getItem('user'));
-  // Impede que um Cliente (Role 3) veja o dropdown da empresa mesmo com permissões em cache
-  const isStaff = user && Number(user.role_id) !== 3 && (Number(user.role_id) === 1 || Number(user.role_id) === 2 || (user.permissions && user.permissions.includes('UPDATE_TICKET')));
+  const user = JSON.parse(localStorage.getItem("user"));
+  // Fail-safe: clientes nunca escolhem empresa, mesmo que tenham permissões antigas em cache.
+  const isStaff =
+    user &&
+    Number(user.role_id) !== 3 &&
+    (Number(user.role_id) === 1 ||
+      Number(user.role_id) === 2 ||
+      (user.permissions && user.permissions.includes("UPDATE_TICKET")));
 
-  // Carrega as empresas do backend se for Administrador
+  // Staff precisa de escolher a empresa associada ao ticket.
   useEffect(() => {
     if (show && isStaff) {
       const fetchCompanies = async () => {
         try {
-          // A chamada via 'api' já utiliza o URL do .env e injeta o Token de Autorização!
-          const response = await api.get('/companies');
+          // axiosConfig injeta o token e usa o URL de API configurado no ambiente.
+          const response = await api.get("/companies");
           setCompanies(response.data);
         } catch (err) {
-          console.error('Failed to load companies:', err);
+          console.error("Failed to load companies:", err);
         }
       };
       fetchCompanies();
@@ -40,9 +60,9 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -51,17 +71,17 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
     setError(null);
 
     if (!formData.subject.trim()) {
-      setError('O assunto é obrigatório');
+      setError("O assunto é obrigatório");
       return;
     }
 
     if (!formData.description.trim()) {
-      setError('A descrição é obrigatória');
+      setError("A descrição é obrigatória");
       return;
     }
 
     if (isStaff && !formData.company_id) {
-      setError('Por favor, selecione uma empresa para este ticket.');
+      setError("Por favor, selecione uma empresa para este ticket.");
       return;
     }
 
@@ -72,18 +92,18 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
         description: formData.description,
         category: formData.category,
         priority: formData.priority,
-        company_id: isStaff ? formData.company_id : user?.company_id
+        company_id: isStaff ? formData.company_id : user?.company_id,
       };
 
       await forumApi.createTicket(payload);
 
-      // Reset form
+      // Limpa o formulário para a próxima abertura do modal.
       setFormData({
-        subject: '',
-        description: '',
-        category: 'Support',
-        priority: 'Medium',
-        company_id: ''
+        subject: "",
+        description: "",
+        category: "Support",
+        priority: "Medium",
+        company_id: "",
       });
 
       onHide();
@@ -91,8 +111,11 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
         onSuccess();
       }
     } catch (error) {
-      console.error('Failed to create ticket:', error);
-      setError(error.response?.data?.error || 'Falha ao criar ticket. Por favor, tente novamente.');
+      console.error("Failed to create ticket:", error);
+      setError(
+        error.response?.data?.error ||
+          "Falha ao criar ticket. Por favor, tente novamente.",
+      );
     } finally {
       setLoading(false);
     }
@@ -114,7 +137,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
             </Alert>
           )}
 
-          {/* Subject Field */}
+          {/* Campo principal usado na listagem de tickets. */}
           <Form.Group className="mb-4">
             <Form.Label className="small fw-bold text-secondary text-uppercase">
               <FontAwesomeIcon icon={faPen} className="me-2" /> Assunto
@@ -131,7 +154,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
             />
           </Form.Group>
 
-          {/* Description Field */}
+          {/* Descrição enviada ao backend como corpo do ticket. */}
           <Form.Group className="mb-4">
             <Form.Label className="small fw-bold text-secondary text-uppercase">
               <FontAwesomeIcon icon={faAlignLeft} className="me-2" /> Descrição
@@ -146,11 +169,11 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
               required
               disabled={loading}
               className="py-2 rounded-3 border-light-subtle shadow-sm shadow-none"
-              style={{ resize: 'none' }}
+              style={{ resize: "none" }}
             />
           </Form.Group>
 
-          {/* Company Field (Admins Only) */}
+          {/* Empresa obrigatória apenas para staff que cria tickets por clientes. */}
           {isStaff && (
             <Form.Group className="mb-4">
               <Form.Label className="small fw-bold text-secondary text-uppercase">
@@ -165,7 +188,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
                 className="py-2 rounded-3 border-light-subtle shadow-sm shadow-none"
               >
                 <option value="">Selecione uma empresa...</option>
-                {companies.map(company => (
+                {companies.map((company) => (
                   <option key={company.id} value={company.id}>
                     {company.name}
                   </option>
@@ -174,7 +197,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
             </Form.Group>
           )}
 
-          {/* Category Field */}
+          {/* Categoria operacional usada para triagem. */}
           <Form.Group className="mb-4">
             <Form.Label className="small fw-bold text-secondary text-uppercase">
               <FontAwesomeIcon icon={faTag} className="me-2" /> Categoria
@@ -193,10 +216,11 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
             </Form.Select>
           </Form.Group>
 
-          {/* Priority Field */}
+          {/* Prioridade inicial ajustável depois por gestores. */}
           <Form.Group className="mb-2">
             <Form.Label className="small fw-bold text-secondary text-uppercase">
-              <FontAwesomeIcon icon={faFlag} className="me-2" /> Prioridade (Opcional)
+              <FontAwesomeIcon icon={faFlag} className="me-2" /> Prioridade
+              (Opcional)
             </Form.Label>
             <Form.Select
               name="priority"
@@ -211,7 +235,7 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
               <option value="Critical">Crítica</option>
             </Form.Select>
           </Form.Group>
-          <small className="text-muted" style={{ fontSize: '0.7rem' }}>
+          <small className="text-muted" style={{ fontSize: "0.7rem" }}>
             Um gestor irá rever e responder ao seu ticket em breve.
           </small>
         </Modal.Body>
@@ -226,15 +250,15 @@ const CreateTicketModal = ({ show, onHide, onSuccess }) => {
             Cancelar
           </Button>
           <Button
+            variant="primary"
             type="submit"
             className="rounded-3 px-4 border-0 shadow-sm fw-bold"
-            style={{ backgroundColor: '#8b5cf6' }}
             disabled={loading}
           >
             {loading ? (
               <>
-                <Spinner animation="border" size="sm" className="me-2" />
-                A criar...
+                <Spinner animation="border" size="sm" className="me-2" />A
+                criar...
               </>
             ) : (
               <>

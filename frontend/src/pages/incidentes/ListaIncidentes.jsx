@@ -13,13 +13,21 @@ import {
 import { incidentsApi } from '../../api/incidentsApi';
 import { Alerts } from '../../utils/Alerts';
 
+/**
+ * Responsável por:
+ * - Listar o histórico de incidentes visível ao utilizador autenticado.
+ * - Encaminhar para criação e detalhe de incidentes.
+ *
+ * Fluxo:
+ * Página -> incidentsApi.getAllIncidents -> Backend filtrado por empresa -> Tabela.
+ */
 const ListaIncidentes = () => {
   const navigate = useNavigate();
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Ir buscar os incidentes ao carregar a página
+  // O backend devolve apenas incidentes permitidos para o utilizador atual.
   useEffect(() => {
     const fetchIncidents = async () => {
       try {
@@ -37,7 +45,7 @@ const ListaIncidentes = () => {
     fetchIncidents();
   }, []);
 
-  // Helpers para as cores dos Badges (UI em PT, dados em EN)
+  // Traduz estados internos em badges legíveis na interface portuguesa.
   const getSeverityBadge = (severity) => {
     switch (severity) {
       case 'Residual': return <Badge bg="light" text="dark">Residual</Badge>;
@@ -63,7 +71,7 @@ const ListaIncidentes = () => {
 
   return (
     <div className="animate-fade-in py-2">
-      {/* Cabeçalho */}
+      {/* Entrada principal para histórico e criação de incidentes. */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="fs-4 fw-bold text-dark mb-1">
@@ -81,7 +89,7 @@ const ListaIncidentes = () => {
         </Button>
       </div>
 
-      {/* Tabela de Dados */}
+      {/* Tabela alimentada diretamente pela resposta do backend. */}
       <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
         <div className="table-responsive">
           <Table hover className="mb-0 align-middle">
@@ -122,7 +130,7 @@ const ListaIncidentes = () => {
                         <div className="fw-bold text-dark">#INC-{inc.id.toString().padStart(4, '0')}</div>
                         <small style={{ fontSize: '0.75rem' }}>{formattedDate} {formattedTime}</small>
                       </td>
-                      {/* EMPRESA E UTILIZADOR */}
+                      {/* Relações carregadas pelo backend: empresa e utilizador reportador. */}
                       <td className="py-3">
                         <div className="fw-bold text-dark mb-1">
                           <FontAwesomeIcon icon={faBuilding} className="text-muted me-2" style={{fontSize: '0.8rem'}} />

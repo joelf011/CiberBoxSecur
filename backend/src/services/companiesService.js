@@ -1,6 +1,14 @@
 const { Company, User } = require('../models');
 const auditLogService = require('./auditLogService')
 
+/**
+ * Responsável por:
+ * - Persistir empresas e relações com cliente, contacto SOS e gestores atribuídos.
+ * - Registar auditoria das alterações feitas no backoffice.
+ *
+ * Fluxo:
+ * Controller -> Service -> Companies/CompanyAdmins -> AuditLogs -> Resposta à UI.
+ */
 const includeOptions = [
     { model: User, as: 'ClientOwner', attributes: ['id', 'name', 'email', 'phone'] },
     { model: User, as: 'EmergencyAdmin', attributes: ['id', 'name', 'phone'] },
@@ -11,7 +19,7 @@ const companyService = {
     async create(data, user, ipAddress) {
         const { assigned_admins, ...companyData } = data;
 
-        // Create
+        // Cria a empresa antes de preencher a relação M:N com gestores atribuídos.
         const newCompany = await Company.create({
             ...companyData,
             is_active: true,
@@ -19,10 +27,11 @@ const companyService = {
         });
 
         if (assigned_admins && assigned_admins.length > 0) {
+            // Atualiza a tabela pivot CompanyAdmins com os gestores selecionados.
             await newCompany.setAssignedAdmins(assigned_admins);
         }
 
-        // LOG
+        // Auditoria associada ao utilizador que realizou a operação no backoffice.
         await auditLogService.logEvent({
             user_id: user ? user.id : null,
             action: 'COMPANY_CREATE',
@@ -35,6 +44,7 @@ const companyService = {
     },
 
     async findAll() {
+        // Devolve já as relações necessárias para tabelas e modais de gestão.
         return await Company.findAll({
             include: includeOptions,
             order: [['createdAt', 'DESC']]
@@ -53,14 +63,15 @@ const companyService = {
 
         const { assigned_admins, ...companyData } = data;
 
-        // Uptade db
+        // Atualiza os campos diretos da empresa antes das relações M:N.
         await company.update(companyData);
 
         if (assigned_admins) {
+            // Sincroniza a lista completa de gestores atribuídos à empresa.
             await company.setAssignedAdmins(assigned_admins);
         }
 
-        // LOG
+        // Regista alteração para rastreabilidade de dados empresariais.
         await auditLogService.logEvent({
             user_id: user ? user.id : null,
             action: 'COMPANY_UPDATE',
@@ -78,7 +89,7 @@ const companyService = {
 
         await company.destroy();
 
-        // LOG
+        // Soft delete preserva histórico e relações para eventual restauro.
         await auditLogService.logEvent({
             user_id: user ? user.id : null,
             action: 'COMPANY_DELETE',
@@ -100,7 +111,7 @@ const companyService = {
 
         await company.restore();
 
-        // LOG
+        // O restauro também é auditado para fechar o ciclo de vida do registo.
         await auditLogService.logEvent({
             user_id: user ? user.id : null,
             action: 'COMPANY_RESTORE',

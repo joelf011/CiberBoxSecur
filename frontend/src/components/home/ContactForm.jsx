@@ -47,6 +47,7 @@ function ContactForm() {
           type="text"
           id="name"
           name="name"
+          autoComplete="name"
           className="form-control bg-dark bg-opacity-50 border-secondary border-opacity-50 text-white"
           placeholder="O seu nome"
           required
@@ -60,6 +61,7 @@ function ContactForm() {
           type="email"
           id="email"
           name="email"
+          autoComplete="email"
           className="form-control bg-dark bg-opacity-50 border-secondary border-opacity-50 text-white"
           placeholder="email@empresa.com"
           required
@@ -72,6 +74,7 @@ function ContactForm() {
         <textarea
           id="message"
           name="message"
+          autoComplete="off"
           rows="4"
           className="form-control bg-dark bg-opacity-50 border-secondary border-opacity-50 text-white"
           placeholder="Como podemos ajudar?"

@@ -1,3 +1,12 @@
+/**
+ * Responsável por:
+ * - Definir todas as rotas da aplicação (website público, autenticação e backoffice).
+ * - Separar layouts: LayoutWebsite para páginas públicas, LayoutBackoffice para o portal interno.
+ * - Redirecionar rotas inválidas para a página 404.
+ *
+ * Fluxo:
+ * Utilizador acede a URL -> React Router resolve a rota -> Renderiza o componente adequado.
+ */
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LayoutBackoffice from './pages/LayoutBackoffice';
 import LayoutWebsite from './components/LayoutWebsite';
@@ -26,7 +35,7 @@ import NotFound from './pages/NotFound';
 function App() {
   return (
     <Routes>
-      {/* Rota do Website */}
+      {/* Rotas públicas do website — acessíveis sem autenticação */}
       <Route
         path="/"
         element={
@@ -40,16 +49,16 @@ function App() {
       <Route path="/noticias/:slug" element={<ArticleDetailPage />} />
       <Route path="/nis2" element={<Nis2Page />} />
 
-      {/* Rota de Login */}
+      {/* Rotas de autenticação — login, ativação de conta e recuperação de palavra-passe */}
       <Route path="/login" element={<Login />} />
       <Route path="/ativar-conta" element={<DefinirPassword />} />
       <Route path="/recuperar-password" element={<RecuperarPassword />} />
 
-      {/* Rotas do Backoffice */}
+      {/* Rotas do backoffice — protegidas pelo LayoutBackoffice que valida sessão e permissões */}
       <Route path="/portal" element={<LayoutBackoffice />}>
         <Route index element={<Navigate to="dashboard" replace />} />
 
-        {/* Dashboard */}
+        {/* Painel principal com estatísticas do sistema */}
         <Route path="dashboard" element={<Dashboard />} />
         
         <Route path="forum" element={<AdminForum />} />
@@ -69,7 +78,7 @@ function App() {
         <Route path="perfil" element={<Perfil />} />
       </Route>
 
-      {/* Rota de "catch-all" para 404 */}
+      {/* Catch-all — qualquer rota não definida acima é redirecionada para 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
