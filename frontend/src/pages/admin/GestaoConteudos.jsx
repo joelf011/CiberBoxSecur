@@ -183,8 +183,12 @@ const GestaoConteudos = () => {
       try {
         const dados = await cmsApi.getHomeData();
 
-        if (dados) {
-          setDadosSite(dados);
+        // Só tenta substituir o estado se os dados existirem e não estiverem vazios
+        if (dados && Object.keys(dados).length > 0) {
+          // Garante que o hero existe dentro do que veio da API
+          if (dados.hero) {
+             setDadosSite(dados);
+          }
         }
       } catch (erro) {
         console.error("Erro ao carregar dados da Home:", erro);

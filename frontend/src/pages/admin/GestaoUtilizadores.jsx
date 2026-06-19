@@ -25,12 +25,14 @@ import {
   faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
 import { usersApi } from "../../api/usersApi";
+import { companiesApi } from "../../api/companiesApi"; 
 import { Alerts } from "../../utils/Alerts";
 
 const GestaoUtilizadores = () => {
-  // Estados
+  // Estados principais
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,6 +50,7 @@ const GestaoUtilizadores = () => {
     email: "",
     phone: "",
     role_id: "",
+    company_id: "",
   });
 
   // Funções Modal
@@ -58,19 +61,18 @@ const GestaoUtilizadores = () => {
 
   const handleShow = () => {
     setEditingUserId(null);
-    // Limpar também o campo phone ao abrir para criar novo
-    setFormData({ name: "", email: "", phone: "", role_id: "" });
+    setFormData({ name: "", email: "", phone: "", role_id: "", company_id: "" });
     setShowModal(true);
   };
 
   const handleEditClick = (user) => {
     setEditingUserId(user.id);
-    // Puxar o phone da base de dados ao editar
     setFormData({
       name: user.name,
       email: user.email,
       phone: user.phone || "",
       role_id: user.role_id || "",
+      company_id: user.company_id || "",
     });
     setShowModal(true);
   };
@@ -80,12 +82,14 @@ const GestaoUtilizadores = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const [usersData, rolesData] = await Promise.all([
+      const [usersData, rolesData, companiesData] = await Promise.all([
         usersApi.getUsers(),
         usersApi.getRoles(),
+        companiesApi.getCompanies(),
       ]);
       setUsers(usersData);
       setRoles(rolesData);
+      setCompanies(companiesData);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -143,11 +147,14 @@ const GestaoUtilizadores = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      const payload = { ...formData };
+      if (!payload.company_id) payload.company_id = null;
+
       if (editingUserId) {
-        await usersApi.updateUser(editingUserId, formData);
+        await usersApi.updateUser(editingUserId, payload);
         Alerts.success("Utilizador atualizado com sucesso!");
       } else {
-        await usersApi.createUser(formData);
+        await usersApi.createUser(payload);
         Alerts.success("Utilizador criado e convite enviado!");
       }
       handleClose();
@@ -269,6 +276,7 @@ const GestaoUtilizadores = () => {
                   <th className="px-4 py-3 text-muted">Nome</th>
                   <th className="py-3 text-muted">Email</th>
                   <th className="py-3 text-muted">Cargo</th>
+                  <th className="py-3 text-muted">Empresa</th>
                   <th className="py-3 text-muted">Estado</th>
                   <th className="px-4 py-3 text-muted text-end">Ações</th>
                 </tr>
@@ -298,6 +306,12 @@ const GestaoUtilizadores = () => {
                           {roles.find((r) => r.id === user.role_id)?.name ||
                             `Sem Cargo`}
                         </Badge>
+                      </td>
+                      <td className="py-3 text-muted">
+                        {/* Exibe o nome da empresa na tabela */}
+                        {user.company_id && companies.length > 0
+                          ? companies.find((c) => c.id === user.company_id)?.name || "N/A"
+                          : "-"}
                       </td>
                       <td className="py-3">
                         <Form.Check
@@ -422,42 +436,70 @@ const GestaoUtilizadores = () => {
               />
             </Form.Group>
 
-            {/* --- NOVO CAMPO DE TELEFONE --- */}
-            <Form.Group className="mb-3">
-              <Form.Label className="small fw-bold text-secondary">
-                Telefone / Telemóvel
-              </Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ex: +351 912 345 678"
-                value={formData.phone}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
-              />
-            </Form.Group>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-bold text-secondary">
+                    Telefone / Telemóvel
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Ex: +351 912 345 678"
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-bold text-secondary">
+                    Cargo
+                  </Form.Label>
+                  <Form.Select
+                    required
+                    value={formData.role_id}
+                    onChange={(e) =>
+                      setFormData({ ...formData, role_id: Number(e.target.value) })
+                    }
+                  >
+                    <option value="" disabled>
+                      Selecione um cargo
+                    </option>
+                    {roles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
 
+            {/* --- NOVO CAMPO DE EMPRESA --- */}
             <Form.Group className="mb-3">
               <Form.Label className="small fw-bold text-secondary">
-                Cargo
+                Empresa (Cliente)
               </Form.Label>
               <Form.Select
-                required
-                value={formData.role_id}
+                value={formData.company_id}
                 onChange={(e) =>
-                  setFormData({ ...formData, role_id: Number(e.target.value) })
+                  setFormData({ ...formData, company_id: e.target.value ? Number(e.target.value) : "" })
                 }
               >
-                <option value="" disabled>
-                  Selecione um cargo
-                </option>
-                {roles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}
+                <option value="">Nenhuma / Interno</option>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
                   </option>
                 ))}
               </Form.Select>
+              <Form.Text className="text-muted">
+                Obrigatório para clientes. Se for um Administrador interno, pode ficar vazio.
+              </Form.Text>
             </Form.Group>
+
           </Form>
         </Modal.Body>
         <Modal.Footer className="border-0 pt-0">

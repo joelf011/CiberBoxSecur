@@ -37,7 +37,7 @@ const NovoIncidente = () => {
   ];
   
   // Estes valores são guardados no JSONB cncs_form_data do incidente.
-  const typeOptions = ['Phishing', 'Malware', 'Ransomware', 'DDoS', 'Violação de Dados', 'Exploração de Vulnerabilidades', 'DDoS', 'Man-in-the-Middle', 'Zero-Day'];
+  const typeOptions = ['Phishing', 'Malware', 'Ransomware', 'DDoS', 'Violação de Dados', 'Exploração de Vulnerabilidades', 'Man-in-the-Middle', 'Zero-Day'];
   const assetOptions = ['Servidor', 'Postos', 'Storage', 'UPS', 'Switch', 'Firewall', 'Disco Externo', 'NAS'];
 
   const handleChange = (e) => {
@@ -117,13 +117,15 @@ const NovoIncidente = () => {
                 <Form.Group>
                   <Form.Label className="small fw-bold text-secondary">Criticidade Inicial</Form.Label>
                   <Form.Select 
-                    name="severity"
+                    name="incidentType"
+                    required
                     className="bg-light border-0 py-2"
-                    value={formData.severity}
+                    value={formData.incidentType}
                     onChange={handleChange}
                   >
-                    {severityOptions.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    <option value="">Selecione o tipo...</option>
+                    {typeOptions.map((opt, index) => (
+                        <option key={`${opt}-${index}`} value={opt}>{opt}</option>
                     ))}
                   </Form.Select>
                 </Form.Group>
@@ -133,14 +135,16 @@ const NovoIncidente = () => {
                 <Form.Group>
                   <Form.Label className="small fw-bold text-secondary">Tipo de Incidente</Form.Label>
                   <Form.Select 
-                    name="incidentType"
+                    name="assetType"
                     required
                     className="bg-light border-0 py-2"
-                    value={formData.incidentType}
+                    value={formData.assetType}
                     onChange={handleChange}
                   >
-                    <option value="">Selecione o tipo...</option>
-                    {typeOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    <option value="">Selecione o ativo...</option>
+                    {assetOptions.map((opt, index) => (
+                        <option key={`${opt}-${index}`} value={opt}>{opt}</option>
+                    ))}
                   </Form.Select>
                 </Form.Group>
               </Col>
