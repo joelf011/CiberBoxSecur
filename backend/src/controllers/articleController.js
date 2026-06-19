@@ -18,13 +18,20 @@ const articleController = {
     async create(req, res) {
         try {
             const data = { ...req.body };
+            const author_id = req.user.id;
             
             // category_ids pode vir como string JSON do formulário multipart; converte para array.
             if (data.category_ids && typeof data.category_ids === 'string') {
                 data.category_ids = JSON.parse(data.category_ids);
             }
 
-            // Regista evento de auditoria antes da criação (utiliza variáveis do âmbito seguinte).
+            // Se houver ficheiro enviado, define o caminho relativo da imagem de capa.
+            if (req.file) data.cover_image = `uploads/${req.file.filename}`;
+
+            // Delega a criação ao serviço, que trata da persistência e associações de categorias.
+            const newArticle = await articleService.create(data, author_id, req.ip);
+
+            // Regista evento de auditoria DEPOIS da criação (para termos o ID real do artigo)
             await auditLogService.logEvent({
                 user_id: author_id,
                 action: 'ARTICLE_CREATE',
@@ -32,15 +39,14 @@ const articleController = {
                 entity_id: newArticle.id,
                 ip_address: req.ip
             });
-            // Se houver ficheiro enviado, define o caminho relativo da imagem de capa.
-            if (req.file) data.cover_image = `uploads/${req.file.filename}`;
-
-            // Delega a criação ao serviço, que trata da persistência e associações de categorias.
-            const newArticle = await articleService.create(data, req.user.id, req.ip);
+            
             return res.status(201).json({ message: 'Article created successfully!', article: newArticle });
         } catch (error) {
             // Remove o ficheiro enviado em caso de erro para evitar ficheiros órfãos.
-            if (req.file) fs.unlinkSync(req.file.path);
+            if (req.file) {
+               const fs = require('fs');
+               fs.unlinkSync(req.file.path);
+            }
             
             // Slug duplicado — restrição de unicidade na base de dados.
             if (error.name === 'SequelizeUniqueConstraintError') {
@@ -98,39 +104,39 @@ const articleController = {
     async update(req, res) {
         try {
             const data = { ...req.body };
+            const articleId = req.params.id;
+            const author_id = req.user.id;
             
             // Converte category_ids de string JSON para array, se necessário (multipart).
             if (data.category_ids && typeof data.category_ids === 'string') {
                 data.category_ids = JSON.parse(data.category_ids);
             }
 
-            // Mantém a imagem atual; substitui apenas se um novo ficheiro for enviado.
-            let cover_image = article.cover_image;
+            // Se um novo ficheiro for enviado, adiciona-o aos dados a atualizar
             if (req.file) {
-                // Remove a imagem anterior do disco para evitar ficheiros órfãos.
-                if (article.cover_image && fs.existsSync(article.cover_image)) {
-                    fs.unlinkSync(article.cover_image);
-                }
-                cover_image = `uploads/${req.file.filename}`;
+                data.cover_image = `uploads/${req.file.filename}`;
             }
 
-            await article.update({ title, slug, summary, content_body, cover_image, published_date, status });
+            // Delega ao serviço a persistência na BD (o serviço trata de gravar as variáveis todas)
+            const updatedArticle = await articleService.update(articleId, data, author_id, req.ip);
 
             // Regista a atualização no log de auditoria.
             await auditLogService.logEvent({
-                user_id: req.user.id,
+                user_id: author_id,
                 action: 'ARTICLE_UPDATE',
                 entity_type: 'Article',
-                entity_id: article.id,
+                entity_id: updatedArticle.id,
                 ip_address: req.ip
             });
 
-            // Delega ao serviço a persistência e recarga do artigo atualizado.
-            const article = await articleService.update(req.params.id, data, req.user.id, req.ip);
-            return res.status(200).json({ message: 'Article updated successfully!', article });
+            return res.status(200).json({ message: 'Article updated successfully!', article: updatedArticle });
+            
         } catch (error) {
             // Limpa o ficheiro enviado em caso de falha.
-            if (req.file) fs.unlinkSync(req.file.path);
+            if (req.file) {
+                const fs = require('fs');
+                if(fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+            }
             
             if (error.message === 'Article not found.') return res.status(404).json({ error: error.message });
             if (error.name === 'SequelizeUniqueConstraintError') return res.status(400).json({ error: 'An article with this slug already exists.' });
