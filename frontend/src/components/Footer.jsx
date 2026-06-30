@@ -11,7 +11,7 @@ import Logo from '../assets/logos/CiberBoxSecur-Minimal-NegativeVersion.svg';
  * - Mostrar o aviso de direitos de autor com o ano dinâmico.
  */
 const Footer = () => {
-  const bgColor = '#0a192f';
+  const bgColor = '#0f172a';
   return (
     <footer className="text-secondary py-5 border-top border-secondary" style={{ backgroundColor: bgColor }}>
       <div className="container px-4">
